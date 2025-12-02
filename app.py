@@ -312,8 +312,17 @@ def main():
     init_session_state()
     
     st.markdown('<div class="main-header">🛰️ India GIS & Remote Sensing Portal</div>', unsafe_allow_html=True)
-
     st.markdown('<div class="sub-header">Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="text-align: center; font-size: 15px; color: #555; padding: 1rem 0; margin-top: 0px;">
+            <hr style="border: none; border-top: 1px solid #ddd; margin-bottom: 0px;">
+            Made with ❤️ by <strong>Hemant Kumar</strong> • 
+            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     with st.sidebar:
         st.markdown("## 🔐 GEE Authentication")
         
@@ -722,19 +731,10 @@ def main():
 
 
     # ⭐⭐⭐ ADDED FOOTER (ONLY CHANGE YOU REQUESTED) ⭐⭐⭐
-    st.markdown(
-        """
-        <div style="text-align: center; font-size: 15px; color: #555; padding: 1rem 0; margin-top: 10px;">
-            <hr style="border: none; border-top: 1px solid #ddd; margin-bottom: 10px;">
-            Made with ❤️ by <strong>Hemant Kumar</strong> • 
-            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
     # ⭐⭐⭐ END FOOTER ⭐⭐⭐
 
 
 if __name__ == "__main__":
     main()
+
 
