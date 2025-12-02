@@ -719,8 +719,11 @@ def main():
         '<div style="text-align: center; color: #666; padding: 1rem;">Made with Streamlit & Google Earth Engine</div>',
         unsafe_allow_html=True,
     )
+    
+st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+
 st.markdown("""
-<div style="text-align: center; font-size: 20px; color: #777;">
+<div style="text-align: center; font-size: 15px; color: #777; margin-top: -15px;">
     Developed by <strong>Hemant Kumar</strong> • 
     <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
 </div>
@@ -728,5 +731,6 @@ st.markdown("""
 
 if __name__ == "__main__":
     main()
+
 
 
