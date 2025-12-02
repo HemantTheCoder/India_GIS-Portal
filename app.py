@@ -47,11 +47,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 st.markdown("""
-<div style="text-align: center; font-size: 20px; color: #777;">
+<div style="text-align: center; font-size: 15px; color: #777;">
     Developed by <strong>Hemant Kumar</strong> • 
     <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
-</div> 
-""")
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
     .main-header {
@@ -320,7 +321,6 @@ def main():
     st.markdown('<div class="sub-header">Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities</div>', unsafe_allow_html=True)
     
     with st.sidebar:
-
         st.markdown("## 🔐 GEE Authentication")
         
         st.markdown("""
@@ -719,31 +719,12 @@ def main():
             - Available from: 2013
             - Best for: Long-term studies
             """)
+    
     st.markdown("---")
     st.markdown(
         '<div style="text-align: center; color: #666; padding: 1rem;">Made with Streamlit & Google Earth Engine</div>',
         unsafe_allow_html=True,
-    ) 
-""", unsafe_allow_html=True)
-
-
+    )
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
