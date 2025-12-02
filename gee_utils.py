@@ -20,6 +20,36 @@ Functions provided (all used by app.py):
 - LULC_CLASSES, INDEX_INFO
 """
 
+import os, json, ee
+
+def auto_initialize_gee():
+    if ee.data._initialized:
+        return True
+
+    # Streamlit secret
+    if "GEE_SERVICE_ACCOUNT_JSON" in os.environ:
+        try:
+            key = json.loads(os.environ["GEE_SERVICE_ACCOUNT_JSON"])
+            credentials = ee.ServiceAccountCredentials(
+                key["client_email"],
+                key_data=os.environ["GEE_SERVICE_ACCOUNT_JSON"]
+            )
+            ee.Initialize(credentials)
+            print("Initialized with service account")
+            return True
+        except Exception as e:
+            print("Service account GEE init failed:", e)
+
+    # Local fallback
+    try:
+        ee.Initialize()
+        print("Initialized with default GEE credentials")
+        return True
+    except Exception as e:
+        print("Default GEE init failed:", e)
+        return False
+
+
 import ee
 import json
 from datetime import datetime
@@ -467,3 +497,4 @@ def export_to_drive(image, description, folder, geometry, scale=30):
     except Exception as e:
         print("export_to_drive error:", e)
         return None
+
