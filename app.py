@@ -1,13 +1,5 @@
 import os, json
 import ee
-
-if "GEE_SERVICE_ACCOUNT_JSON" in os.environ:
-    key = json.loads(os.environ["GEE_SERVICE_ACCOUNT_JSON"])
-    from gee_utils import initialize_gee
-    initialize_gee(key)
-else:
-    ee.Initialize()
-
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
@@ -17,6 +9,43 @@ import json
 from datetime import datetime, date
 import pandas as pd
 import io
+
+# ----------------------------
+# SAFE GOOGLE EARTH ENGINE INIT
+# ----------------------------
+
+import os
+import json
+import ee
+
+def safe_initialize_gee():
+    """Initializes GEE using Streamlit secrets if present."""
+    if "GEE_SERVICE_ACCOUNT_JSON" in os.environ:
+        try:
+            service_json = os.environ["GEE_SERVICE_ACCOUNT_JSON"]
+            key = json.loads(service_json)
+
+            credentials = ee.ServiceAccountCredentials(
+                key["client_email"],
+                key_data=service_json,
+            )
+            ee.Initialize(credentials)
+            print("GEE initialized with service account.")
+            return
+        except Exception as e:
+            print("Service account init failed:", e)
+
+    # Fallback: local auth
+    try:
+        ee.Initialize()
+        print("GEE initialized with default credentials.")
+    except Exception as e:
+        print("Error initializing GEE:", e)
+
+
+# Call initialization once
+safe_initialize_gee()
+
 
 from india_cities import get_states, get_cities, get_city_coordinates, INDIA_DATA
 from gee_utils import (
@@ -655,6 +684,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
