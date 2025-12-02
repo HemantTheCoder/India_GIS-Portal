@@ -1,3 +1,25 @@
+import ee
+import streamlit as st
+import json
+
+def init_gee():
+    try:
+        if "GEE_JSON" in st.secrets:
+            service_json = st.secrets["GEE_JSON"]
+            credentials = ee.ServiceAccountCredentials(
+                service_json["client_email"],
+                key_data=json.dumps(service_json)
+            )
+            ee.Initialize(credentials)
+        else:
+            ee.Initialize()
+        st.success("🟢 GEE Connected")
+    except Exception as e:
+        st.error(f"🔴 GEE Init Failed: {str(e)}")
+
+# IMPORTANT: always initialize on each rerun
+init_gee()
+
 import os, json
 import ee
 import streamlit as st
@@ -502,3 +524,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
