@@ -1,0 +1,381 @@
+# india_cities.py
+
+# ---------------------------------------------
+# Master dictionary of Indian States and Cities
+# Includes 36 States/UTs and 200+ major cities
+# ---------------------------------------------
+
+INDIA_DATA = {
+    "Andhra Pradesh": {
+        "Visakhapatnam": {"lat": 17.6868, "lon": 83.2185},
+        "Vijayawada": {"lat": 16.5062, "lon": 80.6480},
+        "Guntur": {"lat": 16.3067, "lon": 80.4365},
+        "Nellore": {"lat": 14.4426, "lon": 79.9865},
+        "Kurnool": {"lat": 15.8281, "lon": 78.0373},
+        "Tirupati": {"lat": 13.6288, "lon": 79.4192},
+        "Rajahmundry": {"lat": 17.0005, "lon": 81.8040},
+        "Kakinada": {"lat": 16.9891, "lon": 82.2475},
+        "Kadapa": {"lat": 14.4673, "lon": 78.8242},
+        "Anantapur": {"lat": 14.6819, "lon": 77.6006},
+    },
+
+    "Arunachal Pradesh": {
+        "Itanagar": {"lat": 27.0844, "lon": 93.6053},
+        "Naharlagun": {"lat": 27.1044, "lon": 93.6950},
+        "Pasighat": {"lat": 28.0670, "lon": 95.3260},
+        "Tawang": {"lat": 27.5860, "lon": 91.8690},
+        "Ziro": {"lat": 27.5450, "lon": 93.8310},
+    },
+
+    "Assam": {
+        "Guwahati": {"lat": 26.1445, "lon": 91.7362},
+        "Silchar": {"lat": 24.8333, "lon": 92.7789},
+        "Dibrugarh": {"lat": 27.4728, "lon": 94.9120},
+        "Jorhat": {"lat": 26.7509, "lon": 94.2037},
+        "Nagaon": {"lat": 26.3507, "lon": 92.6840},
+        "Tinsukia": {"lat": 27.4891, "lon": 95.3550},
+        "Tezpur": {"lat": 26.6338, "lon": 92.8000},
+    },
+
+    "Bihar": {
+        "Patna": {"lat": 25.5941, "lon": 85.1376},
+        "Gaya": {"lat": 24.7914, "lon": 85.0002},
+        "Bhagalpur": {"lat": 25.2425, "lon": 86.9842},
+        "Muzaffarpur": {"lat": 26.1209, "lon": 85.3647},
+        "Purnia": {"lat": 25.7771, "lon": 87.4753},
+        "Darbhanga": {"lat": 26.1542, "lon": 85.8918},
+        "Bihar Sharif": {"lat": 25.1982, "lon": 85.5204},
+        "Arrah": {"lat": 25.5541, "lon": 84.6634},
+        "Begusarai": {"lat": 25.4182, "lon": 86.1272},
+        "Katihar": {"lat": 25.5313, "lon": 87.5719},
+    },
+
+    "Chhattisgarh": {
+        "Raipur": {"lat": 21.2514, "lon": 81.6296},
+        "Bhilai": {"lat": 21.2094, "lon": 81.4285},
+        "Bilaspur": {"lat": 22.0796, "lon": 82.1391},
+        "Korba": {"lat": 22.3595, "lon": 82.7501},
+        "Durg": {"lat": 21.1904, "lon": 81.2849},
+        "Rajnandgaon": {"lat": 21.0974, "lon": 81.0280},
+        "Jagdalpur": {"lat": 19.0780, "lon": 82.0300},
+        "Raigarh": {"lat": 21.8974, "lon": 83.3950},
+    },
+
+    "Goa": {
+        "Panaji": {"lat": 15.4909, "lon": 73.8278},
+        "Margao": {"lat": 15.2832, "lon": 73.9862},
+        "Vasco da Gama": {"lat": 15.3982, "lon": 73.8113},
+        "Mapusa": {"lat": 15.5916, "lon": 73.8100},
+        "Ponda": {"lat": 15.4000, "lon": 74.0100},
+    },
+
+    "Gujarat": {
+        "Ahmedabad": {"lat": 23.0225, "lon": 72.5714},
+        "Surat": {"lat": 21.1702, "lon": 72.8311},
+        "Vadodara": {"lat": 22.3072, "lon": 73.1812},
+        "Rajkot": {"lat": 22.3039, "lon": 70.8022},
+        "Bhavnagar": {"lat": 21.7645, "lon": 72.1519},
+        "Jamnagar": {"lat": 22.4707, "lon": 70.0577},
+        "Junagadh": {"lat": 21.5222, "lon": 70.4579},
+        "Gandhinagar": {"lat": 23.2156, "lon": 72.6369},
+        "Anand": {"lat": 22.5645, "lon": 72.9289},
+        "Morbi": {"lat": 22.8173, "lon": 70.8378},
+    },
+
+    "Haryana": {
+        "Faridabad": {"lat": 28.4089, "lon": 77.3178},
+        "Gurgaon": {"lat": 28.4595, "lon": 77.0266},
+        "Panipat": {"lat": 29.3909, "lon": 76.9635},
+        "Ambala": {"lat": 30.3782, "lon": 76.7767},
+        "Yamunanagar": {"lat": 30.1290, "lon": 77.2674},
+        "Rohtak": {"lat": 28.8955, "lon": 76.6066},
+        "Hisar": {"lat": 29.1492, "lon": 75.7217},
+        "Karnal": {"lat": 29.6857, "lon": 76.9905},
+        "Sonipat": {"lat": 28.9288, "lon": 77.0913},
+        "Panchkula": {"lat": 30.6942, "lon": 76.8606},
+    },
+
+    "Himachal Pradesh": {
+        "Shimla": {"lat": 31.1048, "lon": 77.1734},
+        "Dharamshala": {"lat": 32.2190, "lon": 76.3234},
+        "Solan": {"lat": 30.9045, "lon": 77.0967},
+        "Mandi": {"lat": 31.7082, "lon": 76.9318},
+        "Kullu": {"lat": 31.9579, "lon": 77.1095},
+        "Manali": {"lat": 32.2432, "lon": 77.1892},
+        "Bilaspur": {"lat": 31.3380, "lon": 76.7600},
+        "Chamba": {"lat": 32.5534, "lon": 76.1258},
+    },
+
+    "Jharkhand": {
+        "Ranchi": {"lat": 23.3441, "lon": 85.3096},
+        "Jamshedpur": {"lat": 22.8046, "lon": 86.2029},
+        "Dhanbad": {"lat": 23.7957, "lon": 86.4304},
+        "Bokaro": {"lat": 23.6693, "lon": 86.1511},
+        "Hazaribagh": {"lat": 23.9966, "lon": 85.3637},
+        "Deoghar": {"lat": 24.4850, "lon": 86.6945},
+        "Giridih": {"lat": 24.1851, "lon": 86.3003},
+        "Ramgarh": {"lat": 23.6353, "lon": 85.5120},
+    },
+
+    "Karnataka": {
+        "Bengaluru": {"lat": 12.9716, "lon": 77.5946},
+        "Mysuru": {"lat": 12.2958, "lon": 76.6394},
+        "Hubli-Dharwad": {"lat": 15.3647, "lon": 75.1240},
+        "Mangaluru": {"lat": 12.9141, "lon": 74.8560},
+        "Belgaum": {"lat": 15.8497, "lon": 74.4977},
+        "Gulbarga": {"lat": 17.3297, "lon": 76.8343},
+        "Davangere": {"lat": 14.4644, "lon": 75.9218},
+        "Bellary": {"lat": 15.1394, "lon": 76.9214},
+        "Shimoga": {"lat": 13.9299, "lon": 75.5681},
+        "Tumkur": {"lat": 13.3379, "lon": 77.1173},
+    },
+
+    "Kerala": {
+        "Thiruvananthapuram": {"lat": 8.5241, "lon": 76.9366},
+        "Kochi": {"lat": 9.9312, "lon": 76.2673},
+        "Kozhikode": {"lat": 11.2588, "lon": 75.7804},
+        "Thrissur": {"lat": 10.5276, "lon": 76.2144},
+        "Kollam": {"lat": 8.8932, "lon": 76.6141},
+        "Alappuzha": {"lat": 9.4981, "lon": 76.3388},
+        "Palakkad": {"lat": 10.7867, "lon": 76.6548},
+        "Kannur": {"lat": 11.8745, "lon": 75.3704},
+        "Kottayam": {"lat": 9.5916, "lon": 76.5222},
+        "Malappuram": {"lat": 11.0510, "lon": 76.0711},
+    },
+
+    "Madhya Pradesh": {
+        "Bhopal": {"lat": 23.2599, "lon": 77.4126},
+        "Indore": {"lat": 22.7196, "lon": 75.8577},
+        "Jabalpur": {"lat": 23.1815, "lon": 79.9864},
+        "Gwalior": {"lat": 26.2183, "lon": 78.1828},
+        "Ujjain": {"lat": 23.1765, "lon": 75.7885},
+        "Sagar": {"lat": 23.8388, "lon": 78.7378},
+        "Dewas": {"lat": 22.9623, "lon": 76.0508},
+        "Satna": {"lat": 24.5004, "lon": 80.8322},
+        "Ratlam": {"lat": 23.3341, "lon": 75.0367},
+        "Rewa": {"lat": 24.5315, "lon": 81.2985},
+    },
+
+    "Maharashtra": {
+        "Mumbai": {"lat": 19.0760, "lon": 72.8777},
+        "Pune": {"lat": 18.5204, "lon": 73.8567},
+        "Nagpur": {"lat": 21.1458, "lon": 79.0882},
+        "Thane": {"lat": 19.2183, "lon": 72.9781},
+        "Nashik": {"lat": 20.0063, "lon": 73.7901},
+        "Aurangabad": {"lat": 19.8762, "lon": 75.3433},
+        "Solapur": {"lat": 17.6599, "lon": 75.9064},
+        "Kolhapur": {"lat": 16.7050, "lon": 74.2433},
+        "Amravati": {"lat": 20.9374, "lon": 77.7796},
+        "Navi Mumbai": {"lat": 19.0330, "lon": 73.0297},
+    },
+
+    "Manipur": {
+        "Imphal": {"lat": 24.8170, "lon": 93.9368},
+        "Thoubal": {"lat": 24.6300, "lon": 94.0200},
+        "Bishnupur": {"lat": 24.6000, "lon": 93.7700},
+        "Churachandpur": {"lat": 24.3300, "lon": 93.6700},
+    },
+
+    "Meghalaya": {
+        "Shillong": {"lat": 25.5788, "lon": 91.8933},
+        "Tura": {"lat": 25.5140, "lon": 90.2024},
+        "Jowai": {"lat": 25.4500, "lon": 92.2000},
+        "Nongstoin": {"lat": 25.5200, "lon": 91.2700},
+    },
+
+    "Mizoram": {
+        "Aizawl": {"lat": 23.7271, "lon": 92.7176},
+        "Lunglei": {"lat": 22.8800, "lon": 92.7300},
+        "Champhai": {"lat": 23.4700, "lon": 93.3300},
+        "Serchhip": {"lat": 23.3000, "lon": 92.8500},
+    },
+
+    "Nagaland": {
+        "Kohima": {"lat": 25.6751, "lon": 94.1086},
+        "Dimapur": {"lat": 25.9073, "lon": 93.7267},
+        "Mokokchung": {"lat": 26.3200, "lon": 94.5200},
+        "Tuensang": {"lat": 26.2700, "lon": 94.8300},
+    },
+
+    "Odisha": {
+        "Bhubaneswar": {"lat": 20.2961, "lon": 85.8245},
+        "Cuttack": {"lat": 20.4625, "lon": 85.8830},
+        "Rourkela": {"lat": 22.2604, "lon": 84.8536},
+        "Berhampur": {"lat": 19.3150, "lon": 84.7941},
+        "Sambalpur": {"lat": 21.4669, "lon": 83.9812},
+        "Puri": {"lat": 19.8135, "lon": 85.8312},
+        "Balasore": {"lat": 21.4934, "lon": 86.9135},
+        "Bhadrak": {"lat": 21.0544, "lon": 86.4975},
+    },
+
+    "Punjab": {
+        "Ludhiana": {"lat": 30.9010, "lon": 75.8573},
+        "Amritsar": {"lat": 31.6340, "lon": 74.8723},
+        "Jalandhar": {"lat": 31.3260, "lon": 75.5762},
+        "Patiala": {"lat": 30.3398, "lon": 76.3869},
+        "Bathinda": {"lat": 30.2110, "lon": 74.9455},
+        "Mohali": {"lat": 30.7046, "lon": 76.7179},
+        "Hoshiarpur": {"lat": 31.5143, "lon": 75.9115},
+        "Pathankot": {"lat": 32.2643, "lon": 75.6421},
+        "Moga": {"lat": 30.8231, "lon": 75.1721},
+        "Abohar": {"lat": 30.1452, "lon": 74.1950},
+    },
+
+    "Rajasthan": {
+        "Jaipur": {"lat": 26.9124, "lon": 75.7873},
+        "Jodhpur": {"lat": 26.2389, "lon": 73.0243},
+        "Kota": {"lat": 25.2138, "lon": 75.8648},
+        "Bikaner": {"lat": 28.0229, "lon": 73.3119},
+        "Ajmer": {"lat": 26.4499, "lon": 74.6399},
+        "Udaipur": {"lat": 24.5854, "lon": 73.7125},
+        "Bhilwara": {"lat": 25.3407, "lon": 74.6313},
+        "Alwar": {"lat": 27.5530, "lon": 76.6346},
+        "Bharatpur": {"lat": 27.2152, "lon": 77.5030},
+        "Sikar": {"lat": 27.6094, "lon": 75.1398},
+    },
+
+    "Sikkim": {
+        "Gangtok": {"lat": 27.3389, "lon": 88.6065},
+        "Namchi": {"lat": 27.1667, "lon": 88.3500},
+        "Gyalshing": {"lat": 27.2900, "lon": 88.2600},
+        "Mangan": {"lat": 27.5100, "lon": 88.5300},
+    },
+
+    "Tamil Nadu": {
+        "Chennai": {"lat": 13.0827, "lon": 80.2707},
+        "Coimbatore": {"lat": 11.0168, "lon": 76.9558},
+        "Madurai": {"lat": 9.9252, "lon": 78.1198},
+        "Tiruchirappalli": {"lat": 10.7905, "lon": 78.7047},
+        "Salem": {"lat": 11.6643, "lon": 78.1460},
+        "Tirunelveli": {"lat": 8.7139, "lon": 77.7567},
+        "Tiruppur": {"lat": 11.1085, "lon": 77.3411},
+        "Erode": {"lat": 11.3410, "lon": 77.7172},
+        "Vellore": {"lat": 12.9165, "lon": 79.1325},
+        "Thanjavur": {"lat": 10.7870, "lon": 79.1378},
+    },
+
+    "Telangana": {
+        "Hyderabad": {"lat": 17.3850, "lon": 78.4867},
+        "Warangal": {"lat": 17.9784, "lon": 79.5941},
+        "Nizamabad": {"lat": 18.6725, "lon": 78.0941},
+        "Karimnagar": {"lat": 18.4386, "lon": 79.1288},
+        "Khammam": {"lat": 17.2473, "lon": 80.1514},
+        "Ramagundam": {"lat": 18.7600, "lon": 79.4700},
+        "Mahbubnagar": {"lat": 16.7488, "lon": 77.9855},
+        "Nalgonda": {"lat": 17.0500, "lon": 79.2700},
+        "Adilabad": {"lat": 19.6641, "lon": 78.5320},
+        "Siddipet": {"lat": 18.1018, "lon": 78.8520},
+    },
+
+    "Tripura": {
+        "Agartala": {"lat": 23.8315, "lon": 91.2868},
+        "Udaipur": {"lat": 23.5300, "lon": 91.4800},
+        "Dharmanagar": {"lat": 24.3700, "lon": 92.1700},
+        "Kailashahar": {"lat": 24.3300, "lon": 92.0100},
+    },
+
+    "Uttar Pradesh": {
+        "Lucknow": {"lat": 26.8467, "lon": 80.9462},
+        "Kanpur": {"lat": 26.4499, "lon": 80.3319},
+        "Ghaziabad": {"lat": 28.6692, "lon": 77.4538},
+        "Agra": {"lat": 27.1767, "lon": 78.0081},
+        "Varanasi": {"lat": 25.3176, "lon": 82.9739},
+        "Meerut": {"lat": 28.9845, "lon": 77.7064},
+        "Prayagraj": {"lat": 25.4358, "lon": 81.8463},
+        "Bareilly": {"lat": 28.3670, "lon": 79.4304},
+        "Aligarh": {"lat": 27.8974, "lon": 78.0880},
+        "Moradabad": {"lat": 28.8386, "lon": 78.7733},
+        "Noida": {"lat": 28.5355, "lon": 77.3910},
+        "Gorakhpur": {"lat": 26.7606, "lon": 83.3732},
+        "Firozabad": {"lat": 27.1591, "lon": 78.3957},
+        "Jhansi": {"lat": 25.4484, "lon": 78.5685},
+        "Mathura": {"lat": 27.4924, "lon": 77.6737},
+    },
+
+    "Uttarakhand": {
+        "Dehradun": {"lat": 30.3165, "lon": 78.0322},
+        "Haridwar": {"lat": 29.9457, "lon": 78.1642},
+        "Roorkee": {"lat": 29.8543, "lon": 77.8880},
+        "Haldwani": {"lat": 29.2183, "lon": 79.5130},
+        "Rudrapur": {"lat": 28.9748, "lon": 79.4000},
+        "Kashipur": {"lat": 29.2104, "lon": 78.9619},
+        "Rishikesh": {"lat": 30.0869, "lon": 78.2676},
+        "Nainital": {"lat": 29.3803, "lon": 79.4636},
+    },
+
+    "West Bengal": {
+        "Kolkata": {"lat": 22.5726, "lon": 88.3639},
+        "Howrah": {"lat": 22.5958, "lon": 88.2636},
+        "Durgapur": {"lat": 23.5204, "lon": 87.3119},
+        "Asansol": {"lat": 23.6739, "lon": 86.9524},
+        "Siliguri": {"lat": 26.7271, "lon": 88.3953},
+        "Bardhaman": {"lat": 23.2324, "lon": 87.8615},
+        "Malda": {"lat": 25.0108, "lon": 88.1411},
+        "Baharampur": {"lat": 24.1024, "lon": 88.2502},
+        "Kharagpur": {"lat": 22.3460, "lon": 87.2320},
+        "Haldia": {"lat": 22.0667, "lon": 88.0698},
+    },
+
+    "Delhi": {
+        "New Delhi": {"lat": 28.6139, "lon": 77.2090},
+        "Delhi": {"lat": 28.7041, "lon": 77.1025},
+    },
+
+    "Chandigarh": {
+        "Chandigarh": {"lat": 30.7333, "lon": 76.7794},
+    },
+
+    "Puducherry": {
+        "Puducherry": {"lat": 11.9416, "lon": 79.8083},
+        "Karaikal": {"lat": 10.9254, "lon": 79.8380},
+    },
+
+    "Jammu and Kashmir": {
+        "Srinagar": {"lat": 34.0837, "lon": 74.7973},
+        "Jammu": {"lat": 32.7266, "lon": 74.8570},
+        "Anantnag": {"lat": 33.7311, "lon": 75.1487},
+        "Baramulla": {"lat": 34.2095, "lon": 74.3641},
+        "Sopore": {"lat": 34.3000, "lon": 74.4700},
+        "Kathua": {"lat": 32.3868, "lon": 75.5195},
+        "Udhampur": {"lat": 32.9160, "lon": 75.1322},
+    },
+
+    "Ladakh": {
+        "Leh": {"lat": 34.1526, "lon": 77.5771},
+        "Kargil": {"lat": 34.5539, "lon": 76.1349},
+    },
+
+    "Andaman and Nicobar Islands": {
+        "Port Blair": {"lat": 11.6234, "lon": 92.7265},
+    },
+
+    "Dadra and Nagar Haveli and Daman and Diu": {
+        "Daman": {"lat": 20.3974, "lon": 72.8328},
+        "Silvassa": {"lat": 20.2766, "lon": 73.0169},
+        "Diu": {"lat": 20.7141, "lon": 70.9875},
+    },
+
+    "Lakshadweep": {
+        "Kavaratti": {"lat": 10.5669, "lon": 72.6420},
+    },
+}
+
+# ---------------------------------------------
+# Helper functions required by app.py
+# ---------------------------------------------
+
+def get_states():
+    """Returns a sorted list of all states/UTs."""
+    return sorted(INDIA_DATA.keys())
+
+def get_cities(state):
+    """Returns a sorted list of cities for a given state."""
+    if state in INDIA_DATA:
+        return sorted(INDIA_DATA[state].keys())
+    return []
+
+def get_city_coordinates(state, city):
+    """Returns latitude and longitude of a given city."""
+    if state in INDIA_DATA and city in INDIA_DATA[state]:
+        return INDIA_DATA[state][city]
+    return None
