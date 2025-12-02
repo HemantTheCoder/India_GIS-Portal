@@ -4,13 +4,6 @@ from streamlit_folium import st_folium
 from folium.plugins import Draw
 import ee
 import json
-
-service_account_json = os.environ.get("GEE_SERVICE_ACCOUNT_JSON")
-if service_account_json:
-    from gee_utils import initialize_gee
-    initialize_gee(json.loads(service_account_json))
-else:
-    ee.Initialize()  # fallback
 from datetime import datetime, date
 import pandas as pd
 import io
@@ -652,4 +645,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
