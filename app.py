@@ -315,7 +315,7 @@ def main():
     st.markdown('<div class="sub-header">Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities</div>', unsafe_allow_html=True)
     st.markdown(
         """
-        <div style="text-align: center; font-size: 15px; color: #555; padding: 1rem 0; margin-top: 0px;">
+        <div style="text-align: center; font-size: 15px; color: #555; padding: 0rem 0; margin-top: 0px;">
             <hr style="border: none; border-top: 1px solid #ddd; margin-bottom: 0px;">
             Made with ❤️ by <strong>Hemant Kumar</strong> • 
             <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
@@ -736,5 +736,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
