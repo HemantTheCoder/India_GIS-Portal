@@ -1,34 +1,24 @@
-import ee
 import streamlit as st
+import ee
 import json
+from gee_utils import initialize_gee
 
+# ============ EARTH ENGINE INITIALIZATION ============
 def init_gee():
     try:
         if "GEE_JSON" in st.secrets:
-            raw = st.secrets["GEE_JSON"]
-
-            # Convert Streamlit AttrDict to normal dict
-            service_json = dict(raw)
-
-            # Serialize private key EXACTLY as required
-            if "private_key" in service_json:
-                service_json["private_key"] = str(service_json["private_key"])
-
-            credentials = ee.ServiceAccountCredentials(
-                service_json["client_email"],
-                key_data=json.dumps(service_json)
-            )
-
-            ee.Initialize(credentials)
-
+            key = dict(st.secrets["GEE_JSON"])
+            # Convert TOML multi-line private key to real string
+            key["private_key"] = str(key["private_key"])
+            initialize_gee(key)
+            return True
         else:
-            ee.Initialize()
-
-        st.success("🟢 GEE Initialized")
-
+            return False
     except Exception as e:
         st.error(f"🔴 GEE Init Failed: {e}")
-        st.stop()
+        return False
+
+gee_ok = init_gee()
 
 import os, json
 import ee
@@ -534,5 +524,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
