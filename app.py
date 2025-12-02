@@ -47,11 +47,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 st.markdown("""
-<div style="text-align: center; font-size: 15px; color: #777;">
+<div style="text-align: center; font-size: 20px; color: #777;">
     Developed by <strong>Hemant Kumar</strong> • 
     <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
-</div>
-
+</div> 
+""")
 st.markdown("""
 <style>
     .main-header {
@@ -730,6 +730,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
