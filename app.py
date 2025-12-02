@@ -1,3 +1,13 @@
+import os, json
+import ee
+
+if "GEE_SERVICE_ACCOUNT_JSON" in os.environ:
+    key = json.loads(os.environ["GEE_SERVICE_ACCOUNT_JSON"])
+    from gee_utils import initialize_gee
+    initialize_gee(key)
+else:
+    ee.Initialize()
+
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
@@ -645,5 +655,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
