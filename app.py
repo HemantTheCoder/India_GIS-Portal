@@ -46,12 +46,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.markdown("""
-<div style="text-align: center; font-size: 15px; color: #777;">
-    Developed by <strong>Hemant Kumar</strong> • 
-    <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
-</div>
-""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
@@ -318,6 +312,13 @@ def main():
     init_session_state()
     
     st.markdown('<div class="main-header">🛰️ India GIS & Remote Sensing Portal</div>', unsafe_allow_html=True)
+    st.markdown("""
+<div style="text-align: center; font-size: 15px; color: #777; margin-top: -15px;">
+    Developed by <strong>Hemant Kumar</strong> • 
+    <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
+</div>
+""", unsafe_allow_html=True)
+
     st.markdown('<div class="sub-header">Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities</div>', unsafe_allow_html=True)
     
     with st.sidebar:
@@ -734,4 +735,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
