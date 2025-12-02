@@ -55,7 +55,7 @@ st.markdown("""
         color: #1E3A5F;
         text-align: center;
         padding: 1rem 0;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
     .sub-header {
         font-size: 1.1rem;
@@ -736,6 +736,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
