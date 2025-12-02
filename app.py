@@ -43,26 +43,31 @@ from gee_utils import (
 # ================================================================
 #   ⭐⭐⭐ AUTO-INITIALIZE GEE FROM STREAMLIT SECRETS ⭐⭐⭐
 # ================================================================
-if not st.session_state.get("gee_initialized", False):
-    try:
+# Expect a secrets.toml entry like:
+# [GEE_JSON]
+# type = "service_account"
+# project_id = "..."
+# ...
+try:
+    if "gee_initialized" not in st.session_state:
+        st.session_state.gee_initialized = False
+
+    if not st.session_state.gee_initialized:
         if "GEE_JSON" in st.secrets:
+            # st.secrets returns a mapping; convert to dict if needed
             key_data = dict(st.secrets["GEE_JSON"])
-            if initialize_gee(key_data):
-                st.session_state.gee_initialized = True
-            else:
+            try:
+                ok = initialize_gee(key_data)
+                st.session_state.gee_initialized = bool(ok)
+            except Exception:
                 st.session_state.gee_initialized = False
         else:
             st.session_state.gee_initialized = False
-    except Exception as e:
-        st.session_state.gee_initialized = False
+except Exception:
+    # ensure app doesn't crash if secrets unavailable
+    st.session_state.gee_initialized = False
 
 
-st.set_page_config(
-    page_title="India GIS & Remote Sensing Portal",
-    page_icon="🛰️",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 st.set_page_config(
     page_title="India GIS & Remote Sensing Portal",
     page_icon="🛰️",
@@ -141,8 +146,27 @@ st.markdown("""
         color: #f44336;
         font-weight: bold;
     }
+
+    /* R3 results container styling (full-width but centered) */
+    .results-container {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px 32px;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f6;
+    }
+    .legend-color-box {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
 </style>
 """, unsafe_allow_html=True)
+
 
 def init_session_state():
     if "gee_initialized" not in st.session_state:
@@ -161,6 +185,7 @@ def init_session_state():
         st.session_state.time_series_stats = None
     if "drawn_geometry" not in st.session_state:
         st.session_state.drawn_geometry = None
+
 
 def create_base_map(lat, lon, zoom=11, enable_drawing=False):
     m = folium.Map(
@@ -185,6 +210,7 @@ def create_base_map(lat, lon, zoom=11, enable_drawing=False):
     
     return m
 
+
 def add_tile_layer(map_obj, tile_url, layer_name, opacity=1.0):
     folium.TileLayer(
         tiles=tile_url,
@@ -196,17 +222,19 @@ def add_tile_layer(map_obj, tile_url, layer_name, opacity=1.0):
     ).add_to(map_obj)
     return map_obj
 
+
 def render_lulc_legend():
     st.markdown("### Land Cover Classes")
     for class_id, info in LULC_CLASSES.items():
         col1, col2 = st.columns([1, 4])
         with col1:
             st.markdown(
-                f'<div style="background-color: {info["color"]}; width: 30px; height: 30px; border-radius: 4px; border: 1px solid #ccc;"></div>',
+                f'<div class="legend-color-box" style="background-color: {info["color"]};"></div>',
                 unsafe_allow_html=True,
             )
         with col2:
             st.write(info["name"])
+
 
 def render_index_legend(index_name):
     info = INDEX_INFO.get(index_name, {})
@@ -225,6 +253,7 @@ def render_index_legend(index_name):
             st.write("Low")
         with col2:
             st.write("High", unsafe_allow_html=True)
+
 
 def render_statistics_with_area(stats, city_name=""):
     if not stats or "classes" not in stats:
@@ -247,20 +276,21 @@ def render_statistics_with_area(stats, city_name=""):
     
     df = pd.DataFrame(df_data)
     
+    # Render rows in a visually pleasing, multi-column layout that fills width
     for _, row in df.iterrows():
-        col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
-        with col1:
+        cols = st.columns([1, 3, 2, 2])
+        with cols[0]:
             st.markdown(
-                f'<div style="background-color: {row["Color"]}; width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc;"></div>',
+                f'<div class="legend-color-box" style="background-color: {row["Color"]};"></div>',
                 unsafe_allow_html=True,
             )
-        with col2:
-            st.progress(row["Percentage"] / 100)
-        with col3:
-            st.write(f"{row['Percentage']:.1f}%")
-        with col4:
-            st.write(f"{row['Area (km²)']:.2f} km²")
-        st.caption(row["Class"])
+        with cols[1]:
+            st.markdown(f"**{row['Class']}**")
+        with cols[2]:
+            st.markdown(f"{row['Percentage']:.2f}%")
+        with cols[3]:
+            st.markdown(f"{row['Area (km²)']:.2f} km²")
+        st.write("")  # spacing
     
     csv_df = df.drop(columns=["Color"])
     csv_buffer = io.StringIO()
@@ -274,6 +304,7 @@ def render_statistics_with_area(stats, city_name=""):
         mime="text/csv",
         use_container_width=True,
     )
+
 
 def render_time_series_comparison(stats1, stats2, year1, year2):
     if not stats1 or not stats2:
@@ -331,6 +362,7 @@ def render_time_series_comparison(stats1, stats2, year1, year2):
         use_container_width=True,
     )
 
+
 def main():
     init_session_state()
     
@@ -347,6 +379,7 @@ def main():
         unsafe_allow_html=True,
     )
     with st.sidebar:
+        # Only show connected status (auth UI removed)
         st.markdown("## 🔐 Google Earth Engine")
 
         if st.session_state.gee_initialized:
@@ -355,7 +388,6 @@ def main():
             st.markdown('<div class="warning-box">🔴 GEE Not Connected<br>Check secrets.toml</div>', unsafe_allow_html=True)
 
         st.markdown("---")
-        
         st.markdown("## 📍 Location Selection")
         
         states = get_states()
@@ -710,20 +742,5 @@ def main():
     )
 
 
-    # ⭐⭐⭐ ADDED FOOTER (ONLY CHANGE YOU REQUESTED) ⭐⭐⭐
-    # ⭐⭐⭐ END FOOTER ⭐⭐⭐
-
-
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
