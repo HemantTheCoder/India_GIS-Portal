@@ -40,6 +40,29 @@ from gee_utils import (
     INDEX_INFO,
 )
 
+# ================================================================
+#   ⭐⭐⭐ AUTO-INITIALIZE GEE FROM STREAMLIT SECRETS ⭐⭐⭐
+# ================================================================
+if not st.session_state.get("gee_initialized", False):
+    try:
+        if "GEE_JSON" in st.secrets:
+            key_data = dict(st.secrets["GEE_JSON"])
+            if initialize_gee(key_data):
+                st.session_state.gee_initialized = True
+            else:
+                st.session_state.gee_initialized = False
+        else:
+            st.session_state.gee_initialized = False
+    except Exception as e:
+        st.session_state.gee_initialized = False
+
+
+st.set_page_config(
+    page_title="India GIS & Remote Sensing Portal",
+    page_icon="🛰️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 st.set_page_config(
     page_title="India GIS & Remote Sensing Portal",
     page_icon="🛰️",
@@ -324,58 +347,15 @@ def main():
         unsafe_allow_html=True,
     )
     with st.sidebar:
-        st.markdown("## 🔐 GEE Authentication")
-        
-        st.markdown("""
-        <div class="info-box">
-        <strong>Google Earth Engine Setup:</strong><br>
-        1. Go to <a href="https://earthengine.google.com/" target="_blank">Google Earth Engine</a><br>
-        2. Sign up for a free account<br>
-        3. Create a service account and download the JSON key<br>
-        4. Paste the JSON key below
-        </div>
-        """, unsafe_allow_html=True)
-        
-        auth_method = st.radio(
-            "Authentication Method",
-            ["Service Account (JSON Key)", "Default Credentials"],
-            help="Use service account for production, or default credentials if already authenticated"
-        )
-        
-        if auth_method == "Service Account (JSON Key)":
-            service_account_json = st.text_area(
-                "Paste Service Account JSON Key",
-                height=150,
-                placeholder='{"type": "service_account", "project_id": "...", ...}',
-            )
-            
-            if st.button("🔓 Initialize GEE", use_container_width=True):
-                if service_account_json:
-                    try:
-                        key_data = json.loads(service_account_json)
-                        if initialize_gee(key_data):
-                            st.session_state.gee_initialized = True
-                            st.success("GEE initialized successfully!")
-                            st.rerun()
-                        else:
-                            st.error("Failed to initialize GEE. Check your credentials.")
-                    except json.JSONDecodeError:
-                        st.error("Invalid JSON format. Please check your key.")
-                else:
-                    st.warning("Please paste your service account JSON key.")
-        else:
-            if st.button("🔓 Initialize with Default Credentials", use_container_width=True):
-                if initialize_gee():
-                    st.session_state.gee_initialized = True
-                    st.success("GEE initialized successfully!")
-                    st.rerun()
-                else:
-                    st.error("Failed to initialize GEE. Please authenticate first.")
-        
+        st.markdown("## 🔐 Google Earth Engine")
+
         if st.session_state.gee_initialized:
-            st.markdown('<div class="success-box">✅ GEE Connected</div>', unsafe_allow_html=True)
-        
+            st.markdown('<div class="success-box">🟢 GEE Connected</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="warning-box">🔴 GEE Not Connected<br>Check secrets.toml</div>', unsafe_allow_html=True)
+
         st.markdown("---")
+        
         st.markdown("## 📍 Location Selection")
         
         states = get_states()
@@ -736,6 +716,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
