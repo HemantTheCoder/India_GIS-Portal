@@ -313,7 +313,7 @@ def main():
     
     st.markdown('<div class="main-header">🛰️ India GIS & Remote Sensing Portal</div>', unsafe_allow_html=True)
     st.markdown("""
-<div style="text-align: center; font-size: 15px; color: #777; margin-top: -15px;">
+<div style="text-align: center; font-size: 18px; color: #777; margin-top: -10px;">
     Developed by <strong>Hemant Kumar</strong> • 
     <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
 </div>
@@ -735,5 +735,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
