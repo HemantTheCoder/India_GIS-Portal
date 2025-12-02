@@ -315,6 +315,13 @@ def main():
     st.markdown('<div class="sub-header">Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities</div>', unsafe_allow_html=True)
     
     with st.sidebar:
+        st.sidebar.markdown("""
+---
+### 👨‍💻 Developer
+**Hemant Kumar**  
+[LinkedIn Profile](https://www.linkedin.com/in/hemantkumar2430)
+""")
+
         st.markdown("## 🔐 GEE Authentication")
         
         st.markdown("""
@@ -722,6 +729,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
