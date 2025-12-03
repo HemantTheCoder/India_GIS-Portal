@@ -14,7 +14,7 @@ def get_enhanced_css():
         }
         .sub-header {
             font-size: 1.1rem;
-            color: #0F172A;
+            color: #334155;
             text-align: center;
             margin-bottom: 2rem;
             font-weight: 500;
