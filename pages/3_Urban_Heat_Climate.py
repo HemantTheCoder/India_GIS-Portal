@@ -59,6 +59,18 @@ if "lst_center_coords" not in st.session_state:
     st.session_state.lst_center_coords = None
 if "lst_location_name" not in st.session_state:
     st.session_state.lst_location_name = None
+if "lst_stats" not in st.session_state:
+    st.session_state.lst_stats = None
+if "uhi_stats" not in st.session_state:
+    st.session_state.uhi_stats = None
+if "hotspot_stats" not in st.session_state:
+    st.session_state.hotspot_stats = None
+if "cooling_stats" not in st.session_state:
+    st.session_state.cooling_stats = None
+if "anomaly_stats" not in st.session_state:
+    st.session_state.anomaly_stats = None
+if "warming_trend" not in st.session_state:
+    st.session_state.warming_trend = None
 
 with st.sidebar:
     st.markdown("## 🔐 GEE Status")
@@ -132,38 +144,37 @@ with st.sidebar:
                     st.error("Failed to process shapefile")
     
     st.markdown("---")
-    st.markdown("## 📅 Date Range")
+    st.markdown("## 📅 Time Period")
     
     current_year = datetime.now().year
+    
+    analysis_period = st.radio(
+        "Period",
+        ["Full Year", "Seasonal", "Monthly", "Custom"],
+        key="lst_period",
+        horizontal=True
+    )
+    
     year = st.selectbox(
         "Year",
         list(range(current_year, 1999, -1)),
         key="lst_year"
     )
     
-    analysis_period = st.radio(
-        "Period",
-        ["Full Year", "Seasonal", "Monthly", "Custom Range"],
-        key="lst_period",
-        horizontal=True
-    )
-    
-    if analysis_period == "Custom Range":
+    if analysis_period == "Custom":
         col1, col2 = st.columns(2)
         with col1:
             start_date = st.date_input(
                 "Start",
                 value=date(year, 1, 1),
                 min_value=date(2000, 1, 1),
-                max_value=date.today(),
                 key="lst_start_date"
             )
         with col2:
             end_date = st.date_input(
                 "End",
                 value=date(year, 12, 31),
-                min_value=date(2000, 1, 1),
-                max_value=date.today(),
+                min_value=start_date,
                 key="lst_end_date"
             )
     elif analysis_period == "Seasonal":
@@ -233,9 +244,8 @@ with st.sidebar:
     
     analysis_types = st.multiselect(
         "Select Analyses",
-        ["LST Map", "UHI Intensity", "Heat Hotspots", "Cooling Zones", 
-         "LST Anomaly", "Time Series", "Warming Trend"],
-        default=["LST Map", "UHI Intensity", "Heat Hotspots"],
+        ["LST Map", "UHI Intensity", "Heat Hotspots", "Cooling Zones", "LST Anomaly"],
+        default=["LST Map"],
         key="lst_analysis_types"
     )
     
@@ -248,7 +258,13 @@ with st.sidebar:
             help="Compare current period to this baseline"
         )
     
-    if "Time Series" in analysis_types or "Warming Trend" in analysis_types:
+    st.markdown("---")
+    st.markdown("## 📈 Time Series Options")
+    
+    show_time_series = st.checkbox("📈 Show Time Series", key="lst_show_ts")
+    show_warming_trend = st.checkbox("🔥 Show Warming Trend", key="lst_show_warming")
+    
+    if show_time_series or show_warming_trend:
         st.markdown("##### Time Series Settings")
         ts_col1, ts_col2 = st.columns(2)
         with ts_col1:
@@ -287,168 +303,144 @@ elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geometry:
     geometry = uploaded_geometry
     center_coords = uploaded_center
 
+if center_coords:
+    base_map = create_base_map(center_coords[0], center_coords[1], zoom=11)
+    
+    if location_mode == "City Selection" and selected_city and selected_city != "Select...":
+        add_marker(base_map, center_coords[0], center_coords[1], selected_city)
+        add_buffer_circle(base_map, center_coords[0], center_coords[1], buffer_radius)
+else:
+    base_map = create_base_map(20.5937, 78.9629, zoom=5)
+
 if run_analysis and geometry:
     st.session_state.lst_tile_urls = {}
     st.session_state.lst_time_series = []
     st.session_state.lst_center_coords = center_coords
     st.session_state.lst_location_name = selected_city if selected_city else "Custom AOI"
+    st.session_state.lst_stats = None
+    st.session_state.uhi_stats = None
+    st.session_state.hotspot_stats = None
+    st.session_state.cooling_stats = None
+    st.session_state.anomaly_stats = None
+    st.session_state.warming_trend = None
     
-    with st.spinner("Analyzing Land Surface Temperature..."):
-        start_str = start_date.strftime("%Y-%m-%d")
-        end_str = end_date.strftime("%Y-%m-%d")
-        
-        if "LST Map" in analysis_types:
-            with st.spinner("Generating LST map..."):
-                lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
-                if lst_image:
-                    lst_stats = get_lst_statistics(lst_image, geometry)
-                    st.session_state.lst_stats = lst_stats
-                    tile_url = get_lst_tile_url(lst_image, LST_VIS_PARAMS)
-                    if tile_url:
-                        st.session_state.lst_tile_urls['LST'] = tile_url
-        
-        if "UHI Intensity" in analysis_types:
-            with st.spinner("Calculating Urban Heat Island intensity..."):
-                uhi_image, uhi_stats = calculate_uhi_intensity(
-                    geometry, start_str, end_str, buffer_radius, time_of_day, satellite
-                )
-                if uhi_image:
-                    st.session_state.uhi_stats = uhi_stats
-                    tile_url = get_lst_tile_url(uhi_image, UHI_VIS_PARAMS)
-                    if tile_url:
-                        st.session_state.lst_tile_urls['UHI'] = tile_url
-        
-        if "Heat Hotspots" in analysis_types:
-            with st.spinner("Detecting heat hotspots..."):
-                lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
-                if lst_image:
-                    hotspots, hotspot_stats = detect_heat_hotspots(lst_image, geometry)
-                    if hotspots:
-                        st.session_state.hotspot_stats = hotspot_stats
-                        tile_url = get_lst_tile_url(hotspots, HOTSPOT_VIS_PARAMS)
+    try:
+        with st.spinner("Analyzing Land Surface Temperature..."):
+            start_str = start_date.strftime("%Y-%m-%d")
+            end_str = end_date.strftime("%Y-%m-%d")
+            
+            if "LST Map" in analysis_types:
+                with st.spinner("Generating LST map..."):
+                    lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
+                    if lst_image:
+                        lst_stats = get_lst_statistics(lst_image, geometry)
+                        st.session_state.lst_stats = lst_stats
+                        tile_url = get_lst_tile_url(lst_image, LST_VIS_PARAMS)
                         if tile_url:
-                            st.session_state.lst_tile_urls['Hotspots'] = tile_url
+                            st.session_state.lst_tile_urls['LST'] = {
+                                "url": tile_url,
+                                "name": "Land Surface Temperature"
+                            }
+            
+            if "UHI Intensity" in analysis_types:
+                with st.spinner("Calculating Urban Heat Island intensity..."):
+                    uhi_image, uhi_stats = calculate_uhi_intensity(
+                        geometry, start_str, end_str, buffer_radius, time_of_day, satellite
+                    )
+                    if uhi_image:
+                        st.session_state.uhi_stats = uhi_stats
+                        tile_url = get_lst_tile_url(uhi_image, UHI_VIS_PARAMS)
+                        if tile_url:
+                            st.session_state.lst_tile_urls['UHI'] = {
+                                "url": tile_url,
+                                "name": "UHI Intensity"
+                            }
+            
+            if "Heat Hotspots" in analysis_types:
+                with st.spinner("Detecting heat hotspots..."):
+                    lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
+                    if lst_image:
+                        hotspots, hotspot_stats = detect_heat_hotspots(lst_image, geometry)
+                        if hotspots:
+                            st.session_state.hotspot_stats = hotspot_stats
+                            tile_url = get_lst_tile_url(hotspots, HOTSPOT_VIS_PARAMS)
+                            if tile_url:
+                                st.session_state.lst_tile_urls['Hotspots'] = {
+                                    "url": tile_url,
+                                    "name": "Heat Hotspots"
+                                }
+            
+            if "Cooling Zones" in analysis_types:
+                with st.spinner("Identifying cooling zones..."):
+                    cooling, cooling_stats = identify_cooling_zones(
+                        geometry, start_str, end_str, None, time_of_day, satellite
+                    )
+                    if cooling:
+                        st.session_state.cooling_stats = cooling_stats
+                        tile_url = get_lst_tile_url(cooling, COOLING_VIS_PARAMS)
+                        if tile_url:
+                            st.session_state.lst_tile_urls['Cooling'] = {
+                                "url": tile_url,
+                                "name": "Cooling Zones"
+                            }
+            
+            if "LST Anomaly" in analysis_types:
+                with st.spinner("Calculating LST anomaly..."):
+                    baseline_start = f"{baseline_year}-{start_date.month:02d}-{start_date.day:02d}"
+                    baseline_end = f"{baseline_year}-{end_date.month:02d}-{end_date.day:02d}"
+                    
+                    anomaly, anomaly_stats, _ = calculate_lst_anomaly(
+                        geometry, start_str, end_str, baseline_start, baseline_end, time_of_day, satellite
+                    )
+                    if anomaly:
+                        st.session_state.anomaly_stats = anomaly_stats
+                        tile_url = get_lst_tile_url(anomaly, ANOMALY_VIS_PARAMS)
+                        if tile_url:
+                            st.session_state.lst_tile_urls['Anomaly'] = {
+                                "url": tile_url,
+                                "name": "LST Anomaly"
+                            }
+            
+            if show_time_series or show_warming_trend:
+                with st.spinner("Generating time series data..."):
+                    time_series = get_lst_time_series(
+                        geometry, ts_start_year, ts_end_year, 
+                        time_of_day, satellite, ts_aggregation.lower()
+                    )
+                    st.session_state.lst_time_series = time_series
+                    
+                    if show_warming_trend and time_series:
+                        trend = calculate_warming_trend(time_series)
+                        st.session_state.warming_trend = trend
+            
+            st.session_state.lst_analysis_complete = True
+            st.success("Analysis complete!")
         
-        if "Cooling Zones" in analysis_types:
-            with st.spinner("Identifying cooling zones..."):
-                cooling, cooling_stats = identify_cooling_zones(
-                    geometry, start_str, end_str, None, time_of_day, satellite
-                )
-                if cooling:
-                    st.session_state.cooling_stats = cooling_stats
-                    tile_url = get_lst_tile_url(cooling, COOLING_VIS_PARAMS)
-                    if tile_url:
-                        st.session_state.lst_tile_urls['Cooling'] = tile_url
-        
-        if "LST Anomaly" in analysis_types:
-            with st.spinner("Calculating LST anomaly..."):
-                baseline_start = f"{baseline_year}-{start_date.month:02d}-{start_date.day:02d}"
-                baseline_end = f"{baseline_year}-{end_date.month:02d}-{end_date.day:02d}"
-                
-                anomaly, anomaly_stats, _ = calculate_lst_anomaly(
-                    geometry, start_str, end_str, baseline_start, baseline_end, time_of_day, satellite
-                )
-                if anomaly:
-                    st.session_state.anomaly_stats = anomaly_stats
-                    tile_url = get_lst_tile_url(anomaly, ANOMALY_VIS_PARAMS)
-                    if tile_url:
-                        st.session_state.lst_tile_urls['Anomaly'] = tile_url
-        
-        if "Time Series" in analysis_types or "Warming Trend" in analysis_types:
-            with st.spinner("Generating time series data..."):
-                time_series = get_lst_time_series(
-                    geometry, ts_start_year, ts_end_year, 
-                    time_of_day, satellite, ts_aggregation.lower()
-                )
-                st.session_state.lst_time_series = time_series
-                
-                if "Warming Trend" in analysis_types and time_series:
-                    trend = calculate_warming_trend(time_series)
-                    st.session_state.warming_trend = trend
-        
-        st.session_state.lst_analysis_complete = True
-        st.success("Analysis complete!")
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
 
-if st.session_state.lst_tile_urls or st.session_state.lst_analysis_complete:
-    display_coords = st.session_state.lst_center_coords or center_coords
-    display_name = st.session_state.lst_location_name or selected_city
+if st.session_state.get("lst_tile_urls"):
+    for layer_type, layer_info in st.session_state.lst_tile_urls.items():
+        opacity = 0.8 if layer_type == "LST" else 0.7
+        add_tile_layer(base_map, layer_info["url"], layer_info["name"], opacity)
+
+add_layer_control(base_map)
+
+display_name = st.session_state.lst_location_name or selected_city or "India"
+st.markdown(f"### 🗺️ {display_name} - Land Surface Temperature Map")
+st.markdown('<div class="map-container">', unsafe_allow_html=True)
+st_folium(base_map, width=None, height=500, use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+if st.session_state.get("lst_analysis_complete"):
+    st.markdown("---")
+    st.markdown("## 📊 Analysis Results")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Maps", "📊 Statistics", "📈 Time Series", "📥 Export"])
+    res_col1, res_col2 = st.columns([2, 1])
     
-    with tab1:
-        if display_coords:
-            m = create_base_map(display_coords[0], display_coords[1], zoom=11)
-            
-            if 'LST' in st.session_state.lst_tile_urls:
-                add_tile_layer(m, st.session_state.lst_tile_urls['LST'], "Land Surface Temperature")
-            
-            if 'UHI' in st.session_state.lst_tile_urls:
-                add_tile_layer(m, st.session_state.lst_tile_urls['UHI'], "UHI Intensity")
-            
-            if 'Hotspots' in st.session_state.lst_tile_urls:
-                add_tile_layer(m, st.session_state.lst_tile_urls['Hotspots'], "Heat Hotspots")
-            
-            if 'Cooling' in st.session_state.lst_tile_urls:
-                add_tile_layer(m, st.session_state.lst_tile_urls['Cooling'], "Cooling Zones")
-            
-            if 'Anomaly' in st.session_state.lst_tile_urls:
-                add_tile_layer(m, st.session_state.lst_tile_urls['Anomaly'], "LST Anomaly")
-            
-            if display_name and display_name != "Select..." and display_name != "Custom AOI":
-                add_marker(m, display_coords[0], display_coords[1], display_name)
-                add_buffer_circle(m, display_coords[0], display_coords[1], buffer_radius)
-            
-            add_layer_control(m)
-            
-            st_folium(m, width=None, height=600, use_container_width=True)
-            
-            st.markdown("### 🎨 Map Legends")
-            
-            legend_cols = st.columns(3)
-            
-            with legend_cols[0]:
-                if 'LST' in st.session_state.lst_tile_urls:
-                    st.markdown("**Land Surface Temperature**")
-                    st.markdown("""
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 150px; height: 20px; background: linear-gradient(to right, blue, cyan, green, yellow, orange, red, darkred); border-radius: 4px;"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; width: 150px; font-size: 0.8rem;">
-                        <span>20°C</span><span>45°C</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            with legend_cols[1]:
-                if 'UHI' in st.session_state.lst_tile_urls:
-                    st.markdown("**UHI Intensity**")
-                    st.markdown("""
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 150px; height: 20px; background: linear-gradient(to right, #313695, #74add1, #ffffbf, #f46d43, #a50026); border-radius: 4px;"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; width: 150px; font-size: 0.8rem;">
-                        <span>-5°C</span><span>+10°C</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            with legend_cols[2]:
-                if 'Anomaly' in st.session_state.lst_tile_urls:
-                    st.markdown("**LST Anomaly**")
-                    st.markdown("""
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 150px; height: 20px; background: linear-gradient(to right, #2166ac, #92c5de, #f7f7f7, #f4a582, #b2182b); border-radius: 4px;"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; width: 150px; font-size: 0.8rem;">
-                        <span>-5°C</span><span>+5°C</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-        else:
-            render_info_box("No location data available. Please run the analysis first.", "warning")
-    
-    with tab2:
-        st.markdown("### 📊 Analysis Statistics")
-        
-        if hasattr(st.session_state, 'lst_stats') and st.session_state.lst_stats:
-            st.markdown("#### 🌡️ Land Surface Temperature")
+    with res_col1:
+        if st.session_state.lst_stats:
+            st.markdown("### 🌡️ Land Surface Temperature")
             stats = st.session_state.lst_stats
             band_prefix = f"LST_{time_of_day}"
             
@@ -480,281 +472,269 @@ if st.session_state.lst_tile_urls or st.session_state.lst_analysis_complete:
                     "Std Dev",
                     "📊"
                 )
-            
-            st.markdown("##### Percentiles")
-            p_cols = st.columns(5)
-            percentiles = [10, 25, 50, 75, 90]
-            for i, p in enumerate(percentiles):
-                with p_cols[i]:
-                    val = stats.get(f'{band_prefix}_p{p}')
-                    st.metric(f"P{p}", format_temp(val))
         
-        if hasattr(st.session_state, 'uhi_stats') and st.session_state.uhi_stats:
-            st.markdown("---")
-            st.markdown("#### 🏙️ Urban Heat Island Analysis")
+        if st.session_state.uhi_stats:
+            st.markdown("### 🏙️ Urban Heat Island")
             uhi = st.session_state.uhi_stats
             
             cols = st.columns(3)
-            band_prefix = f"LST_{time_of_day}"
-            
             with cols[0]:
-                urban_mean = uhi['urban_stats'].get(f'{band_prefix}_mean') if uhi['urban_stats'] else None
-                render_stat_card(
-                    format_temp(urban_mean),
-                    "Urban Mean LST",
-                    "🏙️",
-                    "stat-card-orange"
-                )
-            with cols[1]:
-                rural_mean = uhi['rural_stats'].get(f'{band_prefix}_mean') if uhi['rural_stats'] else None
-                render_stat_card(
-                    format_temp(rural_mean),
-                    "Rural Mean LST",
-                    "🌳",
-                    "stat-card-green"
-                )
-            with cols[2]:
                 uhi_intensity = uhi.get('uhi_intensity')
                 color = "stat-card-orange" if uhi_intensity and uhi_intensity > 0 else "stat-card-blue"
                 render_stat_card(
-                    f"+{format_temp(uhi_intensity)}" if uhi_intensity and uhi_intensity > 0 else format_temp(uhi_intensity),
+                    format_temp(uhi_intensity),
                     "UHI Intensity",
-                    "🌡️",
+                    "🔥" if uhi_intensity and uhi_intensity > 0 else "❄️",
                     color
                 )
-            
-            if uhi_intensity:
-                if uhi_intensity > 3:
-                    render_info_box("⚠️ High UHI intensity detected! Urban areas are significantly warmer than surrounding rural areas.", "warning")
-                elif uhi_intensity > 1:
-                    render_info_box("Moderate UHI effect observed. Urban development is contributing to local warming.", "info")
-                else:
-                    render_info_box("Low UHI intensity. Good urban-rural temperature balance.", "success")
+            with cols[1]:
+                urban_stats = uhi.get('urban_stats', {})
+                render_stat_card(
+                    format_temp(urban_stats.get(f'LST_{time_of_day}_mean')),
+                    "Urban Mean",
+                    "🏙️"
+                )
+            with cols[2]:
+                rural_stats = uhi.get('rural_stats', {})
+                render_stat_card(
+                    format_temp(rural_stats.get(f'LST_{time_of_day}_mean')),
+                    "Rural Mean",
+                    "🌳"
+                )
         
-        if hasattr(st.session_state, 'hotspot_stats') and st.session_state.hotspot_stats:
-            st.markdown("---")
-            st.markdown("#### 🔥 Heat Hotspots")
+        if st.session_state.hotspot_stats:
+            st.markdown("### 🔥 Heat Hotspots")
             hs = st.session_state.hotspot_stats
-            
-            cols = st.columns(4)
-            with cols[0]:
-                st.metric("Threshold", format_temp(hs.get('threshold_temp')))
-            with cols[1]:
-                st.metric("Hotspot Area", f"{hs.get('hotspot_area_km2', 0):.1f} km²")
-            with cols[2]:
-                st.metric("Total Area", f"{hs.get('total_area_km2', 0):.1f} km²")
-            with cols[3]:
-                st.metric("Hotspot %", f"{hs.get('hotspot_percentage', 0):.1f}%")
-        
-        if hasattr(st.session_state, 'cooling_stats') and st.session_state.cooling_stats:
-            st.markdown("---")
-            st.markdown("#### 🌳 Cooling Zones")
-            cs = st.session_state.cooling_stats
-            
-            cols = st.columns(4)
-            with cols[0]:
-                st.metric("Threshold", format_temp(cs.get('threshold_temp')))
-            with cols[1]:
-                st.metric("Cooling Area", f"{cs.get('cooling_area_km2', 0):.1f} km²")
-            with cols[2]:
-                st.metric("Total Area", f"{cs.get('total_area_km2', 0):.1f} km²")
-            with cols[3]:
-                st.metric("Cooling %", f"{cs.get('cooling_percentage', 0):.1f}%")
-            
-            render_info_box("Cooling zones typically correspond to parks, water bodies, and dense vegetation that help reduce urban temperatures.", "info")
-        
-        if hasattr(st.session_state, 'anomaly_stats') and st.session_state.anomaly_stats:
-            st.markdown("---")
-            st.markdown("#### 📉 LST Anomaly")
-            anom = st.session_state.anomaly_stats
             
             cols = st.columns(3)
             with cols[0]:
-                target_mean = anom['target'].get(f'LST_{time_of_day}_mean') if anom.get('target') else None
-                st.metric("Current Period", format_temp(target_mean))
+                render_stat_card(
+                    format_temp(hs.get('threshold_temp')),
+                    "Threshold (P90)",
+                    "🌡️"
+                )
             with cols[1]:
-                baseline_mean = anom['baseline'].get(f'LST_{time_of_day}_mean') if anom.get('baseline') else None
-                st.metric("Baseline Period", format_temp(baseline_mean))
+                render_stat_card(
+                    f"{hs.get('hotspot_area_km2', 0):.1f} km²",
+                    "Hotspot Area",
+                    "📐",
+                    "stat-card-orange"
+                )
             with cols[2]:
-                anomaly_mean = anom['anomaly'].get('LST_Anomaly_mean') if anom.get('anomaly') else None
-                delta_color = "inverse" if anomaly_mean and anomaly_mean < 0 else "normal"
-                st.metric(
-                    "Anomaly",
-                    format_temp(anomaly_mean),
-                    delta=f"{anomaly_mean:+.1f}°C" if anomaly_mean else None,
-                    delta_color=delta_color
+                render_stat_card(
+                    f"{hs.get('hotspot_percentage', 0):.1f}%",
+                    "% of AOI",
+                    "📊"
+                )
+        
+        if st.session_state.cooling_stats:
+            st.markdown("### 🌳 Cooling Zones")
+            cz = st.session_state.cooling_stats
+            
+            cols = st.columns(3)
+            with cols[0]:
+                render_stat_card(
+                    format_temp(cz.get('threshold_temp')),
+                    "Threshold (P25)",
+                    "🌡️"
+                )
+            with cols[1]:
+                render_stat_card(
+                    f"{cz.get('cooling_area_km2', 0):.1f} km²",
+                    "Cooling Area",
+                    "🌲",
+                    "stat-card-blue"
+                )
+            with cols[2]:
+                render_stat_card(
+                    f"{cz.get('cooling_percentage', 0):.1f}%",
+                    "% of AOI",
+                    "📊"
+                )
+        
+        if st.session_state.anomaly_stats:
+            st.markdown("### 📈 LST Anomaly")
+            anom = st.session_state.anomaly_stats
+            anomaly_val = anom.get('anomaly', {}).get('LST_Anomaly_mean')
+            
+            cols = st.columns(3)
+            with cols[0]:
+                color = "stat-card-orange" if anomaly_val and anomaly_val > 0 else "stat-card-blue"
+                sign = "+" if anomaly_val and anomaly_val > 0 else ""
+                render_stat_card(
+                    f"{sign}{format_temp(anomaly_val)}",
+                    "Mean Anomaly",
+                    "📈" if anomaly_val and anomaly_val > 0 else "📉",
+                    color
+                )
+            with cols[1]:
+                render_stat_card(
+                    format_temp(anom.get('target', {}).get(f'LST_{time_of_day}_mean')),
+                    f"Current ({year})",
+                    "🌡️"
+                )
+            with cols[2]:
+                render_stat_card(
+                    format_temp(anom.get('baseline', {}).get(f'LST_{time_of_day}_mean')),
+                    f"Baseline ({baseline_year})",
+                    "📅"
                 )
     
-    with tab3:
-        st.markdown("### 📈 Temperature Trends")
+    with res_col2:
+        st.markdown("### 🎨 Map Legends")
         
-        if st.session_state.lst_time_series:
-            ts_data = st.session_state.lst_time_series
-            df = pd.DataFrame(ts_data)
+        if 'LST' in st.session_state.lst_tile_urls:
+            st.markdown("**Land Surface Temperature**")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 150px; height: 20px; background: linear-gradient(to right, blue, cyan, green, yellow, orange, red, darkred); border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; width: 150px; font-size: 0.8rem;">
+                <span>20°C</span><span>45°C</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if 'UHI' in st.session_state.lst_tile_urls:
+            st.markdown("**UHI Intensity**")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 150px; height: 20px; background: linear-gradient(to right, #313695, #74add1, #ffffbf, #f46d43, #a50026); border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; width: 150px; font-size: 0.8rem;">
+                <span>-5°C</span><span>+10°C</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if 'Hotspots' in st.session_state.lst_tile_urls:
+            st.markdown("**Heat Hotspots**")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 20px; height: 20px; background: #FF4500; border-radius: 4px;"></div>
+                <span style="font-size: 0.8rem;">Above 90th percentile</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if 'Cooling' in st.session_state.lst_tile_urls:
+            st.markdown("**Cooling Zones**")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 20px; height: 20px; background: #228B22; border-radius: 4px;"></div>
+                <span style="font-size: 0.8rem;">Below 25th percentile</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if 'Anomaly' in st.session_state.lst_tile_urls:
+            st.markdown("**LST Anomaly**")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 150px; height: 20px; background: linear-gradient(to right, #2166ac, #92c5de, #f7f7f7, #f4a582, #b2182b); border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; width: 150px; font-size: 0.8rem;">
+                <span>-5°C</span><span>+5°C</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("### 📥 Export Options")
+        
+        if st.session_state.lst_stats:
+            stats = st.session_state.lst_stats
+            csv_data = f"Metric,Value\n"
+            for key, val in stats.items():
+                csv_data += f"{key},{val}\n"
             
-            st.markdown("#### Temperature Time Series")
-            
-            if 'mean_lst' in df.columns:
-                fig_data = {
-                    'dates': df['date'].tolist(),
-                    'values': df['mean_lst'].tolist(),
-                    'label': f'Mean {time_of_day} LST (°C)'
-                }
-                render_line_chart(
-                    fig_data['dates'],
-                    fig_data['values'],
-                    f"Mean {time_of_day}time LST",
-                    "Date",
-                    "Temperature (°C)",
-                    color='#e74c3c'
-                )
-            
-            if hasattr(st.session_state, 'warming_trend') and st.session_state.warming_trend:
-                st.markdown("---")
-                st.markdown("#### 🔥 Warming Trend Analysis")
-                trend = st.session_state.warming_trend
-                
-                cols = st.columns(4)
-                with cols[0]:
-                    rate = trend.get('warming_rate_per_decade')
-                    color = "stat-card-orange" if rate and rate > 0 else "stat-card-blue"
-                    render_stat_card(
-                        f"{rate:+.2f}°C" if rate else "N/A",
-                        "Warming Rate/Decade",
-                        "📈",
-                        color
-                    )
-                with cols[1]:
-                    total = trend.get('total_warming')
-                    render_stat_card(
-                        f"{total:+.2f}°C" if total else "N/A",
-                        "Total Change",
-                        "🌡️"
-                    )
-                with cols[2]:
-                    r2 = trend.get('r_squared')
-                    render_stat_card(
-                        f"{r2:.3f}" if r2 else "N/A",
-                        "R² (Fit)",
-                        "📊"
-                    )
-                with cols[3]:
-                    years = f"{trend.get('start_year')}-{trend.get('end_year')}"
-                    render_stat_card(
-                        years,
-                        "Period",
-                        "📅"
-                    )
-                
-                if rate:
-                    if rate > 0.3:
-                        render_info_box(f"⚠️ Significant warming trend detected: {rate:.2f}°C per decade. This indicates accelerated urban heating.", "warning")
-                    elif rate > 0:
-                        render_info_box(f"Moderate warming trend: {rate:.2f}°C per decade.", "info")
-                    else:
-                        render_info_box(f"Cooling trend detected: {rate:.2f}°C per decade.", "success")
-            
-            st.markdown("---")
-            st.markdown("#### 📋 Time Series Data")
-            st.dataframe(df, use_container_width=True)
-        else:
-            render_info_box("Run analysis with 'Time Series' or 'Warming Trend' selected to view temporal data.", "info")
-    
-    with tab4:
-        st.markdown("### 📥 Export Data")
-        
-        export_cols = st.columns(2)
-        
-        with export_cols[0]:
-            if hasattr(st.session_state, 'lst_stats') and st.session_state.lst_stats:
-                stats_df = pd.DataFrame([st.session_state.lst_stats])
-                csv = stats_df.to_csv(index=False)
-                st.download_button(
-                    "📊 Download LST Statistics (CSV)",
-                    csv,
-                    f"lst_statistics_{start_date}_{end_date}.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
-        
-        with export_cols[1]:
-            if st.session_state.lst_time_series:
-                ts_df = pd.DataFrame(st.session_state.lst_time_series)
-                csv = ts_df.to_csv(index=False)
-                st.download_button(
-                    "📈 Download Time Series (CSV)",
-                    csv,
-                    f"lst_time_series.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
-        
-        if hasattr(st.session_state, 'uhi_stats') and st.session_state.uhi_stats:
-            st.markdown("---")
-            uhi = st.session_state.uhi_stats
-            uhi_data = {
-                'metric': ['Urban Mean LST', 'Rural Mean LST', 'UHI Intensity'],
-                'value': [
-                    uhi['urban_stats'].get(f'LST_{time_of_day}_mean') if uhi['urban_stats'] else None,
-                    uhi['rural_stats'].get(f'LST_{time_of_day}_mean') if uhi['rural_stats'] else None,
-                    uhi.get('uhi_intensity')
-                ]
-            }
-            uhi_df = pd.DataFrame(uhi_data)
-            csv = uhi_df.to_csv(index=False)
             st.download_button(
-                "🏙️ Download UHI Analysis (CSV)",
-                csv,
-                f"uhi_analysis_{start_date}_{end_date}.csv",
-                "text/csv",
-                use_container_width=True
+                "📄 Download Statistics CSV",
+                data=csv_data,
+                file_name=f"lst_stats_{display_name}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="dl_lst_stats"
             )
+    
+    if st.session_state.lst_time_series:
+        st.markdown("---")
+        st.markdown("### 📈 Temperature Time Series")
+        
+        ts_data = st.session_state.lst_time_series
+        
+        ts_cols = st.columns([3, 1])
+        
+        with ts_cols[0]:
+            render_line_chart(
+                ts_data,
+                title=f"Land Surface Temperature ({time_of_day}time)",
+                y_label="Temperature (°C)",
+                show_rolling=False,
+                date_key='date',
+                value_key='mean_lst'
+            )
+        
+        with ts_cols[1]:
+            if ts_data:
+                temps = [d['mean_lst'] for d in ts_data if d.get('mean_lst')]
+                if temps:
+                    st.markdown("#### Summary")
+                    st.metric("Average", f"{np.mean(temps):.1f}°C")
+                    st.metric("Maximum", f"{np.max(temps):.1f}°C")
+                    st.metric("Minimum", f"{np.min(temps):.1f}°C")
+                    st.metric("Range", f"{np.max(temps) - np.min(temps):.1f}°C")
+        
+        if ts_data:
+            csv_data = generate_time_series_csv(ts_data, 'LST', display_name)
+            if csv_data:
+                st.download_button(
+                    "📥 Download Time Series CSV",
+                    data=csv_data,
+                    file_name=f"lst_timeseries_{display_name}.csv",
+                    mime="text/csv",
+                    key="dl_ts_csv"
+                )
+    
+    if st.session_state.warming_trend:
+        st.markdown("---")
+        st.markdown("### 🔥 Warming Trend Analysis")
+        
+        trend = st.session_state.warming_trend
+        
+        trend_cols = st.columns(4)
+        with trend_cols[0]:
+            slope = trend.get('slope_per_year', 0)
+            color = "stat-card-orange" if slope > 0 else "stat-card-blue"
+            sign = "+" if slope > 0 else ""
+            render_stat_card(
+                f"{sign}{slope:.3f}°C/year",
+                "Warming Rate",
+                "📈" if slope > 0 else "📉",
+                color
+            )
+        with trend_cols[1]:
+            total_change = trend.get('total_change', 0)
+            sign = "+" if total_change > 0 else ""
+            render_stat_card(
+                f"{sign}{total_change:.2f}°C",
+                "Total Change",
+                "🌡️"
+            )
+        with trend_cols[2]:
+            render_stat_card(
+                f"{trend.get('r_squared', 0):.3f}",
+                "R² Score",
+                "📊"
+            )
+        with trend_cols[3]:
+            significance = "Significant" if trend.get('p_value', 1) < 0.05 else "Not Significant"
+            render_stat_card(
+                significance,
+                "Statistical Significance",
+                "✓" if trend.get('p_value', 1) < 0.05 else "✗"
+            )
+        
+        if trend.get('slope_per_year', 0) > 0:
+            st.warning(f"⚠️ This area shows a warming trend of approximately {trend.get('slope_per_year', 0):.3f}°C per year.")
+        else:
+            st.info(f"ℹ️ This area shows a cooling trend of approximately {abs(trend.get('slope_per_year', 0)):.3f}°C per year.")
 
-else:
-    st.markdown("---")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="card">
-            <div class="card-header">🌡️ Land Surface Temperature</div>
-            <p>Analyze surface temperature patterns using MODIS satellite data:</p>
-            <ul>
-                <li><b>Resolution:</b> 1km (MODIS Terra/Aqua)</li>
-                <li><b>Coverage:</b> 2000 - Present</li>
-                <li><b>Day/Night:</b> Separate analyses for daytime and nighttime LST</li>
-                <li><b>Seasonal:</b> Pre-monsoon, monsoon, post-monsoon patterns</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="card">
-            <div class="card-header">🏙️ Urban Heat Island</div>
-            <p>Quantify urban-rural temperature differences:</p>
-            <ul>
-                <li><b>UHI Intensity:</b> Temperature difference between urban and rural areas</li>
-                <li><b>Heat Hotspots:</b> Areas exceeding 90th percentile temperature</li>
-                <li><b>Cooling Zones:</b> Parks and water bodies that reduce temperatures</li>
-                <li><b>Trends:</b> Long-term warming analysis</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    render_info_box("👈 Select a location and configure analysis options in the sidebar, then click 'Run Analysis' to begin.", "info")
-
-st.markdown("---")
-st.markdown(
-    """
-    <div style="text-align: center; color: #666; padding: 1rem;">
-        Made with ❤️ by <strong>Hemant Kumar</strong> • 
-        <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
-        <br>
-        Powered by Streamlit & Google Earth Engine | Data: MODIS LST
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+if not center_coords:
+    render_info_box("Select a city or upload a shapefile to view the map and run analysis.", "info")
+elif not st.session_state.get("lst_analysis_complete"):
+    render_info_box("Click 'Run Analysis' to generate temperature maps and statistics.", "info")
