@@ -25,15 +25,6 @@ with st.sidebar:
         st.success("GEE Connected")
     else:
         st.error("GEE Not Connected - Check secrets.toml")
-    
-    st.markdown("---")
-    st.markdown("## 🧭 Navigation")
-    st.markdown("Use the pages in the sidebar to access different analysis modules.")
-    
-    st.markdown("---")
-    st.markdown("### Quick Links")
-    st.page_link("pages/1_LULC_Vegetation.py", label="🌍 LULC & Vegetation", icon="🌍")
-    st.page_link("pages/2_AQI_Analysis.py", label="🌫️ AQI Analysis", icon="🌫️")
 
 st.markdown("---")
 
