@@ -657,16 +657,16 @@ if st.session_state.get("lst_analysis_complete"):
         
         ts_data = st.session_state.lst_time_series
         
+        chart_data = [{'date': d['date'], 'value': d['mean_lst']} for d in ts_data if d.get('mean_lst')]
+        
         ts_cols = st.columns([3, 1])
         
         with ts_cols[0]:
             render_line_chart(
-                ts_data,
+                chart_data,
                 title=f"Land Surface Temperature ({time_of_day}time)",
                 y_label="Temperature (°C)",
-                show_rolling=False,
-                date_key='date',
-                value_key='mean_lst'
+                show_rolling=False
             )
         
         with ts_cols[1]:
