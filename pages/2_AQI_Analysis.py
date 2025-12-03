@@ -129,7 +129,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("## 📈 Analysis Options")
     
-    show_time_series = st.checkbox("Time Series Analysis", value=False, key="aqi_time_series")
+    show_time_series = st.checkbox("Time Series Analysis", value=False, key="aqi_time_series_opt")
     show_dashboard = st.checkbox("Multi-Pollutant Dashboard", value=False, key="aqi_dashboard")
 
 if city_coords and st.session_state.gee_initialized and selected_pollutants:
@@ -211,115 +211,60 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
     
     add_layer_control(base_map)
     
-    col1, col2 = st.columns([3, 1])
+    st.markdown(f"### 🗺️ {selected_city} - Air Quality Map")
+    st.markdown('<div class="map-container">', unsafe_allow_html=True)
+    st_folium(base_map, width=None, height=500)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    with col1:
-        st.markdown(f"### 🗺️ {selected_city} - Air Quality Map")
-        st.markdown('<div class="map-container">', unsafe_allow_html=True)
-        st_folium(base_map, width=None, height=600)
-        st.markdown('</div>', unsafe_allow_html=True)
+    if st.session_state.get("aqi_analysis_complete"):
+        st.markdown("---")
+        st.markdown("## 📊 Analysis Results")
         
-        if st.session_state.get("aqi_analysis_complete"):
-            if show_time_series and st.session_state.get("aqi_time_series"):
-                st.markdown("---")
-                st.markdown("### 📈 Time Series Analysis")
-                
-                ts_tabs = st.tabs(list(st.session_state.aqi_time_series.keys()))
-                for i, (pollutant, ts_data) in enumerate(st.session_state.aqi_time_series.items()):
-                    with ts_tabs[i]:
-                        info = POLLUTANT_INFO.get(pollutant, {})
-                        render_line_chart(
-                            ts_data,
-                            title=f"{info.get('name', pollutant)} Over Time",
-                            y_label=info.get('display_unit', ''),
-                            show_rolling=True
-                        )
-                        
-                        if ts_data:
-                            csv_data = generate_time_series_csv(ts_data, pollutant, selected_city)
-                            if csv_data:
-                                st.download_button(
-                                    f"📥 Download {pollutant} CSV",
-                                    data=csv_data,
-                                    file_name=f"{pollutant}_timeseries_{selected_city}.csv",
-                                    mime="text/csv",
-                                    key=f"dl_ts_{pollutant}"
-                                )
+        if st.session_state.get("pollutant_stats"):
+            num_pollutants = len(selected_pollutants)
+            stat_cols = st.columns(min(num_pollutants, 4))
             
-            if show_dashboard and len(selected_pollutants) > 1:
-                st.markdown("---")
-                st.markdown("### 📊 Multi-Pollutant Dashboard")
-                
-                dash_col1, dash_col2 = st.columns(2)
-                
-                with dash_col1:
-                    st.markdown("#### Correlation Matrix")
-                    if st.session_state.get("correlations"):
-                        render_correlation_heatmap(
-                            st.session_state.correlations,
-                            selected_pollutants,
-                            "Pollutant Correlations"
-                        )
-                
-                with dash_col2:
-                    st.markdown("#### Average Concentrations")
-                    if st.session_state.get("pollutant_stats"):
-                        avg_data = {}
-                        for p, stats in st.session_state.pollutant_stats.items():
-                            if stats and "mean" in stats:
-                                avg_data[p] = stats["mean"]
-                        
-                        if avg_data:
-                            render_radar_chart(avg_data, "Pollutant Levels (Normalized)")
-                
-                st.markdown("#### Comparison Chart")
-                if st.session_state.get("aqi_time_series"):
-                    render_multi_pollutant_chart(
-                        st.session_state.aqi_time_series,
-                        "Multi-Pollutant Time Series Comparison"
-                    )
-    
-    with col2:
-        if st.session_state.get("aqi_analysis_complete"):
-            st.markdown("### 📊 Statistics")
-            
+            for i, pollutant in enumerate(selected_pollutants):
+                stats = st.session_state.pollutant_stats.get(pollutant)
+                if stats:
+                    info = POLLUTANT_INFO.get(pollutant, {})
+                    with stat_cols[i % len(stat_cols)]:
+                        st.markdown(f"""
+                        <div class="stat-card">
+                            <div class="stat-value">{stats.get('mean', 0):.2f}</div>
+                            <div class="stat-label">{info.get('name', pollutant)} Mean</div>
+                            <div style="font-size: 0.75rem; color: #888;">{stats.get('unit', '')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+        
+        res_col1, res_col2 = st.columns(2)
+        
+        with res_col1:
+            st.markdown("### 📈 Detailed Statistics")
             for pollutant in selected_pollutants:
                 stats = st.session_state.pollutant_stats.get(pollutant)
                 if stats:
                     info = POLLUTANT_INFO.get(pollutant, {})
                     
                     with st.expander(f"📈 {info.get('name', pollutant)}", expanded=(pollutant == primary_pollutant)):
-                        col_a, col_b = st.columns(2)
-                        with col_a:
-                            st.metric("Mean", f"{stats.get('mean', 0):.2f}")
-                            st.metric("Median", f"{stats.get('median', 0):.2f}")
-                            st.metric("Std Dev", f"{stats.get('std_dev', 0):.2f}")
-                        with col_b:
-                            st.metric("Min", f"{stats.get('min', 0):.2f}")
-                            st.metric("Max", f"{stats.get('max', 0):.2f}")
-                            st.metric("P90", f"{stats.get('p90', 0):.2f}")
+                        m_col1, m_col2, m_col3 = st.columns(3)
+                        with m_col1:
+                            st.metric("Mean", f"{stats.get('mean', 0):.3f}")
+                            st.metric("Median", f"{stats.get('median', 0):.3f}")
+                        with m_col2:
+                            st.metric("Std Dev", f"{stats.get('std_dev', 0):.3f}")
+                            st.metric("P90", f"{stats.get('p90', 0):.3f}")
+                        with m_col3:
+                            st.metric("Min", f"{stats.get('min', 0):.3f}")
+                            st.metric("Max", f"{stats.get('max', 0):.3f}")
                         
                         st.caption(f"Unit: {stats.get('unit', '')}")
-                        
-                        csv_data = generate_aqi_csv(
-                            stats, pollutant, selected_city,
-                            f"{start_date} to {end_date}"
-                        )
-                        if csv_data:
-                            st.download_button(
-                                "📥 CSV",
-                                data=csv_data,
-                                file_name=f"{pollutant}_stats_{selected_city}.csv",
-                                mime="text/csv",
-                                key=f"dl_stats_{pollutant}",
-                                use_container_width=True
-                            )
-            
-            st.markdown("---")
-            st.markdown("### 🎨 Legends")
+        
+        with res_col2:
+            st.markdown("### 🎨 Map Legends")
             
             if primary_pollutant:
-                opacity = render_pollutant_legend_with_opacity(primary_pollutant, key_prefix="aqi_")
+                render_pollutant_legend_with_opacity(primary_pollutant, key_prefix="aqi_")
                 
                 if show_anomaly:
                     render_anomaly_legend(primary_pollutant)
@@ -327,22 +272,102 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 if show_hotspots:
                     render_hotspot_legend()
             
-            st.markdown("---")
-            st.markdown("### 📥 Export")
+            st.markdown("### 📥 Export Options")
             
-            if st.button("Generate GeoTIFF", use_container_width=True, key="aqi_export"):
-                if primary_pollutant and primary_pollutant in st.session_state.get("pollutant_images", {}):
-                    with st.spinner("Generating..."):
-                        url, error = get_safe_download_url(
-                            st.session_state.pollutant_images[primary_pollutant],
-                            st.session_state.current_geometry,
-                            scale=1000
+            exp_col1, exp_col2 = st.columns(2)
+            
+            with exp_col1:
+                if st.button("📦 Generate GeoTIFF", use_container_width=True, key="aqi_export"):
+                    if primary_pollutant and primary_pollutant in st.session_state.get("pollutant_images", {}):
+                        with st.spinner("Generating..."):
+                            url, error = get_safe_download_url(
+                                st.session_state.pollutant_images[primary_pollutant],
+                                st.session_state.current_geometry,
+                                scale=1000
+                            )
+                            if url:
+                                st.success("Ready!")
+                                st.markdown(f"[📥 Download]({url})")
+                            elif error:
+                                st.warning(error)
+            
+            with exp_col2:
+                if primary_pollutant and st.session_state.pollutant_stats.get(primary_pollutant):
+                    csv_data = generate_aqi_csv(
+                        st.session_state.pollutant_stats[primary_pollutant],
+                        primary_pollutant, selected_city,
+                        f"{start_date} to {end_date}"
+                    )
+                    if csv_data:
+                        st.download_button(
+                            "📄 Download CSV",
+                            data=csv_data,
+                            file_name=f"{primary_pollutant}_stats_{selected_city}.csv",
+                            mime="text/csv",
+                            key="dl_primary_csv",
+                            use_container_width=True
                         )
-                        if url:
-                            st.success("Ready!")
-                            st.markdown(f"[📥 Download]({url})")
-                        elif error:
-                            st.warning(error)
+        
+        if show_time_series and st.session_state.get("aqi_time_series"):
+            st.markdown("---")
+            st.markdown("### 📈 Time Series Analysis")
+            
+            ts_cols = st.columns(min(len(st.session_state.aqi_time_series), 2))
+            
+            for i, (pollutant, ts_data) in enumerate(st.session_state.aqi_time_series.items()):
+                with ts_cols[i % len(ts_cols)]:
+                    info = POLLUTANT_INFO.get(pollutant, {})
+                    st.markdown(f"#### {info.get('name', pollutant)}")
+                    render_line_chart(
+                        ts_data,
+                        title=f"{pollutant} Over Time",
+                        y_label=info.get('display_unit', ''),
+                        show_rolling=True
+                    )
+                    
+                    if ts_data:
+                        csv_data = generate_time_series_csv(ts_data, pollutant, selected_city)
+                        if csv_data:
+                            st.download_button(
+                                f"📥 Download {pollutant} Time Series",
+                                data=csv_data,
+                                file_name=f"{pollutant}_timeseries_{selected_city}.csv",
+                                mime="text/csv",
+                                key=f"dl_ts_{pollutant}"
+                            )
+        
+        if show_dashboard and len(selected_pollutants) > 1:
+            st.markdown("---")
+            st.markdown("### 📊 Multi-Pollutant Dashboard")
+            
+            dash_col1, dash_col2 = st.columns(2)
+            
+            with dash_col1:
+                st.markdown("#### Correlation Matrix")
+                if st.session_state.get("correlations"):
+                    render_correlation_heatmap(
+                        st.session_state.correlations,
+                        selected_pollutants,
+                        "Pollutant Correlations"
+                    )
+            
+            with dash_col2:
+                st.markdown("#### Average Concentrations")
+                if st.session_state.get("pollutant_stats"):
+                    avg_data = {}
+                    for p, stats in st.session_state.pollutant_stats.items():
+                        if stats and "mean" in stats:
+                            avg_data[p] = stats["mean"]
+                    
+                    if avg_data:
+                        render_radar_chart(avg_data, "Pollutant Levels (Normalized)")
+            
+            if st.session_state.get("aqi_time_series"):
+                st.markdown("#### Multi-Pollutant Comparison")
+                render_multi_pollutant_chart(
+                    st.session_state.aqi_time_series,
+                    "Multi-Pollutant Time Series Comparison"
+                )
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")
@@ -376,7 +401,7 @@ ref_cols = st.columns(3)
 for i, (pollutant, info) in enumerate(POLLUTANT_INFO.items()):
     with ref_cols[i % 3]:
         st.markdown(f"""
-        <div class="pollutant-card">
+        <div class="stat-card" style="margin-bottom: 0.5rem;">
             <div style="font-weight: 600;">{pollutant}</div>
             <div style="font-size: 0.85rem; color: #666;">{info['name']}</div>
             <div style="font-size: 0.75rem; margin-top: 0.5rem;">{info['description']}</div>

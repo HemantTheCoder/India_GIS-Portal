@@ -221,18 +221,19 @@ if city_coords and st.session_state.gee_initialized:
     
     add_layer_control(base_map)
     
-    col1, col2 = st.columns([3, 1])
+    st.markdown(f"### 🗺️ {selected_city}, {selected_state}")
+    st.markdown('<div class="map-container">', unsafe_allow_html=True)
+    map_data = st_folium(base_map, width=None, height=550, returned_objects=["all_drawings", "last_clicked"])
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    with col1:
-        st.markdown(f"### 🗺️ {selected_city}, {selected_state}")
-        st.markdown('<div class="map-container">', unsafe_allow_html=True)
-        map_data = st_folium(base_map, width=None, height=600, returned_objects=["all_drawings", "last_clicked"])
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+    map_info_col1, map_info_col2 = st.columns(2)
+    
+    with map_info_col1:
         if enable_drawing and map_data and map_data.get("all_drawings"):
             st.info(f"📐 {len(map_data['all_drawings'])} shape(s) drawn")
             st.session_state.drawn_geometry = map_data["all_drawings"]
-        
+    
+    with map_info_col2:
         if enable_pixel_inspector and map_data and map_data.get("last_clicked"):
             click_lat = map_data["last_clicked"]["lat"]
             click_lng = map_data["last_clicked"]["lng"]
@@ -248,7 +249,6 @@ if city_coords and st.session_state.gee_initialized:
                                 pixel_vals[idx_name] = val.get(idx_name, "N/A")
                     
                     if pixel_vals:
-                        st.markdown("**Index Values:**")
                         cols = st.columns(min(len(pixel_vals), 5))
                         for i, (name, val) in enumerate(pixel_vals.items()):
                             with cols[i % len(cols)]:
@@ -259,96 +259,178 @@ if city_coords and st.session_state.gee_initialized:
                 except Exception as e:
                     st.warning(f"Could not sample pixel values: {str(e)}")
     
-    with col2:
-        if st.session_state.get("analysis_complete"):
-            if analysis_mode == "Time Series Comparison" and st.session_state.get("time_series_stats"):
-                stats1, stats2, year1, year2 = st.session_state.time_series_stats
+    if st.session_state.get("analysis_complete"):
+        st.markdown("---")
+        st.markdown("## 📊 Analysis Results")
+        
+        if analysis_mode == "Time Series Comparison" and st.session_state.get("time_series_stats"):
+            stats1, stats2, year1, year2 = st.session_state.time_series_stats
+            
+            if stats1 and stats2:
+                change_summary = calculate_change_summary(stats1, stats2)
                 
-                st.markdown(f"### 📈 Change: {year1} → {year2}")
-                
-                if stats1 and stats2:
-                    change_summary = calculate_change_summary(stats1, stats2)
+                if change_summary:
+                    col1, col2, col3, col4 = st.columns(4)
                     
-                    if change_summary:
-                        st.markdown("#### Key Insights")
-                        
-                        biggest_inc = change_summary["biggest_increase"]
-                        biggest_dec = change_summary["biggest_decrease"]
-                        
-                        st.markdown(f"📈 **Largest Increase:** {biggest_inc['class']} (+{biggest_inc['pct_change']:.1f}%)")
-                        st.markdown(f"📉 **Largest Decrease:** {biggest_dec['class']} ({biggest_dec['pct_change']:.1f}%)")
-                        
-                        veg_change = change_summary["net_vegetation_change"]
-                        built_change = change_summary["net_built_change"]
-                        
-                        st.markdown("---")
-                        st.markdown(f"🌿 **Net Vegetation:** {'+' if veg_change >= 0 else ''}{veg_change:.2f} km²")
-                        st.markdown(f"🏘️ **Net Built-up:** {'+' if built_change >= 0 else ''}{built_change:.2f} km²")
-                        
-                        st.markdown("---")
-                        with st.expander("View All Changes", expanded=False):
-                            for change in change_summary["all_changes"]:
-                                if abs(change["pct_change"]) > 0.1:
-                                    arrow = "📈" if change["pct_change"] > 0 else "📉"
-                                    st.caption(f"{arrow} {change['class']}: {change['pct_change']:+.1f}%")
-                        
-                        csv_data = generate_change_analysis_csv(stats1, stats2, year1, year2, selected_city)
-                        if csv_data:
-                            st.download_button(
-                                "📥 Download CSV",
-                                data=csv_data,
-                                file_name=f"lulc_change_{year1}_{year2}.csv",
-                                mime="text/csv",
-                                use_container_width=True
-                            )
+                    biggest_inc = change_summary["biggest_increase"]
+                    biggest_dec = change_summary["biggest_decrease"]
+                    veg_change = change_summary["net_vegetation_change"]
+                    built_change = change_summary["net_built_change"]
+                    
+                    with col1:
+                        st.markdown(f"""
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #2ecc71;">📈 +{biggest_inc['pct_change']:.1f}%</div>
+                            <div class="stat-label">Largest Increase: {biggest_inc['class']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col2:
+                        st.markdown(f"""
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #e74c3c;">📉 {biggest_dec['pct_change']:.1f}%</div>
+                            <div class="stat-label">Largest Decrease: {biggest_dec['class']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col3:
+                        color = "#2ecc71" if veg_change >= 0 else "#e74c3c"
+                        st.markdown(f"""
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: {color};">🌿 {'+' if veg_change >= 0 else ''}{veg_change:.2f} km²</div>
+                            <div class="stat-label">Net Vegetation Change</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col4:
+                        color = "#e74c3c" if built_change >= 0 else "#2ecc71"
+                        st.markdown(f"""
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: {color};">🏘️ {'+' if built_change >= 0 else ''}{built_change:.2f} km²</div>
+                            <div class="stat-label">Net Built-up Change</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    res_col1, res_col2 = st.columns(2)
+                    
+                    with res_col1:
+                        st.markdown(f"#### {year1} Land Cover")
+                        render_pie_chart(stats1.get("classes", {}), f"Distribution {year1}")
+                    
+                    with res_col2:
+                        st.markdown(f"#### {year2} Land Cover")
+                        render_pie_chart(stats2.get("classes", {}), f"Distribution {year2}")
+                    
+                    with st.expander("📋 Detailed Change Analysis", expanded=False):
+                        change_data = []
+                        for change in change_summary["all_changes"]:
+                            if abs(change["pct_change"]) > 0.1:
+                                change_data.append({
+                                    "Class": change["class"],
+                                    "Change (%)": f"{change['pct_change']:+.1f}%",
+                                    "Trend": "📈" if change["pct_change"] > 0 else "📉"
+                                })
+                        if change_data:
+                            st.dataframe(pd.DataFrame(change_data), use_container_width=True, hide_index=True)
+                    
+                    csv_data = generate_change_analysis_csv(stats1, stats2, year1, year2, selected_city)
+                    if csv_data:
+                        st.download_button(
+                            "📥 Download Change Analysis CSV",
+                            data=csv_data,
+                            file_name=f"lulc_change_{year1}_{year2}.csv",
+                            mime="text/csv"
+                        )
+        
+        elif show_lulc and st.session_state.get("lulc_stats"):
+            stats = st.session_state.lulc_stats
             
-            elif show_lulc and st.session_state.get("lulc_stats"):
-                stats = st.session_state.lulc_stats
-                
-                st.markdown("### 📊 LULC Statistics")
-                st.markdown(f"**Total Area: {stats.get('total_area_sqkm', 'N/A')} km²**")
-                
-                with st.expander("🎨 Legend", expanded=True):
-                    render_lulc_legend()
-                
-                with st.expander("📊 Charts", expanded=True):
-                    chart_type = st.radio("Chart Type", ["Bar", "Pie"], horizontal=True, key="chart_type")
-                    if chart_type == "Pie":
-                        render_pie_chart(stats.get("classes", {}), "Land Cover Distribution")
-                    else:
-                        render_bar_chart(stats.get("classes", {}), "Land Cover by Area")
-                
-                with st.expander("📋 Details", expanded=False):
-                    classes_data = stats.get("classes", {})
-                    for name, data in sorted(classes_data.items(), key=lambda x: x[1]["percentage"], reverse=True):
-                        col_a, col_b = st.columns([3, 1])
-                        with col_a:
-                            st.progress(data["percentage"] / 100)
-                            st.caption(f"{name}: {data['percentage']:.1f}%")
-                        with col_b:
-                            st.caption(f"{data['area_sqkm']:.1f} km²")
-                
-                csv_data = generate_lulc_csv(stats, selected_city, selected_year)
-                if csv_data:
-                    st.download_button(
-                        "📥 Download CSV",
-                        data=csv_data,
-                        file_name=f"lulc_{selected_city}_{selected_year}.csv",
-                        mime="text/csv",
-                        use_container_width=True
-                    )
+            summary_col1, summary_col2, summary_col3 = st.columns(3)
             
+            total_area = stats.get('total_area_sqkm', 0)
+            classes_data = stats.get("classes", {})
+            
+            veg_pct = classes_data.get("Trees", {}).get("percentage", 0) + classes_data.get("Grass", {}).get("percentage", 0) + classes_data.get("Crops", {}).get("percentage", 0)
+            built_pct = classes_data.get("Built Area", {}).get("percentage", 0)
+            water_pct = classes_data.get("Water", {}).get("percentage", 0)
+            
+            with summary_col1:
+                st.markdown(f"""
+                <div class="stat-card">
+                    <div class="stat-value">🌿 {veg_pct:.1f}%</div>
+                    <div class="stat-label">Vegetation Cover</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with summary_col2:
+                st.markdown(f"""
+                <div class="stat-card">
+                    <div class="stat-value">🏘️ {built_pct:.1f}%</div>
+                    <div class="stat-label">Built-up Area</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with summary_col3:
+                st.markdown(f"""
+                <div class="stat-card">
+                    <div class="stat-value">📏 {total_area:.1f} km²</div>
+                    <div class="stat-label">Total Area Analyzed</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            res_col1, res_col2 = st.columns(2)
+            
+            with res_col1:
+                st.markdown("#### 📊 Land Cover Distribution")
+                chart_type = st.radio("Chart Type", ["Pie", "Bar"], horizontal=True, key="chart_type")
+                if chart_type == "Pie":
+                    render_pie_chart(classes_data, "Land Cover Distribution")
+                else:
+                    render_bar_chart(classes_data, "Land Cover by Area")
+            
+            with res_col2:
+                st.markdown("#### 🎨 Legend & Details")
+                render_lulc_legend()
+                
+                st.markdown("##### Area Breakdown")
+                for name, data in sorted(classes_data.items(), key=lambda x: x[1]["percentage"], reverse=True):
+                    if data["percentage"] > 0.5:
+                        st.progress(data["percentage"] / 100)
+                        st.caption(f"{name}: {data['percentage']:.1f}% ({data['area_sqkm']:.2f} km²)")
+            
+            csv_data = generate_lulc_csv(stats, selected_city, selected_year)
+            if csv_data:
+                st.download_button(
+                    "📥 Download LULC Statistics CSV",
+                    data=csv_data,
+                    file_name=f"lulc_{selected_city}_{selected_year}.csv",
+                    mime="text/csv"
+                )
+        
+        if show_indices and st.session_state.get("index_images"):
             st.markdown("---")
-            for idx in show_indices:
-                opacity = render_index_legend_with_opacity(idx, key_prefix="lulc_")
+            st.markdown("### 🌱 Vegetation Indices")
             
-            if st.session_state.get("current_image") and st.session_state.get("current_geometry"):
-                st.markdown("---")
-                st.markdown("### 📥 Export")
-                
-                export_scale = 30 if satellite == "Landsat 8/9" else 10
-                
-                if st.button("Generate GeoTIFF", use_container_width=True):
+            num_indices = len(show_indices)
+            if num_indices <= 3:
+                idx_cols = st.columns(num_indices)
+            else:
+                idx_cols = st.columns(3)
+            
+            for i, idx in enumerate(show_indices):
+                with idx_cols[i % len(idx_cols)]:
+                    render_index_legend_with_opacity(idx, key_prefix="lulc_")
+        
+        if st.session_state.get("current_image") and st.session_state.get("current_geometry"):
+            st.markdown("---")
+            st.markdown("### 📥 Export Options")
+            
+            export_col1, export_col2, export_col3 = st.columns(3)
+            
+            export_scale = 30 if satellite == "Landsat 8/9" else 10
+            
+            with export_col1:
+                if st.button("📦 Generate GeoTIFF", use_container_width=True):
                     with st.spinner("Generating..."):
                         url, error = get_safe_download_url(
                             st.session_state.current_image,
@@ -357,9 +439,27 @@ if city_coords and st.session_state.gee_initialized:
                         )
                         if url:
                             st.success("Ready!")
-                            st.markdown(f"[📥 Download]({url})")
+                            st.markdown(f"[📥 Download GeoTIFF]({url})")
                         elif error:
                             st.warning(error)
+            
+            with export_col2:
+                if st.session_state.get("lulc_stats"):
+                    csv_data = generate_lulc_csv(st.session_state.lulc_stats, selected_city, selected_year)
+                    if csv_data:
+                        st.download_button(
+                            "📄 Download CSV Report",
+                            data=csv_data,
+                            file_name=f"lulc_{selected_city}_{selected_year}.csv",
+                            mime="text/csv",
+                            use_container_width=True
+                        )
+            
+            with export_col3:
+                st.markdown(f"**Analysis Details**")
+                st.caption(f"City: {selected_city}, {selected_state}")
+                st.caption(f"Period: {start_date} to {end_date}")
+                st.caption(f"Satellite: {satellite}")
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")
