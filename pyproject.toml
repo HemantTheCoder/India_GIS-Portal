@@ -11,6 +11,8 @@ dependencies = [
     "matplotlib>=3.10.7",
     "numpy>=2.3.5",
     "pandas>=2.3.3",
+    "plotly>=6.5.0",
+    "reportlab>=4.4.5",
     "streamlit>=1.51.0",
     "streamlit-folium>=0.25.3",
 ]
