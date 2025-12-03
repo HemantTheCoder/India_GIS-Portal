@@ -193,7 +193,9 @@ def create_hotspot_mask(image, geometry, threshold_sigma=1.5):
         threshold = mean.add(std.multiply(threshold_sigma))
         hotspot_mask = image.gt(threshold)
         
-        return hotspot_mask
+        hotspot_image = hotspot_mask.selfMask()
+        
+        return hotspot_image
     except Exception as e:
         print(f"Error creating hotspot mask: {e}")
         return None
@@ -202,7 +204,7 @@ def get_hotspot_vis_params():
     return {
         "min": 0,
         "max": 1,
-        "palette": ["transparent", "#ff0000"],
+        "palette": ["#ff0000", "#ff0000"],
     }
 
 def get_pollutant_time_series(geometry, pollutant, start_date, end_date, interval_days=7):
