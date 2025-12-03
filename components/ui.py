@@ -140,8 +140,21 @@ def get_enhanced_css():
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
-            color: #444;
+            color: #1a1a1a;
             font-weight: 500;
+        }
+        
+        /* Streamlit native headers - light mode */
+        [data-testid="stAppViewContainer"] h1,
+        [data-testid="stAppViewContainer"] h2,
+        [data-testid="stAppViewContainer"] h3,
+        [data-testid="stAppViewContainer"] h4 {
+            color: #000000 !important;
+        }
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3 {
+            color: #000000 !important;
         }
         .pollutant-card {
             background: white;
@@ -318,6 +331,36 @@ def get_enhanced_css():
         .stat-card .stat-label {
             color: white !important;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        /* Streamlit native headers - dark mode */
+        [data-testid="stAppViewContainer"][data-theme="dark"] h1,
+        [data-testid="stAppViewContainer"][data-theme="dark"] h2,
+        [data-testid="stAppViewContainer"][data-theme="dark"] h3,
+        [data-testid="stAppViewContainer"][data-theme="dark"] h4,
+        .stApp[data-theme="dark"] h1,
+        .stApp[data-theme="dark"] h2,
+        .stApp[data-theme="dark"] h3,
+        .stApp[data-theme="dark"] h4 {
+            color: #E0E0E0 !important;
+        }
+        [data-testid="stSidebar"][data-theme="dark"] h1,
+        [data-testid="stSidebar"][data-theme="dark"] h2,
+        [data-testid="stSidebar"][data-theme="dark"] h3 {
+            color: #E0E0E0 !important;
+        }
+        @media (prefers-color-scheme: dark) {
+            [data-testid="stAppViewContainer"] h1,
+            [data-testid="stAppViewContainer"] h2,
+            [data-testid="stAppViewContainer"] h3,
+            [data-testid="stAppViewContainer"] h4 {
+                color: #E0E0E0 !important;
+            }
+            [data-testid="stSidebar"] h1,
+            [data-testid="stSidebar"] h2,
+            [data-testid="stSidebar"] h3 {
+                color: #E0E0E0 !important;
+            }
         }
     </style>
     """
