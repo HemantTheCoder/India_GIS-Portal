@@ -75,19 +75,8 @@ def geojson_to_ee_geometry(geojson_feature):
         print(f"Error converting GeoJSON to EE geometry: {e}")
         return None
 
-def get_safe_download_url(image, geometry, scale=30, max_pixels=1e8):
+def get_safe_download_url(image, geometry, scale=30, max_pixels=5e8):
     try:
-        area = geometry.area(maxError=1).getInfo()
-        area_sqkm = area / 1_000_000
-        
-        if scale == 10:
-            max_area_for_direct = 500
-        else:
-            max_area_for_direct = 2000
-        
-        if area_sqkm > max_area_for_direct:
-            return None, f"Area too large ({area_sqkm:.0f} km²). Max allowed: {max_area_for_direct} km². Try a smaller region."
-        
         url = image.getDownloadURL({
             "name": "export",
             "scale": scale,
@@ -97,7 +86,10 @@ def get_safe_download_url(image, geometry, scale=30, max_pixels=1e8):
         })
         return url, None
     except Exception as e:
-        return None, f"Export error: {str(e)}"
+        error_msg = str(e)
+        if "Too many pixels" in error_msg:
+            return None, "Area too large for direct download. Try reducing the buffer radius or use a coarser scale."
+        return None, f"Export error: {error_msg}"
 
 def sample_pixel_value(image, lat, lon, scale=10):
     try:

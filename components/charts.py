@@ -14,32 +14,50 @@ def render_pie_chart(data, title=""):
     if df.empty:
         return
     
+    df = df[df["Percentage"] > 0].sort_values("Percentage", ascending=False)
+    
+    if df.empty:
+        return
+    
     import matplotlib.pyplot as plt
     import matplotlib
     matplotlib.use('Agg')
     
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(10, 7))
     colors = df["Color"].tolist()
+    
+    def make_autopct(threshold=3):
+        def autopct(pct):
+            return f'{pct:.1f}%' if pct >= threshold else ''
+        return autopct
     
     wedges, texts, autotexts = ax.pie(
         df["Percentage"],
-        labels=df["Class"],
+        labels=None,
         colors=colors,
-        autopct='%1.1f%%',
+        autopct=make_autopct(3),
         startangle=90,
-        pctdistance=0.85,
+        pctdistance=0.75,
+        labeldistance=1.1,
     )
     
     for autotext in autotexts:
         autotext.set_fontsize(9)
+        autotext.set_fontweight('bold')
+        autotext.set_color('white')
     
-    centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+    centre_circle = plt.Circle((0, 0), 0.55, fc='white')
     fig.gca().add_artist(centre_circle)
     
+    legend_labels = [f"{row['Class']} ({row['Percentage']:.1f}%)" for _, row in df.iterrows()]
+    ax.legend(wedges, legend_labels, title="Land Cover", loc="center left", 
+              bbox_to_anchor=(1, 0.5), fontsize=9, title_fontsize=10)
+    
     if title:
-        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_title(title, fontsize=14, fontweight='bold', pad=10)
     
     ax.axis('equal')
+    plt.tight_layout()
     st.pyplot(fig)
     plt.close()
 
