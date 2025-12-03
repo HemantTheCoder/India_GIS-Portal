@@ -3,6 +3,7 @@ import streamlit as st
 def get_enhanced_css():
     return """
     <style>
+        /* Light Mode Styles */
         .main-header {
             font-size: 2.5rem;
             font-weight: 700;
@@ -61,16 +62,19 @@ def get_enhanced_css():
         .stat-value {
             font-size: 1.8rem;
             font-weight: 700;
+            color: white;
         }
         .stat-label {
             font-size: 0.85rem;
             opacity: 0.9;
+            color: white;
         }
         .legend-box {
             background-color: #f8f9fa;
             border-radius: 10px;
             padding: 1rem;
             margin: 1rem 0;
+            color: #333;
         }
         .legend-item {
             display: flex;
@@ -90,6 +94,7 @@ def get_enhanced_css():
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 8px 8px 0;
+            color: #1565C0;
         }
         .success-box {
             background-color: #e8f5e9;
@@ -97,6 +102,7 @@ def get_enhanced_css():
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 8px 8px 0;
+            color: #2E7D32;
         }
         .warning-box {
             background-color: #fff3e0;
@@ -104,6 +110,7 @@ def get_enhanced_css():
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 8px 8px 0;
+            color: #E65100;
         }
         .error-box {
             background-color: #ffebee;
@@ -111,6 +118,7 @@ def get_enhanced_css():
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 8px 8px 0;
+            color: #C62828;
         }
         .change-positive {
             color: #4CAF50;
@@ -156,6 +164,155 @@ def get_enhanced_css():
             padding: 0.5rem 1rem;
             border-radius: 6px;
             font-size: 0.85rem;
+        }
+        
+        /* Dark Mode Styles */
+        @media (prefers-color-scheme: dark) {
+            .main-header {
+                color: #90CAF9;
+            }
+            .sub-header {
+                color: #B0BEC5;
+            }
+            .card {
+                background: #1E1E1E;
+                border: 1px solid #333;
+                color: #E0E0E0;
+            }
+            .card-header {
+                color: #E0E0E0;
+            }
+            .stat-card {
+                background: linear-gradient(135deg, #5C6BC0 0%, #7E57C2 100%);
+            }
+            .stat-value {
+                color: #FFFFFF !important;
+            }
+            .stat-label {
+                color: #E0E0E0 !important;
+            }
+            .legend-box {
+                background-color: #2D2D2D;
+                color: #E0E0E0;
+            }
+            .legend-color {
+                border: 1px solid #555;
+            }
+            .info-box {
+                background-color: #1A237E;
+                color: #90CAF9;
+            }
+            .success-box {
+                background-color: #1B5E20;
+                color: #A5D6A7;
+            }
+            .warning-box {
+                background-color: #E65100;
+                color: #FFCC80;
+            }
+            .error-box {
+                background-color: #B71C1C;
+                color: #FFCDD2;
+            }
+            .legend-labels {
+                color: #B0BEC5;
+            }
+            .pollutant-card {
+                background: #1E1E1E;
+                border: 1px solid #444;
+            }
+            .pollutant-value {
+                color: #E0E0E0;
+            }
+            .pollutant-unit {
+                color: #9E9E9E;
+            }
+        }
+        
+        /* Streamlit Dark Theme Detection */
+        [data-testid="stAppViewContainer"][data-theme="dark"] .main-header,
+        .stApp[data-theme="dark"] .main-header {
+            color: #90CAF9 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .sub-header,
+        .stApp[data-theme="dark"] .sub-header {
+            color: #B0BEC5 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .card,
+        .stApp[data-theme="dark"] .card {
+            background: #1E1E1E !important;
+            border: 1px solid #333 !important;
+            color: #E0E0E0 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .card-header,
+        .stApp[data-theme="dark"] .card-header {
+            color: #E0E0E0 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .stat-card,
+        .stApp[data-theme="dark"] .stat-card {
+            background: linear-gradient(135deg, #5C6BC0 0%, #7E57C2 100%) !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .stat-value,
+        .stApp[data-theme="dark"] .stat-value {
+            color: #FFFFFF !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .stat-label,
+        .stApp[data-theme="dark"] .stat-label {
+            color: #E0E0E0 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .legend-box,
+        .stApp[data-theme="dark"] .legend-box {
+            background-color: #2D2D2D !important;
+            color: #E0E0E0 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .info-box,
+        .stApp[data-theme="dark"] .info-box {
+            background-color: #1A237E !important;
+            color: #90CAF9 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .success-box,
+        .stApp[data-theme="dark"] .success-box {
+            background-color: #1B5E20 !important;
+            color: #A5D6A7 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .warning-box,
+        .stApp[data-theme="dark"] .warning-box {
+            background-color: #E65100 !important;
+            color: #FFCC80 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .error-box,
+        .stApp[data-theme="dark"] .error-box {
+            background-color: #B71C1C !important;
+            color: #FFCDD2 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .legend-labels,
+        .stApp[data-theme="dark"] .legend-labels {
+            color: #B0BEC5 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .pollutant-card,
+        .stApp[data-theme="dark"] .pollutant-card {
+            background: #1E1E1E !important;
+            border: 1px solid #444 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .pollutant-value,
+        .stApp[data-theme="dark"] .pollutant-value {
+            color: #E0E0E0 !important;
+        }
+        [data-testid="stAppViewContainer"][data-theme="dark"] .pollutant-unit,
+        .stApp[data-theme="dark"] .pollutant-unit {
+            color: #9E9E9E !important;
+        }
+        
+        /* Additional fixes for Streamlit dark mode - using :has selector for modern browsers */
+        html:has([data-testid="stSidebar"][aria-expanded]) .main-header {
+            color: inherit;
+        }
+        
+        /* Force readable text in stat cards regardless of theme */
+        .stat-card .stat-value,
+        .stat-card .stat-label {
+            color: white !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
     </style>
     """
@@ -218,11 +375,23 @@ def render_page_header(title, subtitle="", author_info=True):
     if author_info:
         st.markdown(
             """
-            <div style="text-align: center; font-size: 15px; color: #555; padding: 0rem 0; margin-top: -50px;">
-                <hr style="border: none; border-top: 1px solid #ddd; margin-bottom: 0px;">
+            <div class="author-info" style="text-align: center; font-size: 15px; padding: 0rem 0; margin-top: -50px;">
+                <hr class="header-divider" style="border: none; border-top: 1px solid currentColor; opacity: 0.3; margin-bottom: 0px;">
                 Made with love by <strong>Hemant Kumar</strong> • 
                 <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
             </div>
+            <style>
+                .author-info { color: #555; }
+                .author-info a { color: #2196F3; }
+                @media (prefers-color-scheme: dark) {
+                    .author-info { color: #B0BEC5 !important; }
+                    .author-info a { color: #64B5F6 !important; }
+                }
+                [data-testid="stAppViewContainer"][data-theme="dark"] .author-info,
+                .stApp[data-theme="dark"] .author-info { color: #B0BEC5 !important; }
+                [data-testid="stAppViewContainer"][data-theme="dark"] .author-info a,
+                .stApp[data-theme="dark"] .author-info a { color: #64B5F6 !important; }
+            </style>
             """,
             unsafe_allow_html=True,
         )
