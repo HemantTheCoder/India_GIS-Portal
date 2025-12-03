@@ -151,7 +151,8 @@ def calculate_uhi_intensity(geometry, start_date, end_date, buffer_km=20, time_o
         return None, None
     
     buffer_meters = buffer_km * 1000
-    rural_zone = geometry.buffer(buffer_meters).difference(geometry)
+    outer_buffer = geometry.buffer(buffer_meters, maxError=100)
+    rural_zone = outer_buffer.difference(geometry, maxError=100)
     
     rural_lst = get_mean_lst(rural_zone, start_date, end_date, time_of_day, satellite)
     

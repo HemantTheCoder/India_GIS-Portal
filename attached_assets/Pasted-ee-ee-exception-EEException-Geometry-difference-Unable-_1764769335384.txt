@@ -1,0 +1,33 @@
+ee.ee_exception.EEException: Geometry.difference: Unable to perform this geometry operation. Please specify a non-zero error margin.
+Traceback:
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/pages/3_Urban_Heat_Climate.py", line 312, in <module>
+    uhi_image, uhi_stats = calculate_uhi_intensity(
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/services/gee_lst.py", line 156, in calculate_uhi_intensity
+    rural_lst = get_mean_lst(rural_zone, start_date, end_date, time_of_day, satellite)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/services/gee_lst.py", line 59, in get_mean_lst
+    collection, count = get_modis_lst(geometry, start_date, end_date, satellite)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/services/gee_lst.py", line 45, in get_modis_lst
+    count = collection.size().getInfo()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/ee/computedobject.py", line 108, in getInfo
+    return data.computeValue(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/ee/data.py", line 1064, in computeValue
+    return _execute_cloud_call(
+           ^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/ee/data.py", line 351, in _execute_cloud_call
+    raise _translate_cloud_exception(e)  # pylint: disable=raise-missing-from
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
