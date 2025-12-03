@@ -133,18 +133,16 @@ def calculate_pollutant_statistics(image, geometry, pollutant):
             maxPixels=1e9
         ).getInfo()
         
-        band = info["band"]
-        if info["scale_factor"] != 1:
-            band = info["band"]
+        band_name = image.bandNames().get(0).getInfo()
         
         return {
-            "mean": stats.get(f"{info['band']}_mean", 0) * info["scale_factor"] if stats.get(f"{info['band']}_mean") else 0,
-            "median": stats.get(f"{info['band']}_median", 0) * info["scale_factor"] if stats.get(f"{info['band']}_median") else 0,
-            "std_dev": stats.get(f"{info['band']}_stdDev", 0) * info["scale_factor"] if stats.get(f"{info['band']}_stdDev") else 0,
-            "min": stats.get(f"{info['band']}_min", 0) * info["scale_factor"] if stats.get(f"{info['band']}_min") else 0,
-            "max": stats.get(f"{info['band']}_max", 0) * info["scale_factor"] if stats.get(f"{info['band']}_max") else 0,
-            "p10": stats.get(f"{info['band']}_p10", 0) * info["scale_factor"] if stats.get(f"{info['band']}_p10") else 0,
-            "p90": stats.get(f"{info['band']}_p90", 0) * info["scale_factor"] if stats.get(f"{info['band']}_p90") else 0,
+            "mean": stats.get(f"{band_name}_mean", 0) or 0,
+            "median": stats.get(f"{band_name}_median", 0) or 0,
+            "std_dev": stats.get(f"{band_name}_stdDev", 0) or 0,
+            "min": stats.get(f"{band_name}_min", 0) or 0,
+            "max": stats.get(f"{band_name}_max", 0) or 0,
+            "p10": stats.get(f"{band_name}_p10", 0) or 0,
+            "p90": stats.get(f"{band_name}_p90", 0) or 0,
             "unit": info["display_unit"],
         }
     except Exception as e:
@@ -233,6 +231,7 @@ def get_pollutant_time_series(geometry, pollutant, start_date, end_date, interva
             )
             
             if image is not None:
+                band_name = image.bandNames().get(0).getInfo()
                 stats = image.reduceRegion(
                     reducer=ee.Reducer.mean(),
                     geometry=geometry,
@@ -240,9 +239,7 @@ def get_pollutant_time_series(geometry, pollutant, start_date, end_date, interva
                     maxPixels=1e9
                 ).getInfo()
                 
-                value = stats.get(info["band"], None)
-                if value is not None:
-                    value = value * info["scale_factor"]
+                value = stats.get(band_name, None)
                 
                 time_series.append({
                     "date": current.strftime("%Y-%m-%d"),

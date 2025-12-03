@@ -32,6 +32,26 @@ from components.charts import (
 )
 from services.exports import generate_aqi_csv, generate_time_series_csv
 
+def format_aqi_value(value, decimals=2):
+    if value is None:
+        return "N/A"
+    if abs(value) >= 10000:
+        return f"{value:.2e}"
+    elif abs(value) >= 1000:
+        return f"{value:,.0f}"
+    elif abs(value) >= 100:
+        return f"{value:.1f}"
+    elif abs(value) >= 10:
+        return f"{value:.2f}"
+    elif abs(value) >= 1:
+        return f"{value:.3f}"
+    elif abs(value) >= 0.01:
+        return f"{value:.4f}"
+    elif value == 0:
+        return "0"
+    else:
+        return f"{value:.2e}"
+
 st.set_page_config(
     page_title="AQI Analysis",
     page_icon="🌫️",
@@ -52,6 +72,8 @@ if "aqi_analysis_complete" not in st.session_state:
     st.session_state.aqi_analysis_complete = False
 if "aqi_time_series" not in st.session_state:
     st.session_state.aqi_time_series = {}
+if "aqi_tile_urls" not in st.session_state:
+    st.session_state.aqi_tile_urls = {}
 
 with st.sidebar:
     st.markdown("## 🔐 GEE Status")
@@ -151,6 +173,8 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 
                 st.session_state.pollutant_images = {}
                 st.session_state.pollutant_stats = {}
+                st.session_state.aqi_tile_urls = {}
+                st.session_state.aqi_primary_pollutant = primary_pollutant
                 
                 for pollutant in selected_pollutants:
                     image = get_pollutant_image(geometry, pollutant, start_str, end_str)
@@ -165,7 +189,10 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                     if show_base_layer:
                         vis_params = get_pollutant_vis_params(primary_pollutant)
                         tile_url = get_tile_url(primary_image, vis_params)
-                        add_tile_layer(base_map, tile_url, f"{primary_pollutant} Concentration", 0.8)
+                        st.session_state.aqi_tile_urls["base"] = {
+                            "url": tile_url,
+                            "name": f"{primary_pollutant} Concentration"
+                        }
                     
                     if show_anomaly:
                         baseline = get_baseline_image(geometry, primary_pollutant)
@@ -174,21 +201,30 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                             if anomaly:
                                 anomaly_params = get_anomaly_vis_params(primary_pollutant)
                                 anomaly_url = get_tile_url(anomaly, anomaly_params)
-                                add_tile_layer(base_map, anomaly_url, f"{primary_pollutant} Anomaly", 0.7)
+                                st.session_state.aqi_tile_urls["anomaly"] = {
+                                    "url": anomaly_url,
+                                    "name": f"{primary_pollutant} Anomaly"
+                                }
                     
                     if show_smoothed:
                         smoothed = create_smoothed_map(primary_image)
                         if smoothed:
                             vis_params = get_pollutant_vis_params(primary_pollutant)
                             smoothed_url = get_tile_url(smoothed, vis_params)
-                            add_tile_layer(base_map, smoothed_url, f"{primary_pollutant} Smoothed", 0.6)
+                            st.session_state.aqi_tile_urls["smoothed"] = {
+                                "url": smoothed_url,
+                                "name": f"{primary_pollutant} Smoothed"
+                            }
                     
                     if show_hotspots:
                         hotspot = create_hotspot_mask(primary_image, geometry)
                         if hotspot:
                             hotspot_params = get_hotspot_vis_params()
                             hotspot_url = get_tile_url(hotspot, hotspot_params)
-                            add_tile_layer(base_map, hotspot_url, f"{primary_pollutant} Hotspots", 0.8)
+                            st.session_state.aqi_tile_urls["hotspots"] = {
+                                "url": hotspot_url,
+                                "name": f"{primary_pollutant} Hotspots"
+                            }
                 
                 if show_time_series:
                     st.session_state.aqi_time_series = {}
@@ -208,6 +244,11 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
             
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+    
+    if st.session_state.get("aqi_tile_urls"):
+        for layer_type, layer_info in st.session_state.aqi_tile_urls.items():
+            opacity = 0.8 if layer_type == "base" else 0.7
+            add_tile_layer(base_map, layer_info["url"], layer_info["name"], opacity)
     
     add_layer_control(base_map)
     
@@ -229,9 +270,10 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 if stats:
                     info = POLLUTANT_INFO.get(pollutant, {})
                     with stat_cols[i % len(stat_cols)]:
+                        mean_val = format_aqi_value(stats.get('mean', 0))
                         st.markdown(f"""
                         <div class="stat-card">
-                            <div class="stat-value">{stats.get('mean', 0):.2f}</div>
+                            <div class="stat-value">{mean_val}</div>
                             <div class="stat-label">{info.get('name', pollutant)} Mean</div>
                             <div style="font-size: 0.75rem; color: #888;">{stats.get('unit', '')}</div>
                         </div>
@@ -249,14 +291,14 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                     with st.expander(f"📈 {info.get('name', pollutant)}", expanded=(pollutant == primary_pollutant)):
                         m_col1, m_col2, m_col3 = st.columns(3)
                         with m_col1:
-                            st.metric("Mean", f"{stats.get('mean', 0):.3f}")
-                            st.metric("Median", f"{stats.get('median', 0):.3f}")
+                            st.metric("Mean", format_aqi_value(stats.get('mean', 0)))
+                            st.metric("Median", format_aqi_value(stats.get('median', 0)))
                         with m_col2:
-                            st.metric("Std Dev", f"{stats.get('std_dev', 0):.3f}")
-                            st.metric("P90", f"{stats.get('p90', 0):.3f}")
+                            st.metric("Std Dev", format_aqi_value(stats.get('std_dev', 0)))
+                            st.metric("P90", format_aqi_value(stats.get('p90', 0)))
                         with m_col3:
-                            st.metric("Min", f"{stats.get('min', 0):.3f}")
-                            st.metric("Max", f"{stats.get('max', 0):.3f}")
+                            st.metric("Min", format_aqi_value(stats.get('min', 0)))
+                            st.metric("Max", format_aqi_value(stats.get('max', 0)))
                         
                         st.caption(f"Unit: {stats.get('unit', '')}")
         
