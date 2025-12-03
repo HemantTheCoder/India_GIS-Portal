@@ -7,15 +7,14 @@ def get_enhanced_css():
         .main-header {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #0D2240;
+            color: #0F172A;
             text-align: center;
             padding: 1rem 0;
             margin-bottom: 0rem;
-            text-shadow: 0 1px 1px rgba(0,0,0,0.05);
         }
         .sub-header {
             font-size: 1.1rem;
-            color: #444;
+            color: #334155;
             text-align: center;
             margin-bottom: 2rem;
             font-weight: 500;
@@ -140,7 +139,7 @@ def get_enhanced_css():
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
-            color: #444;
+            color: #333;
             font-weight: 500;
         }
         .pollutant-card {
@@ -386,16 +385,16 @@ def render_page_header(title, subtitle="", author_info=True):
                 <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
             </div>
             <style>
-                .author-info { color: #555; }
-                .author-info a { color: #2196F3; }
+                .author-info { color: #475569; }
+                .author-info a { color: #2563EB; }
                 @media (prefers-color-scheme: dark) {
-                    .author-info { color: #B0BEC5 !important; }
-                    .author-info a { color: #64B5F6 !important; }
+                    .author-info { color: #B0BEC5; }
+                    .author-info a { color: #64B5F6; }
                 }
                 [data-testid="stAppViewContainer"][data-theme="dark"] .author-info,
-                .stApp[data-theme="dark"] .author-info { color: #B0BEC5 !important; }
+                .stApp[data-theme="dark"] .author-info { color: #B0BEC5; }
                 [data-testid="stAppViewContainer"][data-theme="dark"] .author-info a,
-                .stApp[data-theme="dark"] .author-info a { color: #64B5F6 !important; }
+                .stApp[data-theme="dark"] .author-info a { color: #64B5F6; }
             </style>
             """,
             unsafe_allow_html=True,
