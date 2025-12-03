@@ -171,12 +171,14 @@ def calculate_uhi_intensity(geometry, start_date, end_date, buffer_km=20, time_o
             if urban_mean is not None and rural_mean is not None:
                 uhi_intensity = urban_mean - rural_mean
     
-    uhi_image = urban_lst.subtract(rural_lst.reduceRegion(
+    rural_mean_value = rural_lst.reduceRegion(
         reducer=ee.Reducer.mean(),
         geometry=rural_zone,
         scale=1000,
         maxPixels=1e9
-    ).values().get(0)).rename('UHI_Intensity')
+    ).values().get(0)
+    
+    uhi_image = urban_lst.subtract(ee.Number(rural_mean_value)).rename('UHI_Intensity')
     
     return uhi_image, {
         'urban_stats': urban_stats,
@@ -204,7 +206,7 @@ def detect_heat_hotspots(lst_image, geometry, threshold_percentile=90):
         maxPixels=1e9
     ).getInfo()
     
-    total_area = geometry.area().getInfo()
+    total_area = geometry.area(maxError=100).getInfo()
     
     return hotspots, {
         'threshold_temp': percentile.getInfo(),
@@ -236,7 +238,7 @@ def identify_cooling_zones(geometry, start_date, end_date, lst_image=None, time_
         maxPixels=1e9
     ).getInfo()
     
-    total_area = geometry.area().getInfo()
+    total_area = geometry.area(maxError=100).getInfo()
     
     return cooling_zones, {
         'threshold_temp': percentile_25.getInfo(),
