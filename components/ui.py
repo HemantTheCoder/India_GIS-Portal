@@ -382,7 +382,7 @@ def render_page_header(title, subtitle="", author_info=True):
             """
             <div class="author-info" style="text-align: center; font-size: 15px; padding: 0rem 0; margin-top: -50px;">
                 <hr class="header-divider" style="border: none; border-top: 1px solid currentColor; opacity: 0.3; margin-bottom: 0px;">
-                Made with love by <strong>Hemant Kumar</strong> • 
+                Made with ❤️ by <strong>Hemant Kumar</strong> • 
                 <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
             </div>
             <style>
