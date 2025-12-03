@@ -40,6 +40,23 @@ from gee_utils import (
     INDEX_INFO,
 )
 
+# ================================================================
+#   ⭐⭐⭐ AUTO-INITIALIZE GEE FROM STREAMLIT SECRETS ⭐⭐⭐
+# ================================================================
+if not st.session_state.get("gee_initialized", False):
+    try:
+        if "GEE_JSON" in st.secrets:
+            key_data = dict(st.secrets["GEE_JSON"])
+            if initialize_gee(key_data):
+                st.session_state.gee_initialized = True
+            else:
+                st.session_state.gee_initialized = False
+        else:
+            st.session_state.gee_initialized = False
+    except Exception as e:
+        st.session_state.gee_initialized = False
+
+
 st.set_page_config(
     page_title="India GIS & Remote Sensing Portal",
     page_icon="🛰️",
@@ -55,7 +72,7 @@ st.markdown("""
         color: #1E3A5F;
         text-align: center;
         padding: 1rem 0;
-        margin-bottom: 1rem;
+        margin-bottom: 0rem;
     }
     .sub-header {
         font-size: 1.1rem;
@@ -145,7 +162,7 @@ def create_base_map(lat, lon, zoom=11, enable_drawing=False):
         zoom_start=zoom,
         tiles="OpenStreetMap",
     )
-    
+
     if enable_drawing:
         draw = Draw(
             draw_options={
@@ -159,7 +176,7 @@ def create_base_map(lat, lon, zoom=11, enable_drawing=False):
             edit_options={'edit': False}
         )
         draw.add_to(m)
-    
+
     return m
 
 def add_tile_layer(map_obj, tile_url, layer_name, opacity=1.0):
@@ -189,7 +206,7 @@ def render_index_legend(index_name):
     info = INDEX_INFO.get(index_name, {})
     st.markdown(f"### {info.get('name', index_name)}")
     st.markdown(f"*{info.get('description', '')}*")
-    
+
     palette = info.get("palette", [])
     if palette:
         gradient = ", ".join(palette)
@@ -207,13 +224,13 @@ def render_statistics_with_area(stats, city_name=""):
     if not stats or "classes" not in stats:
         st.warning("Unable to calculate statistics for this area.")
         return
-    
+
     st.markdown("### Land Cover Statistics")
     st.markdown(f"**Total Area: {stats.get('total_area_sqkm', 'N/A')} km²**")
-    
+
     classes_data = stats["classes"]
     df_data = []
-    
+
     for name, data in sorted(classes_data.items(), key=lambda x: x[1]["percentage"], reverse=True):
         df_data.append({
             "Class": name,
@@ -221,9 +238,9 @@ def render_statistics_with_area(stats, city_name=""):
             "Percentage": data["percentage"],
             "Color": data["color"]
         })
-    
+
     df = pd.DataFrame(df_data)
-    
+
     for _, row in df.iterrows():
         col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
         with col1:
@@ -238,12 +255,12 @@ def render_statistics_with_area(stats, city_name=""):
         with col4:
             st.write(f"{row['Area (km²)']:.2f} km²")
         st.caption(row["Class"])
-    
+
     csv_df = df.drop(columns=["Color"])
     csv_buffer = io.StringIO()
     csv_df.to_csv(csv_buffer, index=False)
     csv_data = csv_buffer.getvalue()
-    
+
     st.download_button(
         label="📥 Download Statistics (CSV)",
         data=csv_data,
@@ -256,22 +273,22 @@ def render_time_series_comparison(stats1, stats2, year1, year2):
     if not stats1 or not stats2:
         st.warning("Unable to compare time series data.")
         return
-    
+
     st.markdown(f"### LULC Change Analysis: {year1} vs {year2}")
-    
+
     classes1 = stats1.get("classes", {})
     classes2 = stats2.get("classes", {})
-    
+
     all_classes = set(classes1.keys()) | set(classes2.keys())
-    
+
     comparison_data = []
     for class_name in all_classes:
         data1 = classes1.get(class_name, {"percentage": 0, "area_sqkm": 0})
         data2 = classes2.get(class_name, {"percentage": 0, "area_sqkm": 0})
-        
+
         pct_change = data2.get("percentage", 0) - data1.get("percentage", 0)
         area_change = data2.get("area_sqkm", 0) - data1.get("area_sqkm", 0)
-        
+
         comparison_data.append({
             "Class": class_name,
             f"{year1} (%)": data1.get("percentage", 0),
@@ -281,12 +298,12 @@ def render_time_series_comparison(stats1, stats2, year1, year2):
             f"{year2} (km²)": data2.get("area_sqkm", 0),
             "Change (km²)": area_change,
         })
-    
+
     df = pd.DataFrame(comparison_data)
     df = df.sort_values("Change (%)", key=abs, ascending=False)
-    
+
     st.dataframe(df, use_container_width=True, hide_index=True)
-    
+
     st.markdown("#### Key Changes")
     for _, row in df.iterrows():
         change = row["Change (%)"]
@@ -295,11 +312,11 @@ def render_time_series_comparison(stats1, stats2, year1, year2):
                 st.markdown(f"- **{row['Class']}**: <span class='change-positive'>+{change:.2f}%</span> (+{row['Change (km²)']:.2f} km²)", unsafe_allow_html=True)
             else:
                 st.markdown(f"- **{row['Class']}**: <span class='change-negative'>{change:.2f}%</span> ({row['Change (km²)']:.2f} km²)", unsafe_allow_html=True)
-    
+
     csv_buffer = io.StringIO()
     df.to_csv(csv_buffer, index=False)
     csv_data = csv_buffer.getvalue()
-    
+
     st.download_button(
         label="📥 Download Change Analysis (CSV)",
         data=csv_data,
@@ -310,101 +327,67 @@ def render_time_series_comparison(stats1, stats2, year1, year2):
 
 def main():
     init_session_state()
-    
+
     st.markdown('<div class="main-header">🛰️ India GIS & Remote Sensing Portal</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities</div>', unsafe_allow_html=True)
-    
-    with st.sidebar:
-        st.markdown("## 🔐 GEE Authentication")
-        
-        st.markdown("""
-        <div class="info-box">
-        <strong>Google Earth Engine Setup:</strong><br>
-        1. Go to <a href="https://earthengine.google.com/" target="_blank">Google Earth Engine</a><br>
-        2. Sign up for a free account<br>
-        3. Create a service account and download the JSON key<br>
-        4. Paste the JSON key below
+    st.markdown(
+        """
+        <div style="text-align: center; font-size: 15px; color: #555; padding: 0rem 0; margin-top: -50px;">
+            <hr style="border: none; border-top: 1px solid #ddd; margin-bottom: 0px;">
+            Made with ❤️ by <strong>Hemant Kumar</strong> • 
+            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
         </div>
-        """, unsafe_allow_html=True)
-        
-        auth_method = st.radio(
-            "Authentication Method",
-            ["Service Account (JSON Key)", "Default Credentials"],
-            help="Use service account for production, or default credentials if already authenticated"
-        )
-        
-        if auth_method == "Service Account (JSON Key)":
-            service_account_json = st.text_area(
-                "Paste Service Account JSON Key",
-                height=150,
-                placeholder='{"type": "service_account", "project_id": "...", ...}',
-            )
-            
-            if st.button("🔓 Initialize GEE", use_container_width=True):
-                if service_account_json:
-                    try:
-                        key_data = json.loads(service_account_json)
-                        if initialize_gee(key_data):
-                            st.session_state.gee_initialized = True
-                            st.success("GEE initialized successfully!")
-                            st.rerun()
-                        else:
-                            st.error("Failed to initialize GEE. Check your credentials.")
-                    except json.JSONDecodeError:
-                        st.error("Invalid JSON format. Please check your key.")
-                else:
-                    st.warning("Please paste your service account JSON key.")
-        else:
-            if st.button("🔓 Initialize with Default Credentials", use_container_width=True):
-                if initialize_gee():
-                    st.session_state.gee_initialized = True
-                    st.success("GEE initialized successfully!")
-                    st.rerun()
-                else:
-                    st.error("Failed to initialize GEE. Please authenticate first.")
-        
+        """,
+        unsafe_allow_html=True,
+    )
+    with st.sidebar:
+        st.markdown("## 🔐 Google Earth Engine")
+
         if st.session_state.gee_initialized:
-            st.markdown('<div class="success-box">✅ GEE Connected</div>', unsafe_allow_html=True)
-        
+            st.markdown('<div class="success-box">🟢 GEE Connected</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="warning-box">🔴 GEE Not Connected<br>Check secrets.toml</div>', unsafe_allow_html=True)
+
         st.markdown("---")
+
         st.markdown("## 📍 Location Selection")
-        
+
         states = get_states()
         selected_state = st.selectbox("Select State", ["Select a state..."] + states)
-        
+
         selected_city = None
         city_coords = None
-        
+
         if selected_state and selected_state != "Select a state...":
             cities = get_cities(selected_state)
             selected_city = st.selectbox("Select City", ["Select a city..."] + cities)
-            
+
             if selected_city and selected_city != "Select a city...":
                 city_coords = get_city_coordinates(selected_state, selected_city)
                 if city_coords:
                     st.success(f"📍 {selected_city}, {selected_state}")
                     st.caption(f"Lat: {city_coords['lat']:.4f}, Lon: {city_coords['lon']:.4f}")
-        
+
         st.markdown("---")
         st.markdown("## 📅 Time Period")
-        
+
         current_year = datetime.now().year
         years = list(range(2017, current_year + 1))
-        
+
         analysis_mode = st.radio(
             "Analysis Mode",
             ["Single Period", "Time Series Comparison"],
             help="Compare LULC changes between two different years"
         )
-        
+
         if analysis_mode == "Single Period":
             selected_year = st.selectbox("Select Year", years[::-1])
-            
+
             date_range = st.radio(
                 "Date Range",
                 ["Full Year", "Custom Range"],
             )
-            
+
             if date_range == "Full Year":
                 start_date = f"{selected_year}-01-01"
                 end_date = f"{selected_year}-12-31"
@@ -426,7 +409,7 @@ def main():
                     )
                 start_date = start.strftime("%Y-%m-%d")
                 end_date = end.strftime("%Y-%m-%d")
-            
+
             st.caption(f"Period: {start_date} to {end_date}")
             compare_year1, compare_year2 = None, None
         else:
@@ -435,20 +418,20 @@ def main():
                 compare_year1 = st.selectbox("Year 1 (Earlier)", years[::-1], index=len(years)-1)
             with col2:
                 compare_year2 = st.selectbox("Year 2 (Later)", years[::-1], index=0)
-            
+
             start_date = f"{compare_year2}-01-01"
             end_date = f"{compare_year2}-12-31"
             selected_year = compare_year2
-        
+
         st.markdown("---")
         st.markdown("## 🛰️ Data Source")
-        
+
         satellite = st.radio(
             "Satellite",
             ["Sentinel-2", "Landsat 8/9"],
             help="Sentinel-2 has 10m resolution, Landsat has 30m resolution"
         )
-        
+
         buffer_km = st.slider(
             "Analysis Radius (km)",
             min_value=5,
@@ -456,10 +439,10 @@ def main():
             value=15,
             help="Area around city center to analyze"
         )
-        
+
         st.markdown("---")
         st.markdown("## 📊 Analysis Options")
-        
+
         show_lulc = st.checkbox("Land Use / Land Cover (LULC)", value=True)
         show_indices = st.multiselect(
             "Vegetation/Urban Indices",
@@ -469,17 +452,17 @@ def main():
         show_rgb = st.checkbox("True Color (RGB) Image", value=True)
         enable_drawing = st.checkbox("Enable Custom AOI Drawing", value=False, 
                                      help="Draw custom areas on the map to analyze specific regions")
-    
+
     if city_coords:
         base_map = create_base_map(city_coords["lat"], city_coords["lon"], enable_drawing=enable_drawing)
-        
+
         folium.Marker(
             [city_coords["lat"], city_coords["lon"]],
             popup=f"{selected_city}, {selected_state}",
             tooltip=selected_city,
             icon=folium.Icon(color="red", icon="info-sign"),
         ).add_to(base_map)
-        
+
         folium.Circle(
             [city_coords["lat"], city_coords["lon"]],
             radius=buffer_km * 1000,
@@ -488,7 +471,7 @@ def main():
             fillOpacity=0.1,
             weight=2,
         ).add_to(base_map)
-        
+
         if st.session_state.gee_initialized:
             use_custom_aoi = st.sidebar.checkbox(
                 "Use Custom AOI (if drawn)",
@@ -496,7 +479,7 @@ def main():
                 help="Check this to use a custom drawn area instead of the city buffer",
                 disabled=not st.session_state.drawn_geometry
             )
-            
+
             if st.sidebar.button("🚀 Run Analysis", use_container_width=True, type="primary"):
                 with st.spinner("Fetching satellite data and running analysis..."):
                     try:
@@ -508,9 +491,9 @@ def main():
                                 geometry = get_city_geometry(city_coords["lat"], city_coords["lon"], buffer_km)
                         else:
                             geometry = get_city_geometry(city_coords["lat"], city_coords["lon"], buffer_km)
-                        
+
                         st.session_state.current_geometry = geometry
-                        
+
                         if satellite == "Sentinel-2":
                             image = get_sentinel2_image(geometry, start_date, end_date)
                             rgb_params_func = get_sentinel_rgb_params
@@ -527,32 +510,32 @@ def main():
                             ndbi_func = calculate_ndbi_landsat
                             evi_func = calculate_evi_landsat
                             savi_func = calculate_savi_landsat
-                        
+
                         if image is None:
                             st.error(f"No cloud-free {satellite} images found for the selected period. Try a different date range.")
                         else:
                             st.session_state.current_image = image
-                            
+
                             if show_rgb:
                                 rgb_params = rgb_params_func(image)
                                 rgb_url = get_tile_url(image, rgb_params)
                                 base_map = add_tile_layer(base_map, rgb_url, f"{satellite} RGB", 0.9)
-                            
+
                             if show_lulc:
                                 lulc = get_dynamic_world_lulc(geometry, start_date, end_date)
                                 if lulc:
                                     lulc_params = get_lulc_vis_params()
                                     lulc_url = get_tile_url(lulc, lulc_params)
                                     base_map = add_tile_layer(base_map, lulc_url, "LULC (Dynamic World)", 0.8)
-                                    
+
                                     st.session_state.lulc_stats = calculate_lulc_statistics_with_area(lulc, geometry)
-                                    
+
                                     if analysis_mode == "Time Series Comparison" and compare_year1 and compare_year2:
                                         stats1, stats2, _ = get_lulc_change_analysis(geometry, compare_year1, compare_year2)
                                         st.session_state.time_series_stats = (stats1, stats2, compare_year1, compare_year2)
                                 else:
                                     st.warning("LULC data not available for the selected period.")
-                            
+
                             index_funcs = {
                                 "NDVI": ndvi_func,
                                 "NDWI": ndwi_func,
@@ -560,35 +543,35 @@ def main():
                                 "EVI": evi_func,
                                 "SAVI": savi_func,
                             }
-                            
+
                             for idx in show_indices:
                                 if idx in index_funcs:
                                     index_image = index_funcs[idx](image)
                                     index_params = get_index_vis_params(idx)
                                     index_url = get_tile_url(index_image, index_params)
                                     base_map = add_tile_layer(base_map, index_url, idx, 0.8)
-                            
+
                             st.session_state.analysis_complete = True
                             st.success("Analysis complete! Toggle layers using the control panel on the map.")
-                    
+
                     except Exception as e:
                         st.error(f"Error during analysis: {str(e)}")
                         st.info("Please check your GEE credentials and try again.")
         else:
             st.sidebar.warning("⚠️ Please initialize GEE first")
-        
+
         folium.LayerControl(collapsed=False).add_to(base_map)
-        
+
         col1, col2 = st.columns([3, 1])
-        
+
         with col1:
             st.markdown(f"### 🗺️ {selected_city}, {selected_state}")
             map_data = st_folium(base_map, width=None, height=600, returned_objects=["all_drawings"])
-            
+
             if enable_drawing and map_data and map_data.get("all_drawings"):
                 st.info(f"📐 Custom area(s) drawn: {len(map_data['all_drawings'])} shape(s)")
                 st.session_state.drawn_geometry = map_data["all_drawings"]
-        
+
         with col2:
             if st.session_state.analysis_complete:
                 if analysis_mode == "Time Series Comparison" and st.session_state.time_series_stats:
@@ -598,18 +581,18 @@ def main():
                     render_lulc_legend()
                     st.markdown("---")
                     render_statistics_with_area(st.session_state.lulc_stats, selected_city or "city")
-            
+
             for idx in show_indices:
                 if st.session_state.analysis_complete:
                     st.markdown("---")
                     render_index_legend(idx)
-            
+
             if st.session_state.analysis_complete and st.session_state.current_image:
                 st.markdown("---")
                 st.markdown("### 📥 Export Options")
-                
+
                 export_scale = 30 if satellite == "Landsat 8/9" else 10
-                
+
                 if st.button("Generate GeoTIFF Download Link", use_container_width=True):
                     try:
                         if st.session_state.current_geometry:
@@ -627,7 +610,7 @@ def main():
                                     st.warning(error)
                     except Exception as e:
                         st.warning(f"Export not available: {str(e)}")
-    
+
     else:
         st.markdown("""
         <div class="info-box">
@@ -641,11 +624,11 @@ def main():
         </ol>
         </div>
         """, unsafe_allow_html=True)
-        
+
         st.markdown("### 📊 Available Analyses")
-        
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             st.markdown("""
             #### 🏞️ Land Use / Land Cover (LULC)
@@ -658,7 +641,7 @@ def main():
             - Bare ground
             - Snow and ice
             """)
-        
+
         with col2:
             st.markdown("""
             #### 🌿 Vegetation & Urban Indices
@@ -668,12 +651,12 @@ def main():
             - **EVI**: Enhanced vegetation assessment
             - **SAVI**: Soil-adjusted vegetation index
             """)
-        
+
         st.markdown("---")
         st.markdown("### 🆕 New Features")
-        
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             st.markdown("""
             #### 📈 Time Series Analysis
@@ -682,7 +665,7 @@ def main():
             - Monitor deforestation
             - Analyze agricultural changes
             """)
-        
+
         with col2:
             st.markdown("""
             #### 📥 Export & Download
@@ -690,12 +673,12 @@ def main():
             - Export maps as GeoTIFF
             - Area calculations in km²
             """)
-        
+
         st.markdown("---")
         st.markdown("### 🛰️ Data Sources")
-        
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             st.markdown("""
             #### Sentinel-2
@@ -704,7 +687,7 @@ def main():
             - Available from: 2017
             - Best for: Detailed analysis
             """)
-        
+
         with col2:
             st.markdown("""
             #### Landsat 8/9
@@ -713,12 +696,13 @@ def main():
             - Available from: 2013
             - Best for: Long-term studies
             """)
-    
+
     st.markdown("---")
     st.markdown(
         '<div style="text-align: center; color: #666; padding: 1rem;">Made with Streamlit & Google Earth Engine</div>',
         unsafe_allow_html=True,
     )
+
 
 if __name__ == "__main__":
     main()
