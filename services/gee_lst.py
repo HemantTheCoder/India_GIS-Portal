@@ -412,7 +412,11 @@ def calculate_warming_trend(time_series_data):
     sum_xy = sum(x * y for x, y in zip(years, temps))
     sum_x2 = sum(x ** 2 for x in years)
     
-    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
+    denominator = n * sum_x2 - sum_x ** 2
+    if denominator == 0:
+        return None
+    
+    slope = (n * sum_xy - sum_x * sum_y) / denominator
     intercept = (sum_y - slope * sum_x) / n
     
     mean_y = sum_y / n
@@ -420,14 +424,28 @@ def calculate_warming_trend(time_series_data):
     ss_res = sum((y - (slope * x + intercept)) ** 2 for x, y in zip(years, temps))
     r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
     
+    se_slope = 0
+    p_value = 1.0
+    if n > 2 and ss_tot > 0:
+        mse = ss_res / (n - 2)
+        se_slope = (mse / (sum_x2 - (sum_x ** 2) / n)) ** 0.5 if (sum_x2 - (sum_x ** 2) / n) > 0 else 0
+        if se_slope > 0:
+            t_stat = abs(slope / se_slope)
+            p_value = 0.01 if t_stat > 2.5 else (0.05 if t_stat > 2.0 else 0.1 if t_stat > 1.5 else 0.5)
+    
+    total_change = slope * (max(years) - min(years))
+    
     return {
         'slope': slope,
+        'slope_per_year': slope,
         'intercept': intercept,
         'r_squared': r_squared,
+        'p_value': p_value,
         'warming_rate_per_decade': slope * 10,
         'start_year': min(years),
         'end_year': max(years),
-        'total_warming': slope * (max(years) - min(years))
+        'total_warming': total_change,
+        'total_change': total_change
     }
 
 def get_lst_tile_url(lst_image, vis_params=None):
