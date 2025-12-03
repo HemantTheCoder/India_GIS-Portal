@@ -7,15 +7,14 @@ def get_enhanced_css():
         .main-header {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #000000;
+            color: #0F172A;
             text-align: center;
             padding: 1rem 0;
             margin-bottom: 0rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .sub-header {
             font-size: 1.1rem;
-            color: #1a1a1a;
+            color: #334155;
             text-align: center;
             margin-bottom: 2rem;
             font-weight: 500;
@@ -140,21 +139,8 @@ def get_enhanced_css():
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
-            color: #1a1a1a;
+            color: #333;
             font-weight: 500;
-        }
-        
-        /* Streamlit native headers - light mode */
-        [data-testid="stAppViewContainer"] h1,
-        [data-testid="stAppViewContainer"] h2,
-        [data-testid="stAppViewContainer"] h3,
-        [data-testid="stAppViewContainer"] h4 {
-            color: #000000 !important;
-        }
-        [data-testid="stSidebar"] h1,
-        [data-testid="stSidebar"] h2,
-        [data-testid="stSidebar"] h3 {
-            color: #000000 !important;
         }
         .pollutant-card {
             background: white;
@@ -332,36 +318,6 @@ def get_enhanced_css():
             color: white !important;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        
-        /* Streamlit native headers - dark mode */
-        [data-testid="stAppViewContainer"][data-theme="dark"] h1,
-        [data-testid="stAppViewContainer"][data-theme="dark"] h2,
-        [data-testid="stAppViewContainer"][data-theme="dark"] h3,
-        [data-testid="stAppViewContainer"][data-theme="dark"] h4,
-        .stApp[data-theme="dark"] h1,
-        .stApp[data-theme="dark"] h2,
-        .stApp[data-theme="dark"] h3,
-        .stApp[data-theme="dark"] h4 {
-            color: #E0E0E0 !important;
-        }
-        [data-testid="stSidebar"][data-theme="dark"] h1,
-        [data-testid="stSidebar"][data-theme="dark"] h2,
-        [data-testid="stSidebar"][data-theme="dark"] h3 {
-            color: #E0E0E0 !important;
-        }
-        @media (prefers-color-scheme: dark) {
-            [data-testid="stAppViewContainer"] h1,
-            [data-testid="stAppViewContainer"] h2,
-            [data-testid="stAppViewContainer"] h3,
-            [data-testid="stAppViewContainer"] h4 {
-                color: #E0E0E0 !important;
-            }
-            [data-testid="stSidebar"] h1,
-            [data-testid="stSidebar"] h2,
-            [data-testid="stSidebar"] h3 {
-                color: #E0E0E0 !important;
-            }
-        }
     </style>
     """
 
@@ -429,16 +385,16 @@ def render_page_header(title, subtitle="", author_info=True):
                 <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
             </div>
             <style>
-                .author-info { color: #1a1a1a; }
-                .author-info a { color: #1565C0; font-weight: 500; }
+                .author-info { color: #475569; }
+                .author-info a { color: #2563EB; }
                 @media (prefers-color-scheme: dark) {
-                    .author-info { color: #B0BEC5 !important; }
-                    .author-info a { color: #64B5F6 !important; }
+                    .author-info { color: #B0BEC5; }
+                    .author-info a { color: #64B5F6; }
                 }
                 [data-testid="stAppViewContainer"][data-theme="dark"] .author-info,
-                .stApp[data-theme="dark"] .author-info { color: #B0BEC5 !important; }
+                .stApp[data-theme="dark"] .author-info { color: #B0BEC5; }
                 [data-testid="stAppViewContainer"][data-theme="dark"] .author-info a,
-                .stApp[data-theme="dark"] .author-info a { color: #64B5F6 !important; }
+                .stApp[data-theme="dark"] .author-info a { color: #64B5F6; }
             </style>
             """,
             unsafe_allow_html=True,
