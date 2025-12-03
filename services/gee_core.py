@@ -42,7 +42,7 @@ def get_tile_url(image, vis_params):
 
 def calculate_geometry_area(geometry):
     try:
-        area_sqm = geometry.area().getInfo()
+        area_sqm = geometry.area(maxError=1).getInfo()
         area_sqkm = area_sqm / 1_000_000
         return round(area_sqkm, 2)
     except Exception as e:
@@ -77,7 +77,7 @@ def geojson_to_ee_geometry(geojson_feature):
 
 def get_safe_download_url(image, geometry, scale=30, max_pixels=1e8):
     try:
-        area = geometry.area().getInfo()
+        area = geometry.area(maxError=1).getInfo()
         area_sqkm = area / 1_000_000
         
         if scale == 10:
