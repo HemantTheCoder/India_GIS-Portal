@@ -9,7 +9,8 @@ import io
 from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (
     auto_initialize_gee, get_city_geometry, get_tile_url, 
-    geojson_to_ee_geometry, get_safe_download_url, sample_pixel_value
+    geojson_to_ee_geometry, get_safe_download_url, sample_pixel_value,
+    process_shapefile_upload, geojson_file_to_ee_geometry
 )
 from services.gee_lulc import (
     get_sentinel2_image, get_landsat_image, get_dynamic_world_lulc,
@@ -63,21 +64,72 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("## 📍 Location")
     
-    states = get_states()
-    selected_state = st.selectbox("State", ["Select..."] + states, key="lulc_state")
+    location_mode = st.radio(
+        "Input Method",
+        ["City Selection", "Upload Shapefile/GeoJSON"],
+        key="lulc_location_mode",
+        horizontal=True
+    )
     
     selected_city = None
     city_coords = None
+    uploaded_geometry = None
+    uploaded_center = None
     
-    if selected_state != "Select...":
-        cities = get_cities(selected_state)
-        selected_city = st.selectbox("City", ["Select..."] + cities, key="lulc_city")
+    if location_mode == "City Selection":
+        states = get_states()
+        selected_state = st.selectbox("State", ["Select..."] + states, key="lulc_state")
         
-        if selected_city != "Select...":
-            city_coords = get_city_coordinates(selected_state, selected_city)
-            if city_coords:
-                st.success(f"📍 {selected_city}, {selected_state}")
-                st.caption(f"Lat: {city_coords['lat']:.4f}, Lon: {city_coords['lon']:.4f}")
+        if selected_state != "Select...":
+            cities = get_cities(selected_state)
+            selected_city = st.selectbox("City", ["Select..."] + cities, key="lulc_city")
+            
+            if selected_city != "Select...":
+                city_coords = get_city_coordinates(selected_state, selected_city)
+                if city_coords:
+                    st.success(f"📍 {selected_city}, {selected_state}")
+                    st.caption(f"Lat: {city_coords['lat']:.4f}, Lon: {city_coords['lon']:.4f}")
+    else:
+        selected_state = "Custom AOI"
+        st.markdown("##### Upload Files")
+        st.caption("Upload a Shapefile (.shp + .shx + .dbf + .prj) or a single .zip file containing the shapefile, or a GeoJSON file.")
+        
+        uploaded_files = st.file_uploader(
+            "Choose files",
+            type=["shp", "shx", "dbf", "prj", "cpg", "zip", "geojson", "json"],
+            accept_multiple_files=True,
+            key="lulc_shapefile_upload"
+        )
+        
+        if uploaded_files:
+            file_names = [f.name for f in uploaded_files]
+            
+            geojson_files = [f for f in uploaded_files if f.name.endswith(('.geojson', '.json'))]
+            zip_files = [f for f in uploaded_files if f.name.endswith('.zip')]
+            shp_files = [f for f in uploaded_files if f.name.endswith('.shp')]
+            
+            if geojson_files:
+                geom, center, error = geojson_file_to_ee_geometry(geojson_files[0])
+                if error:
+                    st.error(error)
+                else:
+                    uploaded_geometry = geom
+                    uploaded_center = center
+                    city_coords = center
+                    selected_city = "Custom Area"
+                    st.success(f"✅ GeoJSON loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+            elif zip_files or shp_files:
+                geom, center, error = process_shapefile_upload(uploaded_files)
+                if error:
+                    st.error(error)
+                else:
+                    uploaded_geometry = geom
+                    uploaded_center = center
+                    city_coords = center
+                    selected_city = "Custom Area"
+                    st.success(f"✅ Shapefile loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+            else:
+                st.warning("Please upload all required shapefile components (.shp, .shx, .dbf, .prj) or a .zip file")
     
     st.markdown("---")
     st.markdown("## 📅 Time Period")
@@ -142,20 +194,30 @@ with st.sidebar:
 
 if city_coords and st.session_state.gee_initialized:
     use_custom_aoi = False
+    use_uploaded_aoi = uploaded_geometry is not None
+    
     if enable_drawing and st.session_state.get("drawn_geometry"):
-        use_custom_aoi = st.sidebar.checkbox("Use Custom AOI", value=False, key="lulc_use_custom")
+        use_custom_aoi = st.sidebar.checkbox("Use Drawn AOI", value=False, key="lulc_use_custom")
     
     run_analysis = st.sidebar.button("🚀 Run Analysis", use_container_width=True, type="primary")
     
     base_map = create_base_map(city_coords["lat"], city_coords["lon"], enable_drawing=enable_drawing)
-    add_marker(base_map, city_coords["lat"], city_coords["lon"], 
-               popup=f"{selected_city}, {selected_state}", tooltip=selected_city)
-    add_buffer_circle(base_map, city_coords["lat"], city_coords["lon"], buffer_km)
+    
+    if not use_uploaded_aoi:
+        add_marker(base_map, city_coords["lat"], city_coords["lon"], 
+                   popup=f"{selected_city}, {selected_state}", tooltip=selected_city)
+        add_buffer_circle(base_map, city_coords["lat"], city_coords["lon"], buffer_km)
+    else:
+        add_marker(base_map, city_coords["lat"], city_coords["lon"], 
+                   popup="Custom Area Center", tooltip="Custom Area")
     
     if run_analysis:
         with st.spinner("Fetching satellite data and running analysis..."):
             try:
-                if use_custom_aoi and st.session_state.get("drawn_geometry"):
+                if use_uploaded_aoi and uploaded_geometry:
+                    geometry = uploaded_geometry
+                    st.info("Using uploaded shapefile/GeoJSON geometry")
+                elif use_custom_aoi and st.session_state.get("drawn_geometry"):
                     first_drawing = st.session_state.drawn_geometry[0]
                     geometry = geojson_to_ee_geometry(first_drawing)
                     if geometry is None:
@@ -427,9 +489,18 @@ if city_coords and st.session_state.gee_initialized:
             
             export_col1, export_col2, export_col3 = st.columns(3)
             
-            export_scale = 30 if satellite == "Landsat 8/9" else 10
+            default_scale = 30 if satellite == "Landsat 8/9" else 10
             
             with export_col1:
+                st.markdown("**GeoTIFF Export**")
+                export_scale = st.select_slider(
+                    "Resolution (meters)",
+                    options=[10, 20, 30, 50, 100, 250, 500, 1000],
+                    value=default_scale,
+                    key="export_scale",
+                    help="Higher values = smaller file size. Use larger values for big areas."
+                )
+                
                 if st.button("📦 Generate GeoTIFF", use_container_width=True):
                     with st.spinner("Generating..."):
                         url, error = get_safe_download_url(
@@ -441,9 +512,11 @@ if city_coords and st.session_state.gee_initialized:
                             st.success("Ready!")
                             st.markdown(f"[📥 Download GeoTIFF]({url})")
                         elif error:
-                            st.warning(error)
+                            st.error(error)
+                            st.info("💡 Try increasing the resolution value above to reduce file size.")
             
             with export_col2:
+                st.markdown("**CSV Report**")
                 if st.session_state.get("lulc_stats"):
                     csv_data = generate_lulc_csv(st.session_state.lulc_stats, selected_city, selected_year)
                     if csv_data:
@@ -454,12 +527,15 @@ if city_coords and st.session_state.gee_initialized:
                             mime="text/csv",
                             use_container_width=True
                         )
+                else:
+                    st.caption("Run LULC analysis to enable CSV export")
             
             with export_col3:
-                st.markdown(f"**Analysis Details**")
-                st.caption(f"City: {selected_city}, {selected_state}")
+                st.markdown("**Analysis Details**")
+                st.caption(f"Location: {selected_city}, {selected_state}")
                 st.caption(f"Period: {start_date} to {end_date}")
                 st.caption(f"Satellite: {satellite}")
+                st.caption(f"Export Scale: {export_scale}m")
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")
