@@ -7,16 +7,18 @@ def get_enhanced_css():
         .main-header {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #1E3A5F;
+            color: #0D2240;
             text-align: center;
             padding: 1rem 0;
             margin-bottom: 0rem;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.05);
         }
         .sub-header {
             font-size: 1.1rem;
-            color: #666;
+            color: #444;
             text-align: center;
             margin-bottom: 2rem;
+            font-weight: 500;
         }
         .map-container {
             border-radius: 12px;
@@ -40,7 +42,7 @@ def get_enhanced_css():
             margin-bottom: 1rem;
             font-weight: 600;
             font-size: 1.1rem;
-            color: #333;
+            color: #1a1a1a;
         }
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -70,11 +72,12 @@ def get_enhanced_css():
             color: white;
         }
         .legend-box {
-            background-color: #f8f9fa;
+            background-color: #f5f7fa;
             border-radius: 10px;
             padding: 1rem;
             margin: 1rem 0;
-            color: #333;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
         }
         .legend-item {
             display: flex;
@@ -137,7 +140,8 @@ def get_enhanced_css():
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
-            color: #666;
+            color: #444;
+            font-weight: 500;
         }
         .pollutant-card {
             background: white;
@@ -149,11 +153,12 @@ def get_enhanced_css():
         .pollutant-value {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #333;
+            color: #1a1a1a;
         }
         .pollutant-unit {
             font-size: 0.85rem;
-            color: #666;
+            color: #555;
+            font-weight: 500;
         }
         .opacity-slider {
             margin: 0.5rem 0;
