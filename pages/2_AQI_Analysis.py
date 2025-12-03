@@ -7,7 +7,8 @@ import pandas as pd
 from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (
     auto_initialize_gee, get_city_geometry, get_tile_url, 
-    geojson_to_ee_geometry, get_safe_download_url
+    geojson_to_ee_geometry, get_safe_download_url,
+    process_shapefile_upload, geojson_file_to_ee_geometry
 )
 from services.gee_aqi import (
     POLLUTANT_INFO, get_pollutant_image, get_pollutant_vis_params,
@@ -85,20 +86,69 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("## 📍 Location")
     
-    states = get_states()
-    selected_state = st.selectbox("State", ["Select..."] + states, key="aqi_state")
+    location_mode = st.radio(
+        "Input Method",
+        ["City Selection", "Upload Shapefile/GeoJSON"],
+        key="aqi_location_mode",
+        horizontal=True
+    )
     
     selected_city = None
     city_coords = None
+    uploaded_geometry = None
+    uploaded_center = None
     
-    if selected_state != "Select...":
-        cities = get_cities(selected_state)
-        selected_city = st.selectbox("City", ["Select..."] + cities, key="aqi_city")
+    if location_mode == "City Selection":
+        states = get_states()
+        selected_state = st.selectbox("State", ["Select..."] + states, key="aqi_state")
         
-        if selected_city != "Select...":
-            city_coords = get_city_coordinates(selected_state, selected_city)
-            if city_coords:
-                st.success(f"📍 {selected_city}, {selected_state}")
+        if selected_state != "Select...":
+            cities = get_cities(selected_state)
+            selected_city = st.selectbox("City", ["Select..."] + cities, key="aqi_city")
+            
+            if selected_city != "Select...":
+                city_coords = get_city_coordinates(selected_state, selected_city)
+                if city_coords:
+                    st.success(f"📍 {selected_city}, {selected_state}")
+    else:
+        selected_state = "Custom AOI"
+        st.markdown("##### Upload Files")
+        st.caption("Upload Shapefile (.shp + .shx + .dbf + .prj), .zip, or GeoJSON file.")
+        
+        uploaded_files = st.file_uploader(
+            "Choose files",
+            type=["shp", "shx", "dbf", "prj", "cpg", "zip", "geojson", "json"],
+            accept_multiple_files=True,
+            key="aqi_shapefile_upload"
+        )
+        
+        if uploaded_files:
+            geojson_files = [f for f in uploaded_files if f.name.endswith(('.geojson', '.json'))]
+            zip_files = [f for f in uploaded_files if f.name.endswith('.zip')]
+            shp_files = [f for f in uploaded_files if f.name.endswith('.shp')]
+            
+            if geojson_files:
+                geom, center, error = geojson_file_to_ee_geometry(geojson_files[0])
+                if error:
+                    st.error(error)
+                else:
+                    uploaded_geometry = geom
+                    uploaded_center = center
+                    city_coords = center
+                    selected_city = "Custom Area"
+                    st.success(f"✅ GeoJSON loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+            elif zip_files or shp_files:
+                geom, center, error = process_shapefile_upload(uploaded_files)
+                if error:
+                    st.error(error)
+                else:
+                    uploaded_geometry = geom
+                    uploaded_center = center
+                    city_coords = center
+                    selected_city = "Custom Area"
+                    st.success(f"✅ Shapefile loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+            else:
+                st.warning("Please upload all required shapefile components or a .zip file")
     
     st.markdown("---")
     st.markdown("## 📅 Time Period")
@@ -155,17 +205,28 @@ with st.sidebar:
     show_dashboard = st.checkbox("Multi-Pollutant Dashboard", value=False, key="aqi_dashboard")
 
 if city_coords and st.session_state.gee_initialized and selected_pollutants:
+    use_uploaded_aoi = uploaded_geometry is not None
+    
     run_analysis = st.sidebar.button("🚀 Run Analysis", use_container_width=True, type="primary")
     
     base_map = create_base_map(city_coords["lat"], city_coords["lon"], zoom=10)
-    add_marker(base_map, city_coords["lat"], city_coords["lon"], 
-               popup=f"{selected_city}", tooltip=selected_city)
-    add_buffer_circle(base_map, city_coords["lat"], city_coords["lon"], buffer_km)
+    
+    if not use_uploaded_aoi:
+        add_marker(base_map, city_coords["lat"], city_coords["lon"], 
+                   popup=f"{selected_city}", tooltip=selected_city)
+        add_buffer_circle(base_map, city_coords["lat"], city_coords["lon"], buffer_km)
+    else:
+        add_marker(base_map, city_coords["lat"], city_coords["lon"], 
+                   popup="Custom Area Center", tooltip="Custom Area")
     
     if run_analysis:
         with st.spinner("Fetching Sentinel-5P data..."):
             try:
-                geometry = get_city_geometry(city_coords["lat"], city_coords["lon"], buffer_km)
+                if use_uploaded_aoi and uploaded_geometry:
+                    geometry = uploaded_geometry
+                    st.info("Using uploaded shapefile/GeoJSON geometry")
+                else:
+                    geometry = get_city_geometry(city_coords["lat"], city_coords["lon"], buffer_km)
                 st.session_state.current_geometry = geometry
                 
                 start_str = start_date.strftime("%Y-%m-%d")
