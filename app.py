@@ -28,7 +28,7 @@ with st.sidebar:
 
 st.markdown("---")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("""
@@ -39,9 +39,8 @@ with col1:
             <li><b>LULC Mapping:</b> 9 land cover classes using Dynamic World</li>
             <li><b>Vegetation Indices:</b> NDVI, NDWI, NDBI, EVI, SAVI</li>
             <li><b>Time Series:</b> Compare changes between years</li>
-            <li><b>Custom AOI:</b> Draw your own analysis areas</li>
-            <li><b>Pixel Inspector:</b> Click to view index values</li>
-            <li><b>Export:</b> CSV statistics, GeoTIFF downloads, PDF reports</li>
+            <li><b>Custom AOI:</b> Shapefile/GeoJSON upload</li>
+            <li><b>Export:</b> CSV, GeoTIFF, PDF reports</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -56,11 +55,10 @@ with col2:
         <p>Monitor air pollutants using Sentinel-5P satellite data.</p>
         <ul>
             <li><b>Pollutants:</b> NO₂, SO₂, CO, O₃, UVAI, CH₄</li>
-            <li><b>AOI Statistics:</b> Mean, median, std dev, percentiles</li>
             <li><b>Anomaly Maps:</b> Compare to 2019 baseline</li>
             <li><b>Hotspot Detection:</b> Identify pollution hotspots</li>
-            <li><b>Time Series:</b> Track pollutant trends over time</li>
-            <li><b>Dashboard:</b> Multi-pollutant correlations & radar charts</li>
+            <li><b>Time Series:</b> Track pollutant trends</li>
+            <li><b>Dashboard:</b> Multi-pollutant correlations</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -68,20 +66,38 @@ with col2:
     if st.button("Open AQI Analysis →", use_container_width=True, type="primary"):
         st.switch_page("pages/2_AQI_Analysis.py")
 
+with col3:
+    st.markdown("""
+    <div class="card">
+        <div class="card-header">🌡️ Urban Heat & Climate</div>
+        <p>Analyze Land Surface Temperature and Urban Heat Islands.</p>
+        <ul>
+            <li><b>LST Mapping:</b> MODIS Terra/Aqua data</li>
+            <li><b>UHI Intensity:</b> Urban vs rural comparison</li>
+            <li><b>Heat Hotspots:</b> High temperature zones</li>
+            <li><b>Cooling Zones:</b> Parks & water bodies</li>
+            <li><b>Warming Trends:</b> Long-term analysis</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("Open Heat Analysis →", use_container_width=True, type="primary"):
+        st.switch_page("pages/3_Urban_Heat_Climate.py")
+
 st.markdown("---")
 
 st.markdown("### 🛰️ Data Sources")
 
-data_col1, data_col2, data_col3 = st.columns(3)
+data_col1, data_col2, data_col3, data_col4 = st.columns(4)
 
 with data_col1:
     st.markdown("""
     <div class="card">
         <div class="card-header">Sentinel-2</div>
-        <p><b>Resolution:</b> 10m (RGB, NIR)</p>
+        <p><b>Resolution:</b> 10m</p>
         <p><b>Revisit:</b> ~5 days</p>
         <p><b>Available:</b> 2017-present</p>
-        <p>Best for detailed vegetation and land cover analysis.</p>
+        <p>Vegetation and land cover.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -92,7 +108,7 @@ with data_col2:
         <p><b>Resolution:</b> 30m</p>
         <p><b>Revisit:</b> ~16 days</p>
         <p><b>Available:</b> 2013-present</p>
-        <p>Best for long-term studies and historical analysis.</p>
+        <p>Long-term analysis.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -103,7 +119,18 @@ with data_col3:
         <p><b>Resolution:</b> 1-7 km</p>
         <p><b>Revisit:</b> Daily</p>
         <p><b>Available:</b> 2018-present</p>
-        <p>Atmospheric composition monitoring for air quality.</p>
+        <p>Air quality monitoring.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with data_col4:
+    st.markdown("""
+    <div class="card">
+        <div class="card-header">MODIS LST</div>
+        <p><b>Resolution:</b> 1 km</p>
+        <p><b>Revisit:</b> Daily</p>
+        <p><b>Available:</b> 2000-present</p>
+        <p>Land surface temperature.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -140,24 +167,33 @@ st.markdown("---")
 
 st.markdown("### 🆕 What's New")
 
-new_col1, new_col2 = st.columns(2)
+new_col1, new_col2, new_col3 = st.columns(3)
 
 with new_col1:
     st.markdown("""
     #### Enhanced UI
-    - Full-width responsive map with rounded corners
-    - Collapsible legends with opacity controls
-    - Pixel value inspector on click
-    - Improved statistics with pie/bar charts
+    - Full-width responsive maps
+    - Collapsible legends
+    - Shapefile/GeoJSON upload
+    - CSV, GeoTIFF, PDF exports
     """)
 
 with new_col2:
     st.markdown("""
-    #### New AQI Module
+    #### AQI Module
     - 6 pollutants from Sentinel-5P
     - Anomaly and hotspot detection
     - Time series with rolling averages
-    - Multi-pollutant correlation dashboard
+    - Multi-pollutant dashboard
+    """)
+
+with new_col3:
+    st.markdown("""
+    #### Urban Heat Module
+    - MODIS Land Surface Temperature
+    - Urban Heat Island intensity
+    - Heat hotspots & cooling zones
+    - Long-term warming trends
     """)
 
 st.markdown("---")
