@@ -190,3 +190,16 @@ def sample_pixel_value(image, lat, lon, scale=10):
     except Exception as e:
         print(f"Error sampling pixel: {e}")
         return None
+
+def get_image_mean(image, geometry, scale=30):
+    try:
+        result = image.reduceRegion(
+            reducer=ee.Reducer.mean(),
+            geometry=geometry,
+            scale=scale,
+            maxPixels=1e9
+        ).getInfo()
+        return result
+    except Exception as e:
+        print(f"Error calculating mean: {e}")
+        return None
