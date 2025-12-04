@@ -4,8 +4,8 @@
 A comprehensive web-based GIS and Remote Sensing application for analyzing Land Use/Land Cover (LULC), vegetation indices, air quality, and urban heat for Indian cities using Google Earth Engine and satellite data from Sentinel, Landsat, and MODIS.
 
 ## Current State
-- **Status**: Complete with Multi-Module Architecture
-- **Last Updated**: December 3, 2025
+- **Status**: Complete with Multi-Module Architecture + PDF Reports
+- **Last Updated**: December 4, 2025
 
 ## Features
 
@@ -33,7 +33,7 @@ A comprehensive web-based GIS and Remote Sensing application for analyzing Land 
 6. **Hotspot Detection**: Areas exceeding mean + 1.5σ threshold
 7. **Time Series Analysis**: Track pollutant trends with rolling averages
 8. **Multi-Pollutant Dashboard**: Correlation heatmaps, radar charts, comparison charts
-9. **Export**: CSV statistics, GeoTIFF downloads
+9. **Export**: CSV statistics, GeoTIFF downloads, PDF reports with Compliance Score
 
 ### Urban Heat & Climate Module
 1. **Land Surface Temperature**: MODIS Terra/Aqua LST data (1km resolution)
@@ -47,7 +47,34 @@ A comprehensive web-based GIS and Remote Sensing application for analyzing Land 
 9. **LST Anomaly**: Compare current period to baseline year
 10. **Time Series**: Track temperature trends over multiple years
 11. **Warming Trends**: Long-term warming analysis with regression
-12. **Export**: CSV statistics, time series data
+12. **Export**: CSV statistics, time series data, PDF reports with Vulnerability Score
+
+## PDF Report Features
+
+### Land Sustainability Score (LULC Module)
+A comprehensive score (0-100) evaluating environmental sustainability based on:
+- **Green Cover (35%)**: Percentage of vegetation (trees, grass, crops)
+- **Impervious Surface (25%)**: Built-up and bare ground areas
+- **Water Bodies (15%)**: Presence of water features
+- **Land Diversity (15%)**: Number of distinct land cover classes
+- **Vegetation Trend (10%)**: Change in tree cover over time
+
+### Air Quality Compliance Score (AQI Module)
+Compares measured pollutant concentrations against WHO Air Quality Guidelines:
+- **Excellent**: ≤50% of WHO limit (Score: 100)
+- **Good**: ≤100% of limit (Score: 80)
+- **Moderate**: ≤150% of limit (Score: 60)
+- **Poor**: ≤200% of limit (Score: 40)
+- **Very Poor**: ≤300% of limit (Score: 20)
+- **Severe**: >300% of limit (Score: 0)
+
+### Heat Vulnerability Score (Urban Heat Module)
+Assesses heat risk based on multiple factors:
+- **Temperature (30%)**: Mean Land Surface Temperature severity
+- **UHI Intensity (25%)**: Urban Heat Island effect magnitude
+- **Variability (15%)**: Temperature range and extremes
+- **Warming Trend (20%)**: Rate of temperature increase per year
+- **Extreme Heat Days (10%)**: Percentage of days exceeding 40°C
 
 ## Project Architecture
 
