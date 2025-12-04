@@ -1075,19 +1075,21 @@ def generate_urban_heat_pdf_report(report_data):
         if lst_stats:
             elements.append(Paragraph("Land Surface Temperature Statistics", heading_style))
             
-            stat_data = [['Metric', 'Value']]
-            stat_labels = {
-                'mean_celsius': 'Mean Temperature',
-                'mean': 'Mean Temperature',
-                'max_celsius': 'Maximum Temperature',
-                'max': 'Maximum Temperature',
-                'min_celsius': 'Minimum Temperature',
-                'min': 'Minimum Temperature',
-                'std_dev': 'Standard Deviation',
-                'range': 'Temperature Range'
-            }
+            time_of_day = report_data.get('time_of_day', 'Day')
+            band_prefix = f"LST_{time_of_day}"
             
-            for key, label in stat_labels.items():
+            stat_data = [['Metric', 'Value']]
+            stat_mappings = [
+                (f'{band_prefix}_mean', 'Mean Temperature'),
+                (f'{band_prefix}_min', 'Minimum Temperature'),
+                (f'{band_prefix}_max', 'Maximum Temperature'),
+                (f'{band_prefix}_stdDev', 'Standard Deviation'),
+                (f'{band_prefix}_p50', 'Median Temperature'),
+                (f'{band_prefix}_p10', '10th Percentile'),
+                (f'{band_prefix}_p90', '90th Percentile'),
+            ]
+            
+            for key, label in stat_mappings:
                 if key in lst_stats and lst_stats[key] is not None:
                     val = lst_stats[key]
                     stat_data.append([label, f"{val:.1f}°C"])
@@ -1110,21 +1112,27 @@ def generate_urban_heat_pdf_report(report_data):
         if uhi_stats:
             elements.append(Paragraph("Urban Heat Island Analysis", heading_style))
             
-            uhi_mean = uhi_stats.get('mean', 0)
-            uhi_max = uhi_stats.get('max', 0)
+            uhi_intensity = uhi_stats.get('uhi_intensity', 0) or 0
             
-            if uhi_mean >= 5:
+            urban_stats = uhi_stats.get('urban_stats', {})
+            rural_stats = uhi_stats.get('rural_stats', {})
+            urban_mean_key = f"LST_{time_of_day}_mean"
+            urban_mean = urban_stats.get(urban_mean_key, 0) if urban_stats else 0
+            rural_mean = rural_stats.get(urban_mean_key, 0) if rural_stats else 0
+            
+            if uhi_intensity >= 5:
                 uhi_severity = "Severe UHI effect - Significant urban warming"
-            elif uhi_mean >= 3:
+            elif uhi_intensity >= 3:
                 uhi_severity = "Moderate UHI effect - Noticeable urban warming"
-            elif uhi_mean >= 1:
+            elif uhi_intensity >= 1:
                 uhi_severity = "Mild UHI effect - Slight urban warming"
             else:
                 uhi_severity = "Minimal UHI effect"
             
             uhi_data = [
-                ['Mean UHI Intensity', f"{uhi_mean:.1f}°C"],
-                ['Maximum UHI Intensity', f"{uhi_max:.1f}°C"],
+                ['UHI Intensity', f"{uhi_intensity:.1f}°C" if uhi_intensity else "N/A"],
+                ['Urban Mean Temp', f"{urban_mean:.1f}°C" if urban_mean else "N/A"],
+                ['Rural Mean Temp', f"{rural_mean:.1f}°C" if rural_mean else "N/A"],
                 ['Assessment', uhi_severity]
             ]
             uhi_table = Table(uhi_data, colWidths=[5*cm, 8*cm])
