@@ -494,6 +494,9 @@ def calculate_land_sustainability_score(lulc_stats, change_stats=None):
 
 
 def _create_chart_image(chart_type, data, title, width=400, height=250):
+    if chart_type == 'bar' and isinstance(data, dict) and len(data) > 5:
+        height = max(250, len(data) * 30)
+    
     fig, ax = plt.subplots(figsize=(width/100, height/100), dpi=100)
     
     if chart_type == 'pie':
@@ -506,11 +509,19 @@ def _create_chart_image(chart_type, data, title, width=400, height=250):
     elif chart_type == 'bar':
         labels = list(data.keys())
         values = [d.get('percentage', 0) if isinstance(d, dict) else d for d in data.values()]
-        colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(labels)))
-        bars = ax.bar(range(len(labels)), values, color=colors)
-        ax.set_xticks(range(len(labels)))
-        ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
-        ax.set_ylabel('Percentage (%)')
+        bar_colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(labels)))
+        
+        if len(labels) > 5:
+            ax.barh(range(len(labels)), values, color=bar_colors)
+            ax.set_yticks(range(len(labels)))
+            ax.set_yticklabels(labels, fontsize=8)
+            ax.set_xlabel('Percentage (%)')
+            ax.invert_yaxis()
+        else:
+            ax.bar(range(len(labels)), values, color=bar_colors)
+            ax.set_xticks(range(len(labels)))
+            ax.set_xticklabels(labels, rotation=30, ha='right', fontsize=8)
+            ax.set_ylabel('Percentage (%)')
         ax.set_title(title, fontsize=10, fontweight='bold')
     
     elif chart_type == 'line':
@@ -597,10 +608,10 @@ def generate_lulc_pdf_report(report_data):
             ['Location', f"{city}, {state}" if state else city],
             ['Analysis Period', date_range or str(year)],
             ['Satellite Source', satellite],
-            ['Total Area Analyzed', f"{total_area:.2f} km²" if total_area else 'N/A'],
+            ['Total Area', f"{total_area:.2f} km²" if total_area else 'N/A'],
             ['Report Generated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
         ]
-        info_table = Table(info_data, colWidths=[3*cm, 8*cm])
+        info_table = Table(info_data, colWidths=[5*cm, 12*cm])
         info_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e3f2fd')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -608,9 +619,10 @@ def generate_lulc_pdf_report(report_data):
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('PADDING', (0, 0), (-1, -1), 8),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         elements.append(info_table)
-        elements.append(Spacer(1, 20))
+        elements.append(Spacer(1, 25))
         
         sustainability = report_data.get('sustainability_score', {})
         if sustainability:
@@ -652,7 +664,7 @@ def generate_lulc_pdf_report(report_data):
                 ]))
                 elements.append(comp_table)
             
-            elements.append(Spacer(1, 10))
+            elements.append(Spacer(1, 15))
             method_note = """<b>Methodology:</b> The Land Sustainability Score is calculated using weighted components:
             Green Cover (35%) - Percentage of vegetation including trees, grass, and crops;
             Impervious Surface (25%) - Built-up and bare ground areas;
@@ -661,7 +673,7 @@ def generate_lulc_pdf_report(report_data):
             Vegetation Trend (10%) - Change in tree cover if time-series available.
             Scores range from 0-100, with higher scores indicating better environmental sustainability."""
             elements.append(Paragraph(method_note, note_style))
-            elements.append(Spacer(1, 15))
+            elements.append(Spacer(1, 30))
         
         stats = report_data.get('stats', {})
         if stats:
