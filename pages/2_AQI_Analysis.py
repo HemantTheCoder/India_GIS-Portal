@@ -31,7 +31,10 @@ from components.charts import (
     render_line_chart, render_multi_pollutant_chart, 
     render_correlation_heatmap, render_radar_chart
 )
-from services.exports import generate_aqi_csv, generate_time_series_csv
+from services.exports import (
+    generate_aqi_csv, generate_time_series_csv, generate_aqi_pdf_report,
+    calculate_aqi_compliance_score
+)
 
 def format_aqi_value(value, decimals=2):
     if value is None:
@@ -377,7 +380,7 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
             
             st.markdown("### 📥 Export Options")
             
-            exp_col1, exp_col2 = st.columns(2)
+            exp_col1, exp_col2, exp_col3 = st.columns(3)
             
             with exp_col1:
                 if st.button("📦 Generate GeoTIFF", use_container_width=True, key="aqi_export"):
@@ -409,6 +412,41 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                             mime="text/csv",
                             key="dl_primary_csv",
                             use_container_width=True
+                        )
+            
+            with exp_col3:
+                if st.session_state.pollutant_stats:
+                    if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_aqi_pdf"):
+                        with st.spinner("Generating PDF report..."):
+                            compliance = calculate_aqi_compliance_score(st.session_state.pollutant_stats)
+                            
+                            ts_data = {}
+                            if st.session_state.get("aqi_time_series"):
+                                ts_data = st.session_state.aqi_time_series
+                            
+                            report_data = {
+                                'city_name': selected_city,
+                                'state': selected_state,
+                                'date_range': f"{start_date} to {end_date}",
+                                'pollutants': selected_pollutants,
+                                'pollutant_stats': st.session_state.pollutant_stats,
+                                'compliance_score': compliance,
+                                'time_series': ts_data
+                            }
+                            
+                            pdf_data = generate_aqi_pdf_report(report_data)
+                            if pdf_data:
+                                st.session_state.aqi_pdf = pdf_data
+                                st.success("PDF ready!")
+                    
+                    if st.session_state.get("aqi_pdf"):
+                        st.download_button(
+                            "📥 Download PDF",
+                            data=st.session_state.aqi_pdf,
+                            file_name=f"aqi_report_{selected_city}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="dl_aqi_pdf"
                         )
         
         if show_time_series and st.session_state.get("aqi_time_series"):
