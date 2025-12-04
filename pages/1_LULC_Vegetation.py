@@ -9,7 +9,7 @@ import io
 from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (
     auto_initialize_gee, get_city_geometry, get_tile_url, 
-    geojson_to_ee_geometry, get_safe_download_url, sample_pixel_value,
+    geojson_to_ee_geometry, get_safe_download_url, sample_pixel_value, get_image_mean,
     process_shapefile_upload, geojson_file_to_ee_geometry
 )
 from services.gee_lulc import (
@@ -35,7 +35,8 @@ from components.charts import (
     render_pie_chart, render_bar_chart, generate_csv_download, render_download_button
 )
 from services.exports import (
-    generate_lulc_csv, generate_change_analysis_csv, generate_pdf_report
+    generate_lulc_csv, generate_change_analysis_csv, generate_lulc_pdf_report,
+    calculate_land_sustainability_score
 )
 
 st.set_page_config(
@@ -262,6 +263,7 @@ if city_coords and st.session_state.gee_initialized:
                     
                     index_funcs = get_index_functions(satellite)
                     st.session_state.index_images = {}
+                    st.session_state.index_means = {}
                     
                     for idx in show_indices:
                         if idx in index_funcs:
@@ -272,6 +274,10 @@ if city_coords and st.session_state.gee_initialized:
                                     index_params = get_index_vis_params(idx)
                                     index_url = get_tile_url(index_image, index_params)
                                     add_tile_layer(base_map, index_url, idx, 0.8)
+                                    
+                                    mean_result = get_image_mean(index_image, geometry)
+                                    if mean_result:
+                                        st.session_state.index_means[idx] = mean_result.get(idx, None)
                             except Exception as e:
                                 st.warning(f"Could not calculate {idx}: {str(e)}")
                     
@@ -531,11 +537,40 @@ if city_coords and st.session_state.gee_initialized:
                     st.caption("Run LULC analysis to enable CSV export")
             
             with export_col3:
-                st.markdown("**Analysis Details**")
-                st.caption(f"Location: {selected_city}, {selected_state}")
-                st.caption(f"Period: {start_date} to {end_date}")
-                st.caption(f"Satellite: {satellite}")
-                st.caption(f"Export Scale: {export_scale}m")
+                st.markdown("**PDF Report**")
+                if st.session_state.get("lulc_stats"):
+                    if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_pdf"):
+                        with st.spinner("Generating PDF report..."):
+                            sustainability = calculate_land_sustainability_score(st.session_state.lulc_stats)
+                            
+                            report_data = {
+                                'city_name': selected_city,
+                                'state': selected_state,
+                                'year': selected_year,
+                                'date_range': f"{start_date} to {end_date}",
+                                'satellite': satellite,
+                                'total_area': st.session_state.lulc_stats.get('total_area_sqkm', 0),
+                                'stats': st.session_state.lulc_stats.get('classes', {}),
+                                'sustainability_score': sustainability,
+                                'indices': st.session_state.get('index_means', {})
+                            }
+                            
+                            pdf_data = generate_lulc_pdf_report(report_data)
+                            if pdf_data:
+                                st.session_state.lulc_pdf = pdf_data
+                                st.success("PDF ready!")
+                    
+                    if st.session_state.get("lulc_pdf"):
+                        st.download_button(
+                            "📥 Download PDF Report",
+                            data=st.session_state.lulc_pdf,
+                            file_name=f"lulc_report_{selected_city}_{selected_year}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="dl_pdf"
+                        )
+                else:
+                    st.caption("Run analysis to enable PDF export")
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")
