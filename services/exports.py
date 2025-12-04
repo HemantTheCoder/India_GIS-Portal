@@ -502,8 +502,14 @@ def _create_chart_image(chart_type, data, title, width=400, height=250):
     if chart_type == 'pie':
         labels = list(data.keys())
         values = [d.get('percentage', 0) for d in data.values()]
-        colors = plt.cm.Set3(np.linspace(0, 1, len(labels)))
-        ax.pie(values, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+        pie_colors = plt.cm.Set3(np.linspace(0, 1, len(labels)))
+        
+        wedges, texts, autotexts = ax.pie(values, autopct='%1.1f%%', colors=pie_colors, startangle=90, pctdistance=0.75)
+        
+        for autotext in autotexts:
+            autotext.set_fontsize(7)
+        
+        ax.legend(wedges, labels, loc='center left', bbox_to_anchor=(1, 0.5), fontsize=7)
         ax.set_title(title, fontsize=10, fontweight='bold')
     
     elif chart_type == 'bar':
@@ -627,19 +633,26 @@ def generate_lulc_pdf_report(report_data):
         sustainability = report_data.get('sustainability_score', {})
         if sustainability:
             elements.append(Paragraph("Land Sustainability Score", heading_style))
+            elements.append(Spacer(1, 10))
             
             score = sustainability.get('score', 0)
             rating = sustainability.get('rating', 'Unknown')
             score_color = sustainability.get('color', '#666666')
             
-            score_text = f"""
-            <para align="center">
-            <font size="28" color="{score_color}"><b>{score:.0f}</b></font><font size="14">/100</font><br/>
-            <font size="12" color="{score_color}"><b>{rating}</b></font>
-            </para>
-            """
-            elements.append(Paragraph(score_text, styles['Normal']))
-            elements.append(Spacer(1, 10))
+            score_table_data = [[
+                Paragraph(f'<font size="24" color="{score_color}"><b>{score:.0f}</b></font><font size="12">/100</font>', 
+                         ParagraphStyle('ScoreStyle', alignment=TA_CENTER)),
+                Paragraph(f'<font size="11" color="{score_color}"><b>{rating}</b></font>',
+                         ParagraphStyle('RatingStyle', alignment=TA_CENTER))
+            ]]
+            score_display = Table(score_table_data, colWidths=[4*cm, 10*cm])
+            score_display.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('PADDING', (0, 0), (-1, -1), 10),
+            ]))
+            elements.append(score_display)
+            elements.append(Spacer(1, 15))
             
             components = sustainability.get('components', {})
             if components:
@@ -705,10 +718,45 @@ def generate_lulc_pdf_report(report_data):
             
             if len(stats) > 0:
                 try:
-                    chart_buf = _create_chart_image('pie', stats, 'Land Cover Distribution', 350, 250)
-                    elements.append(Image(chart_buf, width=3.5*inch, height=2.5*inch))
+                    chart_buf = _create_chart_image('pie', stats, 'Land Cover Distribution', 400, 280)
+                    elements.append(Image(chart_buf, width=5*inch, height=2.8*inch))
                 except Exception:
                     pass
+            elements.append(Spacer(1, 20))
+        
+        indices = report_data.get('indices', {})
+        if indices:
+            elements.append(Paragraph("Vegetation Indices Summary", heading_style))
+            
+            idx_data = [['Index', 'Mean Value', 'Description']]
+            idx_descriptions = {
+                'NDVI': 'Vegetation health and density',
+                'NDWI': 'Water content in vegetation',
+                'NDBI': 'Built-up area intensity',
+                'EVI': 'Enhanced vegetation monitoring',
+                'SAVI': 'Soil-adjusted vegetation'
+            }
+            for idx_name, idx_val in indices.items():
+                if idx_val is not None:
+                    idx_data.append([
+                        idx_name,
+                        f"{idx_val:.4f}",
+                        idx_descriptions.get(idx_name, '')
+                    ])
+            
+            if len(idx_data) > 1:
+                idx_table = Table(idx_data, colWidths=[3*cm, 3*cm, 11*cm])
+                idx_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#8bc34a')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('PADDING', (0, 0), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+                ]))
+                elements.append(idx_table)
+                elements.append(Spacer(1, 20))
         
         change_data = report_data.get('change_analysis', {})
         if change_data:
@@ -743,37 +791,6 @@ def generate_lulc_pdf_report(report_data):
                 ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
             ]))
             elements.append(change_table)
-        
-        indices = report_data.get('indices', {})
-        if indices:
-            elements.append(Spacer(1, 20))
-            elements.append(Paragraph("Vegetation Indices Summary", heading_style))
-            
-            idx_data = [['Index', 'Mean', 'Description']]
-            idx_descriptions = {
-                'NDVI': 'Normalized Difference Vegetation Index - Vegetation health',
-                'NDWI': 'Normalized Difference Water Index - Water content',
-                'NDBI': 'Normalized Difference Built-up Index - Urban areas',
-                'EVI': 'Enhanced Vegetation Index - Improved vegetation monitoring',
-                'SAVI': 'Soil Adjusted Vegetation Index - Vegetation in sparse areas'
-            }
-            for idx_name, idx_val in indices.items():
-                idx_data.append([
-                    idx_name,
-                    f"{idx_val:.3f}" if idx_val else 'N/A',
-                    idx_descriptions.get(idx_name, '')
-                ])
-            
-            idx_table = Table(idx_data, colWidths=[2*cm, 2*cm, 9*cm])
-            idx_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#8bc34a')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('PADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ]))
-            elements.append(idx_table)
         
         elements.append(Spacer(1, 30))
         elements.append(Paragraph("—" * 40, styles['Normal']))

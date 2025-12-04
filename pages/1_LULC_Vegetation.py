@@ -9,7 +9,7 @@ import io
 from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (
     auto_initialize_gee, get_city_geometry, get_tile_url, 
-    geojson_to_ee_geometry, get_safe_download_url, sample_pixel_value,
+    geojson_to_ee_geometry, get_safe_download_url, sample_pixel_value, get_image_mean,
     process_shapefile_upload, geojson_file_to_ee_geometry
 )
 from services.gee_lulc import (
@@ -263,6 +263,7 @@ if city_coords and st.session_state.gee_initialized:
                     
                     index_funcs = get_index_functions(satellite)
                     st.session_state.index_images = {}
+                    st.session_state.index_means = {}
                     
                     for idx in show_indices:
                         if idx in index_funcs:
@@ -273,6 +274,10 @@ if city_coords and st.session_state.gee_initialized:
                                     index_params = get_index_vis_params(idx)
                                     index_url = get_tile_url(index_image, index_params)
                                     add_tile_layer(base_map, index_url, idx, 0.8)
+                                    
+                                    mean_result = get_image_mean(index_image, geometry)
+                                    if mean_result:
+                                        st.session_state.index_means[idx] = mean_result.get(idx, None)
                             except Exception as e:
                                 st.warning(f"Could not calculate {idx}: {str(e)}")
                     
@@ -547,7 +552,7 @@ if city_coords and st.session_state.gee_initialized:
                                 'total_area': st.session_state.lulc_stats.get('total_area_sqkm', 0),
                                 'stats': st.session_state.lulc_stats.get('classes', {}),
                                 'sustainability_score': sustainability,
-                                'indices': {}
+                                'indices': st.session_state.get('index_means', {})
                             }
                             
                             pdf_data = generate_lulc_pdf_report(report_data)
