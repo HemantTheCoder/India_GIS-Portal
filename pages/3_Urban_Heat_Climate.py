@@ -26,7 +26,10 @@ from components.maps import (
     create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control
 )
 from components.charts import render_line_chart
-from services.exports import generate_time_series_csv
+from services.exports import (
+    generate_time_series_csv, generate_urban_heat_pdf_report,
+    calculate_heat_vulnerability_score
+)
 
 def format_temp(value, decimals=1):
     if value is None:
@@ -636,20 +639,62 @@ if st.session_state.get("lst_analysis_complete"):
         
         st.markdown("### 📥 Export Options")
         
-        if st.session_state.lst_stats:
-            stats = st.session_state.lst_stats
-            csv_data = f"Metric,Value\n"
-            for key, val in stats.items():
-                csv_data += f"{key},{val}\n"
-            
-            st.download_button(
-                "📄 Download Statistics CSV",
-                data=csv_data,
-                file_name=f"lst_stats_{display_name}.csv",
-                mime="text/csv",
-                use_container_width=True,
-                key="dl_lst_stats"
-            )
+        exp_cols = st.columns(2)
+        
+        with exp_cols[0]:
+            if st.session_state.lst_stats:
+                stats = st.session_state.lst_stats
+                csv_data = f"Metric,Value\n"
+                for key, val in stats.items():
+                    csv_data += f"{key},{val}\n"
+                
+                st.download_button(
+                    "📄 Download CSV",
+                    data=csv_data,
+                    file_name=f"lst_stats_{display_name}.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="dl_lst_stats"
+                )
+        
+        with exp_cols[1]:
+            if st.session_state.lst_stats:
+                if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_heat_pdf"):
+                    with st.spinner("Generating PDF report..."):
+                        vulnerability = calculate_heat_vulnerability_score(
+                            st.session_state.lst_stats,
+                            st.session_state.uhi_stats,
+                            st.session_state.lst_time_series,
+                            st.session_state.warming_trend
+                        )
+                        
+                        report_data = {
+                            'city_name': display_name,
+                            'state': selected_state if selected_state != "Custom AOI" else "",
+                            'date_range': f"{start_date} to {end_date}",
+                            'time_of_day': time_of_day,
+                            'data_source': f"MODIS {satellite}",
+                            'lst_stats': st.session_state.lst_stats,
+                            'uhi_stats': st.session_state.uhi_stats,
+                            'vulnerability_score': vulnerability,
+                            'time_series': st.session_state.lst_time_series,
+                            'warming_trend': st.session_state.warming_trend
+                        }
+                        
+                        pdf_data = generate_urban_heat_pdf_report(report_data)
+                        if pdf_data:
+                            st.session_state.heat_pdf = pdf_data
+                            st.success("PDF ready!")
+                
+                if st.session_state.get("heat_pdf"):
+                    st.download_button(
+                        "📥 Download PDF",
+                        data=st.session_state.heat_pdf,
+                        file_name=f"urban_heat_report_{display_name}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key="dl_heat_pdf"
+                    )
     
     if st.session_state.lst_time_series:
         st.markdown("---")
