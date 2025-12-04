@@ -673,7 +673,7 @@ if st.session_state.get("lst_analysis_complete"):
                             'state': selected_state if selected_state != "Custom AOI" else "",
                             'date_range': f"{start_date} to {end_date}",
                             'time_of_day': time_of_day,
-                            'data_source': data_source,
+                            'data_source': f"MODIS {satellite}",
                             'lst_stats': st.session_state.lst_stats,
                             'uhi_stats': st.session_state.uhi_stats,
                             'vulnerability_score': vulnerability,
