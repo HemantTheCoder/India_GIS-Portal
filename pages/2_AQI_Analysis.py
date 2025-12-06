@@ -304,6 +304,7 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                     )
                 
                 st.session_state.aqi_analysis_complete = True
+                st.session_state.aqi_pdf = None
                 st.success("Analysis complete!")
             
             except Exception as e:
@@ -416,38 +417,31 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
             
             with exp_col3:
                 if st.session_state.pollutant_stats:
-                    if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_aqi_pdf"):
-                        with st.spinner("Generating PDF report..."):
-                            compliance = calculate_aqi_compliance_score(st.session_state.pollutant_stats)
-                            
-                            ts_data = {}
-                            if st.session_state.get("aqi_time_series"):
-                                ts_data = st.session_state.aqi_time_series
-                            
-                            report_data = {
-                                'city_name': selected_city,
-                                'state': selected_state,
-                                'date_range': f"{start_date} to {end_date}",
-                                'pollutants': selected_pollutants,
-                                'pollutant_stats': st.session_state.pollutant_stats,
-                                'compliance_score': compliance,
-                                'time_series': ts_data
-                            }
-                            
-                            pdf_data = generate_aqi_pdf_report(report_data)
-                            if pdf_data:
-                                st.session_state.aqi_pdf = pdf_data
-                                st.success("PDF ready!")
+                    if 'aqi_pdf' not in st.session_state or st.session_state.aqi_pdf is None:
+                        compliance = calculate_aqi_compliance_score(st.session_state.pollutant_stats)
+                        ts_data = st.session_state.get("aqi_time_series", {})
+                        report_data = {
+                            'city_name': selected_city,
+                            'state': selected_state,
+                            'date_range': f"{start_date} to {end_date}",
+                            'pollutants': selected_pollutants,
+                            'pollutant_stats': st.session_state.pollutant_stats,
+                            'compliance_score': compliance,
+                            'time_series': ts_data
+                        }
+                        st.session_state.aqi_pdf = generate_aqi_pdf_report(report_data)
                     
                     if st.session_state.get("aqi_pdf"):
                         st.download_button(
-                            "📥 Download PDF",
+                            "📥 Download PDF Report",
                             data=st.session_state.aqi_pdf,
                             file_name=f"aqi_report_{selected_city}.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key="dl_aqi_pdf"
                         )
+                    else:
+                        st.error("Failed to generate PDF")
         
         if show_time_series and st.session_state.get("aqi_time_series"):
             st.markdown("---")
