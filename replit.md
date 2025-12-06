@@ -22,7 +22,9 @@ A comprehensive web-based GIS and Remote Sensing application for analyzing Land 
 8. **Pixel Inspector**: Click on map to view index values at any location
 9. **Statistics**: Land cover percentage and area (km²) breakdown with pie/bar charts
 10. **Time Series Analysis**: Compare LULC changes between years with change summaries
-11. **Export/Download**: CSV statistics, GeoTIFF exports, PDF reports
+11. **Trend Analysis**: Historical trend analysis with linear regression for LULC classes and vegetation indices
+12. **Forecast**: Future year predictions based on historical trends with 95% confidence intervals
+13. **Export/Download**: CSV statistics, GeoTIFF exports, PDF reports
 
 ### Air Quality (AQI) Analysis Module
 1. **Pollutant Monitoring**: NO₂, SO₂, CO, O₃, UVAI, CH₄ from Sentinel-5P
@@ -98,6 +100,7 @@ Assesses heat risk based on multiple factors:
 │   ├── gee_indices.py         # Vegetation index calculations
 │   ├── gee_aqi.py             # Air quality/Sentinel-5P functions
 │   ├── gee_lst.py             # Land Surface Temperature/MODIS functions
+│   ├── gee_trends.py          # Historical trend analysis and forecasting
 │   └── exports.py             # CSV and PDF export functions
 ├── india_cities.py            # Indian cities database
 ├── gee_utils.py               # Legacy utilities (kept for compatibility)
@@ -115,6 +118,7 @@ Assesses heat risk based on multiple factors:
 - **gee_indices.py**: NDVI, NDWI, NDBI, EVI, SAVI with standardized ranges (-1 to 1, SAVI 0 to 1)
 - **gee_aqi.py**: Sentinel-5P pollutant fetching, statistics, anomaly/hotspot detection, time series
 - **gee_lst.py**: MODIS LST fetching, UHI calculation, hotspot/cooling detection, warming trends
+- **gee_trends.py**: Historical data fetching, linear regression trend analysis, forecast generation with confidence intervals
 - **exports.py**: CSV generation, PDF report generation with reportlab
 
 #### Components Layer
