@@ -112,8 +112,8 @@ WHO_STANDARDS_2021 = {
         'annual': 5,
         'unit': 'µg/m³',
         'comparable': True,
-        'aqi_breakpoints': [(0, 12, 0, 50), (12.1, 35.4, 51, 100), (35.5, 55.4, 101, 150), 
-                           (55.5, 150.4, 151, 200), (150.5, 250.4, 201, 300), (250.5, 500.4, 301, 500)]
+        'aqi_breakpoints': [(0, 30, 0, 50), (31, 60, 51, 100), (61, 90, 101, 150), 
+                           (91, 120, 151, 200), (121, 250, 201, 300), (251, 500, 301, 500)]
     },
     'PM10': {
         'name': 'Coarse Particulate Matter',
@@ -121,37 +121,77 @@ WHO_STANDARDS_2021 = {
         'annual': 15,
         'unit': 'µg/m³',
         'comparable': True,
-        'aqi_breakpoints': [(0, 54, 0, 50), (55, 154, 51, 100), (155, 254, 101, 150),
-                           (255, 354, 151, 200), (355, 424, 201, 300), (425, 604, 301, 500)]
+        'aqi_breakpoints': [(0, 50, 0, 50), (51, 100, 51, 100), (101, 250, 101, 150),
+                           (251, 350, 151, 200), (351, 430, 201, 300), (431, 600, 301, 500)]
     },
     'NO2': {
-        'name': 'Nitrogen Dioxide',
+        'name': 'Nitrogen Dioxide (Surface)',
         'daily': 25,
         'annual': 10,
         'unit': 'µg/m³',
-        'comparable': False,
-        'note': 'Sentinel-5P provides column density (µmol/m²), not ground concentration'
+        'comparable': True,
+        'aqi_breakpoints': [(0, 40, 0, 50), (41, 80, 51, 100), (81, 180, 101, 150),
+                           (181, 280, 151, 200), (281, 400, 201, 300), (401, 800, 301, 500)]
     },
     'SO2': {
-        'name': 'Sulfur Dioxide',
+        'name': 'Sulfur Dioxide (Surface)',
         'daily': 40,
         'unit': 'µg/m³',
-        'comparable': False,
-        'note': 'Sentinel-5P provides column density (µmol/m²), not ground concentration'
+        'comparable': True,
+        'aqi_breakpoints': [(0, 40, 0, 50), (41, 80, 51, 100), (81, 380, 101, 150),
+                           (381, 800, 151, 200), (801, 1600, 201, 300), (1601, 2400, 301, 500)]
     },
     'CO': {
-        'name': 'Carbon Monoxide',
+        'name': 'Carbon Monoxide (Surface)',
         'daily': 4,
         'unit': 'mg/m³',
-        'comparable': False,
-        'note': 'Sentinel-5P provides column density (mmol/m²), not ground concentration'
+        'comparable': True,
+        'aqi_breakpoints': [(0, 1.0, 0, 50), (1.1, 2.0, 51, 100), (2.1, 10, 101, 150),
+                           (10.1, 17, 151, 200), (17.1, 34, 201, 300), (34.1, 50, 301, 500)]
     },
     'O3': {
-        'name': 'Ozone',
+        'name': 'Ozone (Surface)',
         'daily': 100,
         'unit': 'µg/m³',
+        'comparable': True,
+        'aqi_breakpoints': [(0, 50, 0, 50), (51, 100, 51, 100), (101, 168, 101, 150),
+                           (169, 208, 151, 200), (209, 748, 201, 300), (749, 1200, 301, 500)]
+    },
+    'NO2_Column': {
+        'name': 'NO₂ Column Density',
+        'unit': 'µmol/m²',
         'comparable': False,
-        'note': 'Sentinel-5P provides column density (mmol/m²), not ground concentration'
+        'note': 'Satellite column density - not comparable to WHO ground-level limits'
+    },
+    'SO2_Column': {
+        'name': 'SO₂ Column Density',
+        'unit': 'µmol/m²',
+        'comparable': False,
+        'note': 'Satellite column density - not comparable to WHO ground-level limits'
+    },
+    'CO_Column': {
+        'name': 'CO Column Density',
+        'unit': 'mmol/m²',
+        'comparable': False,
+        'note': 'Satellite column density - not comparable to WHO ground-level limits'
+    },
+    'O3_Column': {
+        'name': 'O₃ Column Density',
+        'unit': 'mmol/m²',
+        'comparable': False,
+        'note': 'Satellite column density - not comparable to WHO ground-level limits'
+    },
+    'UVAI': {
+        'name': 'UV Aerosol Index',
+        'unit': 'index',
+        'comparable': False,
+        'note': 'Aerosol absorption index - no WHO limit defined'
+    },
+    'CH4': {
+        'name': 'Methane',
+        'unit': 'ppb',
+        'comparable': False,
+        'note': 'Atmospheric methane - no WHO air quality limit defined'
     },
 }
 
@@ -979,21 +1019,21 @@ def generate_aqi_pdf_report(report_data):
                 score_color = '#d32f2f'
             
             aqi_score_data = [
-                ['AQI Index', 'AQI Category', 'WHO Compliance Score', 'Rating'],
+                ['AQI Index', 'AQI Category', 'WHO Score', 'Rating'],
                 [str(aqi_index), aqi_category, f"{score:.0f}/100", rating]
             ]
-            aqi_score_table = Table(aqi_score_data, colWidths=[3.5*cm, 4*cm, 4*cm, 5.5*cm])
+            aqi_score_table = Table(aqi_score_data, colWidths=[4*cm, 4.5*cm, 3.5*cm, 6*cm])
             aqi_score_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1565c0')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('FONTSIZE', (0, 1), (0, 1), 18),
-                ('FONTSIZE', (1, 1), (-1, 1), 10),
+                ('FONTSIZE', (0, 1), (0, 1), 24),
+                ('FONTSIZE', (1, 1), (-1, 1), 11),
                 ('TEXTCOLOR', (0, 1), (0, 1), colors.HexColor(aqi_color)),
                 ('TEXTCOLOR', (2, 1), (2, 1), colors.HexColor(score_color)),
                 ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-                ('PADDING', (0, 0), (-1, -1), 10),
+                ('PADDING', (0, 0), (-1, -1), 12),
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1010,22 +1050,20 @@ def generate_aqi_pdf_report(report_data):
             if details:
                 elements.append(Paragraph("Pollutant-wise WHO Comparison (2021 Guidelines)", body_style))
                 
-                comp_data = [['Pollutant', 'Name', 'Measured', 'WHO Limit', 'Sub-AQI', 'Status']]
+                comp_data = [['Pollutant', 'Measured', 'WHO Limit', 'Sub-AQI', 'Status']]
                 for d in details:
-                    ratio = d.get('ratio', 0)
                     status = d.get('status', 'Unknown')
                     sub_aqi = d.get('sub_aqi', 0)
                     unit = d.get('unit', '')
                     comp_data.append([
                         d.get('pollutant', ''),
-                        d.get('name', ''),
                         f"{d.get('measured', 0):.2f} {unit}",
                         f"{d.get('who_limit', 0)} {unit}",
                         str(sub_aqi),
                         status
                     ])
                 
-                comp_table = Table(comp_data, colWidths=[1.8*cm, 4*cm, 3.2*cm, 2.8*cm, 1.8*cm, 2.5*cm])
+                comp_table = Table(comp_data, colWidths=[2.5*cm, 4*cm, 3.5*cm, 2.5*cm, 3*cm])
                 comp_table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0288d1')),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -1038,9 +1076,9 @@ def generate_aqi_pdf_report(report_data):
                 elements.append(comp_table)
             
             elements.append(Spacer(1, 10))
-            method_note = """<b>Methodology:</b> AQI is calculated using standard breakpoints for PM2.5 and PM10. 
-            The overall AQI is the highest sub-index. WHO Compliance Score (0-100) compares ground-level concentrations 
-            against WHO 2021 Guidelines: Excellent (≤50% of limit), Good (≤100%), Moderate (≤150%), 
+            method_note = """<b>Methodology:</b> AQI calculated using standard breakpoints for surface-level pollutants 
+            from CAMS reanalysis data. The overall AQI is the highest sub-index. WHO Compliance Score (0-100) compares 
+            ground-level concentrations against WHO 2021 Guidelines: Excellent (≤50% of limit), Good (≤100%), Moderate (≤150%), 
             Poor (≤200%), Very Poor (≤300%), Severe (>300%)."""
             elements.append(Paragraph(method_note, note_style))
             elements.append(Spacer(1, 15))
