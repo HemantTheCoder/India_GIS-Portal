@@ -979,21 +979,21 @@ def generate_aqi_pdf_report(report_data):
                 score_color = '#d32f2f'
             
             aqi_score_data = [
-                ['AQI Index', 'AQI Category', 'WHO Compliance Score', 'Rating'],
+                ['AQI Index', 'AQI Category', 'WHO Compliance', 'Rating'],
                 [str(aqi_index), aqi_category, f"{score:.0f}/100", rating]
             ]
-            aqi_score_table = Table(aqi_score_data, colWidths=[3.5*cm, 4*cm, 4*cm, 5.5*cm])
+            aqi_score_table = Table(aqi_score_data, colWidths=[2.5*cm, 3.5*cm, 3.5*cm, 6.5*cm])
             aqi_score_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1565c0')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('FONTSIZE', (0, 1), (0, 1), 18),
-                ('FONTSIZE', (1, 1), (-1, 1), 10),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (0, 1), 14),
+                ('FONTSIZE', (1, 1), (-1, 1), 9),
                 ('TEXTCOLOR', (0, 1), (0, 1), colors.HexColor(aqi_color)),
                 ('TEXTCOLOR', (2, 1), (2, 1), colors.HexColor(score_color)),
                 ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-                ('PADDING', (0, 0), (-1, -1), 10),
+                ('PADDING', (0, 0), (-1, -1), 8),
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
