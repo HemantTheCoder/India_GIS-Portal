@@ -140,22 +140,18 @@ Assesses heat risk based on multiple factors:
 |-----------|------------|------|-----------------|-------------|
 | PM2.5 | ECMWF CAMS NRT | µg/m³ | 15 µg/m³ | Fine particulate matter (<2.5µm) |
 | PM10 | ECMWF CAMS NRT | µg/m³ | 45 µg/m³ | Coarse particulate matter (<10µm) |
-| NO₂ | ECMWF CAMS NRT | µg/m³ | 25 µg/m³ | Nitrogen dioxide at surface level |
-| SO₂ | ECMWF CAMS NRT | µg/m³ | 40 µg/m³ | Sulfur dioxide at surface level |
-| CO | ECMWF CAMS NRT | mg/m³ | 4 mg/m³ | Carbon monoxide at surface level |
-| O₃ | ECMWF CAMS NRT | µg/m³ | 100 µg/m³ | Ozone at surface level |
 
 ### Satellite Column Density (Not directly comparable to WHO limits)
 | Pollutant | Collection | Unit | Description |
 |-----------|------------|------|-------------|
-| NO₂_Column | S5P L3 NO2 | µmol/m² | Nitrogen dioxide column density from vehicles/industry |
-| SO₂_Column | S5P L3 SO2 | µmol/m² | Sulfur dioxide column density from power plants |
-| CO_Column | S5P L3 CO | mmol/m² | Carbon monoxide column density from combustion |
-| O₃_Column | S5P L3 O3 | mmol/m² | Tropospheric ozone column density |
+| NO₂ | S5P L3 NO2 | µmol/m² | Nitrogen dioxide column density from vehicles/industry |
+| SO₂ | S5P L3 SO2 | µmol/m² | Sulfur dioxide column density from power plants |
+| CO | S5P L3 CO | mmol/m² | Carbon monoxide column density from combustion |
+| O₃ | S5P L3 O3 | mmol/m² | Tropospheric ozone column density |
 | UVAI | S5P L3 AER_AI | index | UV Aerosol Index for smoke/dust detection |
 | CH₄ | S5P L3 CH4 | ppb | Methane concentration |
 
-**Note:** CAMS reanalysis data provides validated surface-level concentrations (µg/m³ or mg/m³) which ARE directly comparable to WHO air quality guidelines. Sentinel-5P satellite provides atmospheric column density measurements (total gas in a vertical column), which are useful for spatial patterns but cannot be directly compared to WHO ground-level limits. AQI and WHO compliance scores are calculated for all CAMS surface pollutants (PM2.5, PM10, NO₂, SO₂, CO, O₃).
+**Note:** Sentinel-5P satellite provides atmospheric column density measurements (total amount of gas in a vertical column), which cannot be directly compared to WHO ground-level concentration limits (µg/m³). AQI and WHO compliance scores are only calculated for PM2.5 and PM10.
 
 ## WHO 2021 Air Quality Guidelines (Ground-Level)
 
@@ -163,10 +159,10 @@ Assesses heat risk based on multiple factors:
 |-----------|---------------|-----------------|-------|
 | PM2.5 | 5 µg/m³ | 15 µg/m³ | Most health-relevant pollutant |
 | PM10 | 15 µg/m³ | 45 µg/m³ | Coarse particles |
-| NO₂ | 10 µg/m³ | 25 µg/m³ | Traffic-related pollutant |
-| SO₂ | N/A | 40 µg/m³ | Industrial emissions |
-| CO | N/A | 4 mg/m³ | Combustion byproduct |
-| O₃ | N/A | 100 µg/m³ | 8-hour peak season mean |
+| NO₂ | 10 µg/m³ | 25 µg/m³ | *Ground-level only* |
+| SO₂ | N/A | 40 µg/m³ | *Ground-level only* |
+| CO | N/A | 4 mg/m³ | *Ground-level only* |
+| O₃ | N/A | 100 µg/m³ | *Ground-level only* |
 
 ## LST Reference
 
