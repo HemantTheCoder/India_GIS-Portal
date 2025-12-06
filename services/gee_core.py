@@ -5,6 +5,7 @@ import geopandas as gpd
 import tempfile
 import os
 import zipfile
+import scipy
 
 def initialize_gee(service_account_key=None):
     try:
