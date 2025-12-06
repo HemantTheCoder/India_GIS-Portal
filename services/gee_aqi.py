@@ -2,6 +2,34 @@ import ee
 from datetime import datetime, timedelta
 
 POLLUTANT_INFO = {
+    "PM2.5": {
+        "name": "Fine Particulate Matter",
+        "collection": "ECMWF/CAMS/NRT",
+        "band": "particulate_matter_d_less_than_25_um_surface",
+        "unit": "kg/m³",
+        "scale_factor": 1e9,
+        "display_unit": "µg/m³",
+        "min": 0,
+        "max": 100,
+        "palette": ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#8f3f97", "#7e0023"],
+        "description": "Fine particles (<2.5µm) from combustion, dust, and smoke",
+        "who_limit": 15,
+        "who_annual": 5,
+    },
+    "PM10": {
+        "name": "Coarse Particulate Matter",
+        "collection": "ECMWF/CAMS/NRT",
+        "band": "particulate_matter_d_less_than_10_um_surface",
+        "unit": "kg/m³",
+        "scale_factor": 1e9,
+        "display_unit": "µg/m³",
+        "min": 0,
+        "max": 150,
+        "palette": ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#8f3f97", "#7e0023"],
+        "description": "Coarse particles (<10µm) from dust, pollen, and mold",
+        "who_limit": 45,
+        "who_annual": 15,
+    },
     "NO2": {
         "name": "Nitrogen Dioxide",
         "collection": "COPERNICUS/S5P/NRTI/L3_NO2",
@@ -13,6 +41,8 @@ POLLUTANT_INFO = {
         "max": 200,
         "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066", "#660033"],
         "description": "Nitrogen dioxide from vehicles and industry",
+        "who_limit": 25,
+        "who_annual": 10,
     },
     "SO2": {
         "name": "Sulfur Dioxide",
@@ -25,6 +55,7 @@ POLLUTANT_INFO = {
         "max": 500,
         "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066"],
         "description": "Sulfur dioxide from power plants and volcanoes",
+        "who_limit": 40,
     },
     "CO": {
         "name": "Carbon Monoxide",
@@ -37,6 +68,7 @@ POLLUTANT_INFO = {
         "max": 50,
         "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066"],
         "description": "Carbon monoxide from combustion",
+        "who_limit": 4,
     },
     "O3": {
         "name": "Ozone",
@@ -49,6 +81,7 @@ POLLUTANT_INFO = {
         "max": 200,
         "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066"],
         "description": "Tropospheric ozone",
+        "who_limit": 100,
     },
     "UVAI": {
         "name": "UV Aerosol Index",

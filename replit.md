@@ -135,14 +135,34 @@ Assesses heat risk based on multiple factors:
 
 ## Pollutant Reference
 
+### Ground-Level Pollutants (WHO Comparable)
+| Pollutant | Collection | Unit | WHO Daily Limit | Description |
+|-----------|------------|------|-----------------|-------------|
+| PM2.5 | ECMWF CAMS NRT | µg/m³ | 15 µg/m³ | Fine particulate matter (<2.5µm) |
+| PM10 | ECMWF CAMS NRT | µg/m³ | 45 µg/m³ | Coarse particulate matter (<10µm) |
+
+### Satellite Column Density (Not directly comparable to WHO limits)
 | Pollutant | Collection | Unit | Description |
 |-----------|------------|------|-------------|
-| NO₂ | S5P L3 NO2 | µmol/m² | Nitrogen dioxide from vehicles/industry |
-| SO₂ | S5P L3 SO2 | µmol/m² | Sulfur dioxide from power plants |
-| CO | S5P L3 CO | mmol/m² | Carbon monoxide from combustion |
-| O₃ | S5P L3 O3 | mmol/m² | Tropospheric ozone |
-| UVAI | S5P L3 AER_AI | index | UV Aerosol Index for smoke/dust |
+| NO₂ | S5P L3 NO2 | µmol/m² | Nitrogen dioxide column density from vehicles/industry |
+| SO₂ | S5P L3 SO2 | µmol/m² | Sulfur dioxide column density from power plants |
+| CO | S5P L3 CO | mmol/m² | Carbon monoxide column density from combustion |
+| O₃ | S5P L3 O3 | mmol/m² | Tropospheric ozone column density |
+| UVAI | S5P L3 AER_AI | index | UV Aerosol Index for smoke/dust detection |
 | CH₄ | S5P L3 CH4 | ppb | Methane concentration |
+
+**Note:** Sentinel-5P satellite provides atmospheric column density measurements (total amount of gas in a vertical column), which cannot be directly compared to WHO ground-level concentration limits (µg/m³). AQI and WHO compliance scores are only calculated for PM2.5 and PM10.
+
+## WHO 2021 Air Quality Guidelines (Ground-Level)
+
+| Pollutant | Annual Average | 24-hour Average | Notes |
+|-----------|---------------|-----------------|-------|
+| PM2.5 | 5 µg/m³ | 15 µg/m³ | Most health-relevant pollutant |
+| PM10 | 15 µg/m³ | 45 µg/m³ | Coarse particles |
+| NO₂ | 10 µg/m³ | 25 µg/m³ | *Ground-level only* |
+| SO₂ | N/A | 40 µg/m³ | *Ground-level only* |
+| CO | N/A | 4 mg/m³ | *Ground-level only* |
+| O₃ | N/A | 100 µg/m³ | *Ground-level only* |
 
 ## LST Reference
 
