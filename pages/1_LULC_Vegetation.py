@@ -5,7 +5,6 @@ from folium.plugins import Draw
 from datetime import datetime, date
 import pandas as pd
 import io
-import scipy
 
 from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (
