@@ -282,6 +282,7 @@ if city_coords and st.session_state.gee_initialized:
                                 st.warning(f"Could not calculate {idx}: {str(e)}")
                     
                     st.session_state.analysis_complete = True
+                    st.session_state.lulc_pdf = None
                     st.success("Analysis complete!")
             
             except Exception as e:
@@ -539,26 +540,20 @@ if city_coords and st.session_state.gee_initialized:
             with export_col3:
                 st.markdown("**PDF Report**")
                 if st.session_state.get("lulc_stats"):
-                    if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_pdf"):
-                        with st.spinner("Generating PDF report..."):
-                            sustainability = calculate_land_sustainability_score(st.session_state.lulc_stats)
-                            
-                            report_data = {
-                                'city_name': selected_city,
-                                'state': selected_state,
-                                'year': selected_year,
-                                'date_range': f"{start_date} to {end_date}",
-                                'satellite': satellite,
-                                'total_area': st.session_state.lulc_stats.get('total_area_sqkm', 0),
-                                'stats': st.session_state.lulc_stats.get('classes', {}),
-                                'sustainability_score': sustainability,
-                                'indices': st.session_state.get('index_means', {})
-                            }
-                            
-                            pdf_data = generate_lulc_pdf_report(report_data)
-                            if pdf_data:
-                                st.session_state.lulc_pdf = pdf_data
-                                st.success("PDF ready!")
+                    if 'lulc_pdf' not in st.session_state or st.session_state.lulc_pdf is None:
+                        sustainability = calculate_land_sustainability_score(st.session_state.lulc_stats)
+                        report_data = {
+                            'city_name': selected_city,
+                            'state': selected_state,
+                            'year': selected_year,
+                            'date_range': f"{start_date} to {end_date}",
+                            'satellite': satellite,
+                            'total_area': st.session_state.lulc_stats.get('total_area_sqkm', 0),
+                            'stats': st.session_state.lulc_stats.get('classes', {}),
+                            'sustainability_score': sustainability,
+                            'indices': st.session_state.get('index_means', {})
+                        }
+                        st.session_state.lulc_pdf = generate_lulc_pdf_report(report_data)
                     
                     if st.session_state.get("lulc_pdf"):
                         st.download_button(
@@ -567,8 +562,10 @@ if city_coords and st.session_state.gee_initialized:
                             file_name=f"lulc_report_{selected_city}_{selected_year}.pdf",
                             mime="application/pdf",
                             use_container_width=True,
-                            key="dl_pdf"
+                            key="dl_lulc_pdf"
                         )
+                    else:
+                        st.error("Failed to generate PDF")
                 else:
                     st.caption("Run analysis to enable PDF export")
 

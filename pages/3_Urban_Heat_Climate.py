@@ -417,6 +417,7 @@ if run_analysis and geometry:
                         st.session_state.warming_trend = trend
             
             st.session_state.lst_analysis_complete = True
+            st.session_state.heat_pdf = None
             st.success("Analysis complete!")
         
     except Exception as e:
@@ -659,42 +660,38 @@ if st.session_state.get("lst_analysis_complete"):
         
         with exp_cols[1]:
             if st.session_state.lst_stats:
-                if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_heat_pdf"):
-                    with st.spinner("Generating PDF report..."):
-                        vulnerability = calculate_heat_vulnerability_score(
-                            st.session_state.lst_stats,
-                            st.session_state.uhi_stats,
-                            st.session_state.lst_time_series,
-                            st.session_state.warming_trend
-                        )
-                        
-                        report_data = {
-                            'city_name': display_name,
-                            'state': selected_state if selected_state != "Custom AOI" else "",
-                            'date_range': f"{start_date} to {end_date}",
-                            'time_of_day': time_of_day,
-                            'data_source': f"MODIS {satellite}",
-                            'lst_stats': st.session_state.lst_stats,
-                            'uhi_stats': st.session_state.uhi_stats,
-                            'vulnerability_score': vulnerability,
-                            'time_series': st.session_state.lst_time_series,
-                            'warming_trend': st.session_state.warming_trend
-                        }
-                        
-                        pdf_data = generate_urban_heat_pdf_report(report_data)
-                        if pdf_data:
-                            st.session_state.heat_pdf = pdf_data
-                            st.success("PDF ready!")
+                if 'heat_pdf' not in st.session_state or st.session_state.heat_pdf is None:
+                    vulnerability = calculate_heat_vulnerability_score(
+                        st.session_state.lst_stats,
+                        st.session_state.uhi_stats,
+                        st.session_state.lst_time_series,
+                        st.session_state.warming_trend
+                    )
+                    report_data = {
+                        'city_name': display_name,
+                        'state': selected_state if selected_state != "Custom AOI" else "",
+                        'date_range': f"{start_date} to {end_date}",
+                        'time_of_day': time_of_day,
+                        'data_source': f"MODIS {satellite}",
+                        'lst_stats': st.session_state.lst_stats,
+                        'uhi_stats': st.session_state.uhi_stats,
+                        'vulnerability_score': vulnerability,
+                        'time_series': st.session_state.lst_time_series,
+                        'warming_trend': st.session_state.warming_trend
+                    }
+                    st.session_state.heat_pdf = generate_urban_heat_pdf_report(report_data)
                 
                 if st.session_state.get("heat_pdf"):
                     st.download_button(
-                        "📥 Download PDF",
+                        "📥 Download PDF Report",
                         data=st.session_state.heat_pdf,
                         file_name=f"urban_heat_report_{display_name}.pdf",
                         mime="application/pdf",
                         use_container_width=True,
                         key="dl_heat_pdf"
                     )
+                else:
+                    st.error("Failed to generate PDF")
     
     if st.session_state.lst_time_series:
         st.markdown("---")
