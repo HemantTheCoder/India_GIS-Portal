@@ -105,79 +105,176 @@ def generate_time_series_csv(time_series, pollutant, city_name=""):
     return csv_buffer.getvalue()
 
 
-WHO_STANDARDS = {
-    'NO2': {'annual': 10, 'unit': 'µg/m³', 'name': 'Nitrogen Dioxide'},
-    'SO2': {'daily': 40, 'unit': 'µg/m³', 'name': 'Sulfur Dioxide'},
-    'CO': {'daily': 4, 'unit': 'mg/m³', 'name': 'Carbon Monoxide'},
-    'O3': {'8hr': 100, 'unit': 'µg/m³', 'name': 'Ozone'},
+WHO_STANDARDS_2021 = {
+    'PM2.5': {
+        'name': 'Fine Particulate Matter',
+        'daily': 15,
+        'annual': 5,
+        'unit': 'µg/m³',
+        'comparable': True,
+        'aqi_breakpoints': [(0, 12, 0, 50), (12.1, 35.4, 51, 100), (35.5, 55.4, 101, 150), 
+                           (55.5, 150.4, 151, 200), (150.5, 250.4, 201, 300), (250.5, 500.4, 301, 500)]
+    },
+    'PM10': {
+        'name': 'Coarse Particulate Matter',
+        'daily': 45,
+        'annual': 15,
+        'unit': 'µg/m³',
+        'comparable': True,
+        'aqi_breakpoints': [(0, 54, 0, 50), (55, 154, 51, 100), (155, 254, 101, 150),
+                           (255, 354, 151, 200), (355, 424, 201, 300), (425, 604, 301, 500)]
+    },
+    'NO2': {
+        'name': 'Nitrogen Dioxide',
+        'daily': 25,
+        'annual': 10,
+        'unit': 'µg/m³',
+        'comparable': False,
+        'note': 'Sentinel-5P provides column density (µmol/m²), not ground concentration'
+    },
+    'SO2': {
+        'name': 'Sulfur Dioxide',
+        'daily': 40,
+        'unit': 'µg/m³',
+        'comparable': False,
+        'note': 'Sentinel-5P provides column density (µmol/m²), not ground concentration'
+    },
+    'CO': {
+        'name': 'Carbon Monoxide',
+        'daily': 4,
+        'unit': 'mg/m³',
+        'comparable': False,
+        'note': 'Sentinel-5P provides column density (mmol/m²), not ground concentration'
+    },
+    'O3': {
+        'name': 'Ozone',
+        'daily': 100,
+        'unit': 'µg/m³',
+        'comparable': False,
+        'note': 'Sentinel-5P provides column density (mmol/m²), not ground concentration'
+    },
 }
 
-NAAQS_STANDARDS = {
-    'NO2': {'annual': 40, 'unit': 'µg/m³'},
-    'SO2': {'annual': 50, 'unit': 'µg/m³'},
-    'CO': {'8hr': 2, 'unit': 'mg/m³'},
-    'O3': {'8hr': 100, 'unit': 'µg/m³'},
+WHO_STANDARDS = WHO_STANDARDS_2021
+
+NAAQS_INDIA = {
+    'PM2.5': {'annual': 40, 'daily': 60, 'unit': 'µg/m³'},
+    'PM10': {'annual': 60, 'daily': 100, 'unit': 'µg/m³'},
+    'NO2': {'annual': 40, 'daily': 80, 'unit': 'µg/m³'},
+    'SO2': {'annual': 50, 'daily': 80, 'unit': 'µg/m³'},
+    'CO': {'8hr': 2, 'daily': 4, 'unit': 'mg/m³'},
+    'O3': {'8hr': 100, 'daily': 180, 'unit': 'µg/m³'},
 }
+
+def calculate_sub_aqi(concentration, breakpoints):
+    for bp_lo, bp_hi, aqi_lo, aqi_hi in breakpoints:
+        if bp_lo <= concentration <= bp_hi:
+            aqi = ((aqi_hi - aqi_lo) / (bp_hi - bp_lo)) * (concentration - bp_lo) + aqi_lo
+            return round(aqi)
+    return 500 if concentration > breakpoints[-1][1] else 0
+
+def get_aqi_category(aqi):
+    if aqi <= 50:
+        return "Good", "#00e400"
+    elif aqi <= 100:
+        return "Satisfactory", "#ffff00"
+    elif aqi <= 150:
+        return "Moderate", "#ff7e00"
+    elif aqi <= 200:
+        return "Poor", "#ff0000"
+    elif aqi <= 300:
+        return "Very Poor", "#8f3f97"
+    else:
+        return "Severe", "#7e0023"
 
 def calculate_aqi_compliance_score(pollutant_stats):
     if not pollutant_stats:
-        return {'score': 0, 'rating': 'Unknown', 'details': []}
+        return {'score': 0, 'rating': 'Unknown', 'details': [], 'aqi_index': 0, 'satellite_details': []}
     
     total_score = 0
     max_score = 0
     details = []
+    satellite_details = []
+    sub_aqis = []
     
     for pollutant, stats in pollutant_stats.items():
-        if pollutant not in WHO_STANDARDS:
-            continue
-        
         mean_val = stats.get('mean', 0)
         if mean_val is None or mean_val == 0:
             continue
         
-        who_limit = list(WHO_STANDARDS[pollutant].values())[0]
-        if isinstance(who_limit, str):
-            who_limit = list(WHO_STANDARDS[pollutant].values())[1] if len(WHO_STANDARDS[pollutant]) > 1 else 0
-        
-        if who_limit == 0:
-            continue
-        
-        ratio = mean_val / who_limit if who_limit else 1
-        
-        if ratio <= 0.5:
-            score = 100
-            status = "Excellent"
-        elif ratio <= 1.0:
-            score = 80
-            status = "Good"
-        elif ratio <= 1.5:
-            score = 60
-            status = "Moderate"
-        elif ratio <= 2.0:
-            score = 40
-            status = "Poor"
-        elif ratio <= 3.0:
-            score = 20
-            status = "Very Poor"
+        if pollutant in WHO_STANDARDS_2021:
+            std = WHO_STANDARDS_2021[pollutant]
+            is_comparable = std.get('comparable', False)
+            
+            if is_comparable:
+                who_limit = std.get('daily', std.get('annual', 0))
+                
+                if who_limit == 0:
+                    continue
+                
+                ratio = mean_val / who_limit if who_limit else 1
+                
+                if ratio <= 0.5:
+                    score = 100
+                    status = "Excellent"
+                elif ratio <= 1.0:
+                    score = 80
+                    status = "Good"
+                elif ratio <= 1.5:
+                    score = 60
+                    status = "Moderate"
+                elif ratio <= 2.0:
+                    score = 40
+                    status = "Poor"
+                elif ratio <= 3.0:
+                    score = 20
+                    status = "Very Poor"
+                else:
+                    score = 0
+                    status = "Severe"
+                
+                sub_aqi = 0
+                if 'aqi_breakpoints' in std:
+                    sub_aqi = calculate_sub_aqi(mean_val, std['aqi_breakpoints'])
+                    sub_aqis.append(sub_aqi)
+                
+                total_score += score
+                max_score += 100
+                details.append({
+                    'pollutant': pollutant,
+                    'name': std['name'],
+                    'measured': mean_val,
+                    'who_limit': who_limit,
+                    'ratio': ratio,
+                    'score': score,
+                    'sub_aqi': sub_aqi,
+                    'status': status,
+                    'unit': std.get('unit', '')
+                })
+            else:
+                satellite_details.append({
+                    'pollutant': pollutant,
+                    'name': std.get('name', pollutant),
+                    'measured': mean_val,
+                    'unit': stats.get('unit', ''),
+                    'note': std.get('note', 'Column density measurement')
+                })
         else:
-            score = 0
-            status = "Severe"
-        
-        total_score += score
-        max_score += 100
-        details.append({
-            'pollutant': pollutant,
-            'measured': mean_val,
-            'who_limit': who_limit,
-            'ratio': ratio,
-            'score': score,
-            'status': status,
-            'unit': stats.get('unit', '')
-        })
+            satellite_details.append({
+                'pollutant': pollutant,
+                'name': pollutant,
+                'measured': mean_val,
+                'unit': stats.get('unit', ''),
+                'note': 'Relative measurement (not comparable to WHO limits)'
+            })
     
     overall_score = (total_score / max_score * 100) if max_score > 0 else 0
+    overall_aqi = max(sub_aqis) if sub_aqis else 0
+    aqi_category, aqi_color = get_aqi_category(overall_aqi)
     
-    if overall_score >= 80:
+    if max_score == 0:
+        rating = "N/A - No comparable pollutants"
+    elif overall_score >= 80:
         rating = "Good - Meets WHO Guidelines"
     elif overall_score >= 60:
         rating = "Moderate - Minor Exceedances"
@@ -191,7 +288,11 @@ def calculate_aqi_compliance_score(pollutant_stats):
     return {
         'score': round(overall_score, 1),
         'rating': rating,
-        'details': details
+        'details': details,
+        'satellite_details': satellite_details,
+        'aqi_index': overall_aqi,
+        'aqi_category': aqi_category,
+        'aqi_color': aqi_color
     }
 
 
@@ -860,8 +961,11 @@ def generate_aqi_pdf_report(report_data):
         
         compliance = report_data.get('compliance_score', {})
         if compliance:
-            elements.append(Paragraph("Air Quality Compliance Score", heading_style))
+            elements.append(Paragraph("Air Quality Index & Compliance", heading_style))
             
+            aqi_index = compliance.get('aqi_index', 0)
+            aqi_category = compliance.get('aqi_category', 'Unknown')
+            aqi_color = compliance.get('aqi_color', '#888888')
             score = compliance.get('score', 0)
             rating = compliance.get('rating', 'Unknown')
             
@@ -874,50 +978,102 @@ def generate_aqi_pdf_report(report_data):
             else:
                 score_color = '#d32f2f'
             
-            score_text = f"""
-            <para align="center">
-            <font size="28" color="{score_color}"><b>{score:.0f}</b></font><font size="14">/100</font><br/>
-            <font size="12" color="{score_color}"><b>{rating}</b></font>
-            </para>
-            """
-            elements.append(Paragraph(score_text, styles['Normal']))
+            aqi_score_data = [
+                ['AQI Index', 'AQI Category', 'WHO Compliance', 'Rating'],
+                [str(aqi_index), aqi_category, f"{score:.0f}/100", rating]
+            ]
+            aqi_score_table = Table(aqi_score_data, colWidths=[2.5*cm, 3.5*cm, 3.5*cm, 6.5*cm])
+            aqi_score_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1565c0')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (0, 1), 14),
+                ('FONTSIZE', (1, 1), (-1, 1), 9),
+                ('TEXTCOLOR', (0, 1), (0, 1), colors.HexColor(aqi_color)),
+                ('TEXTCOLOR', (2, 1), (2, 1), colors.HexColor(score_color)),
+                ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+                ('PADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            elements.append(aqi_score_table)
+            elements.append(Spacer(1, 15))
+            
+            aqi_legend = """<b>AQI Categories:</b> Good (0-50), Satisfactory (51-100), Moderate (101-150), 
+            Poor (151-200), Very Poor (201-300), Severe (301-500)"""
+            elements.append(Paragraph(aqi_legend, note_style))
             elements.append(Spacer(1, 15))
             
             details = compliance.get('details', [])
             if details:
-                elements.append(Paragraph("Pollutant-wise Compliance vs WHO Standards", body_style))
+                elements.append(Paragraph("Pollutant-wise WHO Comparison (2021 Guidelines)", body_style))
                 
-                comp_data = [['Pollutant', 'Measured', 'WHO Limit', 'Ratio', 'Status']]
+                comp_data = [['Pollutant', 'Name', 'Measured', 'WHO Limit', 'Sub-AQI', 'Status']]
                 for d in details:
                     ratio = d.get('ratio', 0)
                     status = d.get('status', 'Unknown')
+                    sub_aqi = d.get('sub_aqi', 0)
+                    unit = d.get('unit', '')
                     comp_data.append([
                         d.get('pollutant', ''),
-                        f"{d.get('measured', 0):.4f}",
-                        f"{d.get('who_limit', 0)}",
-                        f"{ratio:.2f}x",
+                        d.get('name', ''),
+                        f"{d.get('measured', 0):.2f} {unit}",
+                        f"{d.get('who_limit', 0)} {unit}",
+                        str(sub_aqi),
                         status
                     ])
                 
-                comp_table = Table(comp_data, colWidths=[2.5*cm, 3*cm, 2.5*cm, 2*cm, 3*cm])
+                comp_table = Table(comp_data, colWidths=[1.8*cm, 4*cm, 3.2*cm, 2.8*cm, 1.8*cm, 2.5*cm])
                 comp_table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0288d1')),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('PADDING', (0, 0), (-1, -1), 6),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('PADDING', (0, 0), (-1, -1), 5),
                     ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                    ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                    ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
                 ]))
                 elements.append(comp_table)
             
             elements.append(Spacer(1, 10))
-            method_note = """<b>Methodology:</b> The Air Quality Compliance Score compares measured pollutant concentrations 
-            against WHO Air Quality Guidelines. Each pollutant is scored (0-100) based on how far below or above the WHO limit 
-            it is: Excellent (≤50% of limit), Good (≤100%), Moderate (≤150%), Poor (≤200%), Very Poor (≤300%), Severe (>300%).
-            The overall score is the weighted average across all measured pollutants. A score of 100 indicates full compliance."""
+            method_note = """<b>Methodology:</b> AQI is calculated using standard breakpoints for PM2.5 and PM10. 
+            The overall AQI is the highest sub-index. WHO Compliance Score (0-100) compares ground-level concentrations 
+            against WHO 2021 Guidelines: Excellent (≤50% of limit), Good (≤100%), Moderate (≤150%), 
+            Poor (≤200%), Very Poor (≤300%), Severe (>300%)."""
             elements.append(Paragraph(method_note, note_style))
             elements.append(Spacer(1, 15))
+            
+            satellite_details = compliance.get('satellite_details', [])
+            if satellite_details:
+                elements.append(Paragraph("Satellite-based Pollutant Measurements", body_style))
+                sat_note = """<i>Note: The following pollutants are measured as atmospheric column density by Sentinel-5P 
+                satellite and cannot be directly compared to WHO ground-level concentration limits.</i>"""
+                elements.append(Paragraph(sat_note, note_style))
+                elements.append(Spacer(1, 5))
+                
+                sat_data = [['Pollutant', 'Name', 'Measured Value', 'Unit']]
+                for d in satellite_details:
+                    sat_data.append([
+                        d.get('pollutant', ''),
+                        d.get('name', ''),
+                        f"{d.get('measured', 0):.4f}",
+                        d.get('unit', '')
+                    ])
+                
+                sat_table = Table(sat_data, colWidths=[2.5*cm, 5*cm, 4*cm, 4*cm])
+                sat_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#78909c')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('PADDING', (0, 0), (-1, -1), 5),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ]))
+                elements.append(sat_table)
+                elements.append(Spacer(1, 15))
         
         pollutant_stats = report_data.get('pollutant_stats', {})
         if pollutant_stats:
