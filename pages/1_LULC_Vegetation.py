@@ -38,6 +38,12 @@ from services.exports import (
     generate_lulc_csv, generate_change_analysis_csv, generate_lulc_pdf_report,
     calculate_land_sustainability_score
 )
+from services.gee_trends import (
+    get_historical_lulc_data, get_historical_index_data,
+    analyze_lulc_trends, analyze_index_trends,
+    generate_forecast_lulc, generate_forecast_indices,
+    get_trend_summary
+)
 
 st.set_page_config(
     page_title="LULC & Vegetation Analysis",
@@ -480,6 +486,32 @@ if city_coords and st.session_state.gee_initialized:
             st.markdown("---")
             st.markdown("### 🌱 Vegetation Indices")
             
+            index_means = st.session_state.get("index_means", {})
+            if index_means:
+                st.markdown("#### 📊 Mean Index Values")
+                mean_cols = st.columns(min(len(index_means), 5))
+                
+                index_colors = {
+                    "NDVI": "#2ecc71",
+                    "NDWI": "#3498db",
+                    "NDBI": "#e74c3c",
+                    "EVI": "#27ae60",
+                    "SAVI": "#f39c12"
+                }
+                
+                for i, (idx_name, mean_val) in enumerate(index_means.items()):
+                    with mean_cols[i % len(mean_cols)]:
+                        color = index_colors.get(idx_name, "#666")
+                        if mean_val is not None:
+                            st.markdown(f"""
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: {color};">{mean_val:.4f}</div>
+                                <div class="stat-label">{idx_name} Mean</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+            
             num_indices = len(show_indices)
             if num_indices <= 3:
                 idx_cols = st.columns(num_indices)
@@ -489,6 +521,186 @@ if city_coords and st.session_state.gee_initialized:
             for i, idx in enumerate(show_indices):
                 with idx_cols[i % len(idx_cols)]:
                     render_index_legend_with_opacity(idx, key_prefix="lulc_")
+        
+        if st.session_state.get("current_geometry"):
+            st.markdown("---")
+            st.markdown("### 📈 Trend Analysis & Forecast")
+            st.caption("Analyze historical trends and forecast future values based on linear regression of satellite data (2017-present)")
+            
+            trend_col1, trend_col2 = st.columns(2)
+            
+            current_year = datetime.now().year
+            
+            with trend_col1:
+                history_start = st.selectbox(
+                    "Historical Start Year",
+                    options=list(range(2017, current_year)),
+                    index=0,
+                    key="trend_start_year"
+                )
+            
+            with trend_col2:
+                history_end = st.selectbox(
+                    "Historical End Year",
+                    options=list(range(history_start + 1, current_year + 1)),
+                    index=min(current_year - history_start - 1, len(list(range(history_start + 1, current_year + 1))) - 1),
+                    key="trend_end_year"
+                )
+            
+            forecast_col1, forecast_col2 = st.columns(2)
+            
+            with forecast_col1:
+                trend_type = st.multiselect(
+                    "Analyze",
+                    ["LULC Classes", "Vegetation Indices"],
+                    default=["LULC Classes", "Vegetation Indices"],
+                    key="trend_type"
+                )
+            
+            with forecast_col2:
+                forecast_years = st.multiselect(
+                    "Forecast Years",
+                    options=list(range(current_year + 1, current_year + 11)),
+                    default=[current_year + 1, current_year + 3, current_year + 5],
+                    key="forecast_years"
+                )
+            
+            if st.button("🔍 Run Trend Analysis", use_container_width=True, key="run_trends"):
+                geometry = st.session_state.current_geometry
+                
+                with st.spinner("Fetching historical data and calculating trends..."):
+                    try:
+                        if "LULC Classes" in trend_type:
+                            lulc_data = get_historical_lulc_data(geometry, history_start, history_end)
+                            if lulc_data and len(lulc_data) >= 2:
+                                st.session_state.lulc_historical = lulc_data
+                                st.session_state.lulc_trends = analyze_lulc_trends(lulc_data)
+                                if forecast_years:
+                                    st.session_state.lulc_forecast = generate_forecast_lulc(
+                                        st.session_state.lulc_trends, forecast_years
+                                    )
+                            else:
+                                st.warning("Insufficient LULC data for trend analysis (need at least 2 years)")
+                        
+                        if "Vegetation Indices" in trend_type:
+                            index_data = get_historical_index_data(
+                                geometry, history_start, history_end, 
+                                satellite=satellite if 'satellite' in dir() else "Sentinel-2"
+                            )
+                            if index_data:
+                                valid_indices = {k: v for k, v in index_data.items() if len(v) >= 2}
+                                if valid_indices:
+                                    st.session_state.index_historical = valid_indices
+                                    st.session_state.index_trends = analyze_index_trends(valid_indices)
+                                    if forecast_years:
+                                        st.session_state.index_forecast = generate_forecast_indices(
+                                            st.session_state.index_trends, forecast_years
+                                        )
+                                else:
+                                    st.warning("Insufficient index data for trend analysis")
+                        
+                        st.success("Trend analysis complete!")
+                        st.rerun()
+                        
+                    except Exception as e:
+                        st.error(f"Error during trend analysis: {str(e)}")
+            
+            if st.session_state.get("lulc_trends"):
+                st.markdown("#### 🏞️ LULC Trend Results")
+                
+                lulc_summary = get_trend_summary(st.session_state.lulc_trends, "LULC")
+                if lulc_summary:
+                    trend_status_cols = st.columns(3)
+                    
+                    with trend_status_cols[0]:
+                        increases = lulc_summary.get("significant_increases", [])
+                        if increases:
+                            st.markdown("**📈 Significant Increases:**")
+                            for item in increases:
+                                st.markdown(f"- {item['name']}: +{item['change_per_year']:.2f}%/yr (R²={item['r_squared']:.2f})")
+                        else:
+                            st.caption("No significant increases detected")
+                    
+                    with trend_status_cols[1]:
+                        decreases = lulc_summary.get("significant_decreases", [])
+                        if decreases:
+                            st.markdown("**📉 Significant Decreases:**")
+                            for item in decreases:
+                                st.markdown(f"- {item['name']}: {item['change_per_year']:.2f}%/yr (R²={item['r_squared']:.2f})")
+                        else:
+                            st.caption("No significant decreases detected")
+                    
+                    with trend_status_cols[2]:
+                        stable = lulc_summary.get("stable", [])
+                        if stable:
+                            st.markdown("**➡️ Stable Classes:**")
+                            st.markdown(", ".join(stable[:5]))
+                
+                lulc_forecast = st.session_state.get("lulc_forecast")
+                if lulc_forecast and forecast_years:
+                    st.markdown("##### 🔮 LULC Forecast")
+                    st.caption("Based on linear regression with 95% confidence intervals")
+                    
+                    forecast_data = []
+                    for lulc_class, years_data in lulc_forecast.items():
+                        if years_data:
+                            for year, values in years_data.items():
+                                forecast_data.append({
+                                    "Class": lulc_class,
+                                    "Year": year,
+                                    "Predicted (%)": f"{values['predicted']:.1f}",
+                                    "Range": f"{values['lower_bound']:.1f} - {values['upper_bound']:.1f}%"
+                                })
+                    
+                    if forecast_data:
+                        df = pd.DataFrame(forecast_data)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            if st.session_state.get("index_trends"):
+                st.markdown("#### 🌿 Vegetation Index Trend Results")
+                
+                index_summary = get_trend_summary(st.session_state.index_trends, "Indices")
+                if index_summary:
+                    idx_trend_cols = st.columns(2)
+                    
+                    with idx_trend_cols[0]:
+                        increases = index_summary.get("significant_increases", [])
+                        if increases:
+                            st.markdown("**📈 Improving Indices:**")
+                            for item in increases:
+                                st.markdown(f"- {item['name']}: +{item['change_per_year']:.4f}/yr (R²={item['r_squared']:.2f})")
+                        else:
+                            st.caption("No significant improvements")
+                    
+                    with idx_trend_cols[1]:
+                        decreases = index_summary.get("significant_decreases", [])
+                        if decreases:
+                            st.markdown("**📉 Declining Indices:**")
+                            for item in decreases:
+                                st.markdown(f"- {item['name']}: {item['change_per_year']:.4f}/yr (R²={item['r_squared']:.2f})")
+                        else:
+                            st.caption("No significant declines")
+                
+                index_forecast = st.session_state.get("index_forecast")
+                if index_forecast and forecast_years:
+                    st.markdown("##### 🔮 Vegetation Index Forecast")
+                    
+                    idx_forecast_data = []
+                    for idx_name, years_data in index_forecast.items():
+                        if years_data:
+                            for year, values in years_data.items():
+                                idx_forecast_data.append({
+                                    "Index": idx_name,
+                                    "Year": year,
+                                    "Predicted": f"{values['predicted']:.4f}",
+                                    "Range": f"{values['lower_bound']:.4f} - {values['upper_bound']:.4f}"
+                                })
+                    
+                    if idx_forecast_data:
+                        df = pd.DataFrame(idx_forecast_data)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            st.caption("**Note:** Forecasts are based on linear regression extrapolation of historical trends. Actual future values may differ due to policy changes, climate variations, and other factors. Use forecasts for indicative purposes only.")
         
         if st.session_state.get("current_image") and st.session_state.get("current_geometry"):
             st.markdown("---")
