@@ -23,7 +23,8 @@ from components.ui import (
     render_info_box, init_common_session_state
 )
 from components.maps import (
-    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control
+    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
+    add_geojson_boundary
 )
 from components.charts import render_line_chart
 from services.exports import (
@@ -96,6 +97,7 @@ with st.sidebar:
     city_coords = None
     uploaded_geometry = None
     uploaded_center = None
+    uploaded_geojson = None
     
     if location_mode == "City Selection":
         states = get_states()
@@ -130,21 +132,27 @@ with st.sidebar:
             if is_geojson:
                 geojson_file = next((f for f in uploaded_files if f.name.endswith('.geojson') or f.name.endswith('.json')), None)
                 if geojson_file:
-                    result = geojson_file_to_ee_geometry(geojson_file)
-                    if result:
-                        uploaded_geometry, uploaded_center = result
-                        st.success(f"GeoJSON loaded successfully")
-                        selected_city = "Custom AOI"
+                    geom, center, geojson_data, error = geojson_file_to_ee_geometry(geojson_file)
+                    if error:
+                        st.error(error)
                     else:
-                        st.error("Failed to parse GeoJSON file")
+                        uploaded_geometry = geom
+                        uploaded_center = center
+                        uploaded_geojson = geojson_data
+                        city_coords = center
+                        st.success(f"✅ GeoJSON loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+                        selected_city = "Custom AOI"
             elif is_zip or has_shp:
-                result = process_shapefile_upload(uploaded_files)
-                if result:
-                    uploaded_geometry, uploaded_center = result
-                    st.success(f"Shapefile loaded successfully")
-                    selected_city = "Custom AOI"
+                geom, center, geojson_data, error = process_shapefile_upload(uploaded_files)
+                if error:
+                    st.error(error)
                 else:
-                    st.error("Failed to process shapefile")
+                    uploaded_geometry = geom
+                    uploaded_center = center
+                    uploaded_geojson = geojson_data
+                    city_coords = center
+                    st.success(f"✅ Shapefile loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+                    selected_city = "Custom AOI"
     
     st.markdown("---")
     st.markdown("## 📅 Time Period")
@@ -302,9 +310,9 @@ center_coords = None
 if location_mode == "City Selection" and selected_city and selected_city != "Select..." and city_coords:
     geometry = get_city_geometry(city_coords['lat'], city_coords['lon'], buffer_radius)
     center_coords = (city_coords['lat'], city_coords['lon'])
-elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geometry:
+elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geometry and uploaded_center:
     geometry = uploaded_geometry
-    center_coords = uploaded_center
+    center_coords = (uploaded_center['lat'], uploaded_center['lon'])
 
 if center_coords:
     base_map = create_base_map(center_coords[0], center_coords[1], zoom=11)
@@ -312,6 +320,11 @@ if center_coords:
     if location_mode == "City Selection" and selected_city and selected_city != "Select...":
         add_marker(base_map, center_coords[0], center_coords[1], selected_city)
         add_buffer_circle(base_map, center_coords[0], center_coords[1], buffer_radius)
+    elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geojson:
+        add_geojson_boundary(base_map, uploaded_geojson, name="Uploaded AOI", 
+                           color="#ff7800", weight=3, fill_opacity=0.15)
+        add_marker(base_map, center_coords[0], center_coords[1], 
+                   popup="Custom Area Center", tooltip="Custom Area")
 else:
     base_map = create_base_map(20.5937, 78.9629, zoom=5)
 
