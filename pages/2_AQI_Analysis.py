@@ -22,7 +22,8 @@ from components.ui import (
     render_info_box, init_common_session_state, render_pollutant_stat_card
 )
 from components.maps import (
-    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control
+    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
+    add_geojson_boundary
 )
 from components.legends import (
     render_pollutant_legend_with_opacity, render_anomaly_legend, render_hotspot_legend
@@ -100,6 +101,7 @@ with st.sidebar:
     city_coords = None
     uploaded_geometry = None
     uploaded_center = None
+    uploaded_geojson = None
     
     if location_mode == "City Selection":
         states = get_states()
@@ -131,22 +133,24 @@ with st.sidebar:
             shp_files = [f for f in uploaded_files if f.name.endswith('.shp')]
             
             if geojson_files:
-                geom, center, error = geojson_file_to_ee_geometry(geojson_files[0])
+                geom, center, geojson_data, error = geojson_file_to_ee_geometry(geojson_files[0])
                 if error:
                     st.error(error)
                 else:
                     uploaded_geometry = geom
                     uploaded_center = center
+                    uploaded_geojson = geojson_data
                     city_coords = center
                     selected_city = "Custom Area"
                     st.success(f"✅ GeoJSON loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
             elif zip_files or shp_files:
-                geom, center, error = process_shapefile_upload(uploaded_files)
+                geom, center, geojson_data, error = process_shapefile_upload(uploaded_files)
                 if error:
                     st.error(error)
                 else:
                     uploaded_geometry = geom
                     uploaded_center = center
+                    uploaded_geojson = geojson_data
                     city_coords = center
                     selected_city = "Custom Area"
                     st.success(f"✅ Shapefile loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
@@ -219,6 +223,9 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                    popup=f"{selected_city}", tooltip=selected_city)
         add_buffer_circle(base_map, city_coords["lat"], city_coords["lon"], buffer_km)
     else:
+        if uploaded_geojson:
+            add_geojson_boundary(base_map, uploaded_geojson, name="Uploaded AOI", 
+                               color="#ff7800", weight=3, fill_opacity=0.15)
         add_marker(base_map, city_coords["lat"], city_coords["lon"], 
                    popup="Custom Area Center", tooltip="Custom Area")
     
