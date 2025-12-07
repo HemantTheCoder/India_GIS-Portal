@@ -5,7 +5,7 @@ A comprehensive web-based GIS and Remote Sensing application for analyzing Land 
 
 ## Current State
 - **Status**: Complete with Multi-Module Architecture + PDF Reports
-- **Last Updated**: December 4, 2025
+- **Last Updated**: December 7, 2025
 
 ## Features
 
@@ -189,8 +189,16 @@ Assesses heat risk based on multiple factors:
 - Uses MODIS for Land Surface Temperature (available from 2000)
 - Cloud filtering applied to satellite imagery (< 20% cloud cover)
 - Buffer radius configurable from 5-100 km around city center
-- Custom AOI via shapefile/GeoJSON upload
+- Custom AOI via shapefile/GeoJSON upload with full geometry support
 - Multi-page Streamlit structure for modular navigation
+
+### Shapefile/GeoJSON Upload
+- Supports .shp (with .shx, .dbf, .prj), .zip containing shapefiles, and .geojson/.json files
+- Automatically converts to EPSG:4326 (WGS84) if in different CRS
+- Uses Shapely's unary_union to combine multiple features into single geometry
+- Converts directly to ee.Geometry() for full GEE compatibility
+- Displays uploaded boundary on map with orange outline
+- Supports Polygon, MultiPolygon, and GeometryCollection types
 
 ## Dependencies
 - streamlit
