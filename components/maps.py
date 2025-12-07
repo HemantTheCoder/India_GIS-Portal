@@ -87,3 +87,25 @@ def get_click_coordinates(map_data):
             "lon": map_data["last_clicked"]["lng"]
         }
     return None
+
+def add_geojson_boundary(map_obj, geojson_data, name="Uploaded Boundary", 
+                          color="#ff7800", weight=3, fill=True, fill_opacity=0.1):
+    """Add a GeoJSON boundary to the map for visualization."""
+    if geojson_data is None:
+        return map_obj
+    
+    style_function = lambda x: {
+        'fillColor': color,
+        'color': color,
+        'weight': weight,
+        'fillOpacity': fill_opacity,
+    }
+    
+    folium.GeoJson(
+        geojson_data,
+        name=name,
+        style_function=style_function,
+        tooltip=name
+    ).add_to(map_obj)
+    
+    return map_obj
