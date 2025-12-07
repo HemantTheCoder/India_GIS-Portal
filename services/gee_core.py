@@ -5,7 +5,8 @@ import geopandas as gpd
 import tempfile
 import os
 import zipfile
-import scipy
+from shapely.geometry import mapping, shape
+from shapely.ops import unary_union
 
 def initialize_gee(service_account_key=None):
     try:
@@ -98,7 +99,23 @@ def get_safe_download_url(image, geometry, scale=30, max_pixels=5e8):
             return None, "File too large (>50MB). Please increase the scale value to reduce file size."
         return None, f"Export error: {error_msg}"
 
+def shapely_to_ee_geometry(shapely_geom):
+    """Convert a Shapely geometry to an Earth Engine geometry using GeoJSON.
+    
+    This function uses the GeoJSON representation directly with ee.Geometry()
+    which properly handles all geometry types including MultiPolygon and GeometryCollection.
+    """
+    try:
+        geojson = mapping(shapely_geom)
+        
+        return ee.Geometry(geojson)
+    except Exception as e:
+        print(f"Error converting Shapely to EE geometry: {e}")
+        return None
+
+
 def process_shapefile_upload(uploaded_files):
+    """Process uploaded shapefile(s) and return EE geometry, center, and GeoJSON for display."""
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             for uploaded_file in uploaded_files:
@@ -110,74 +127,91 @@ def process_shapefile_upload(uploaded_files):
                     with zipfile.ZipFile(file_path, 'r') as zip_ref:
                         zip_ref.extractall(tmpdir)
             
-            shp_files = [f for f in os.listdir(tmpdir) if f.endswith('.shp')]
+            shp_files = []
+            for root, dirs, files in os.walk(tmpdir):
+                for f in files:
+                    if f.endswith('.shp'):
+                        shp_files.append(os.path.join(root, f))
             
             if not shp_files:
-                return None, None, "No .shp file found. Please upload a valid shapefile."
+                return None, None, None, "No .shp file found. Please upload a valid shapefile."
             
-            shp_path = os.path.join(tmpdir, shp_files[0])
+            shp_path = shp_files[0]
             gdf = gpd.read_file(shp_path)
             
-            if gdf.crs and gdf.crs.to_epsg() != 4326:
+            if gdf.crs is None:
+                gdf = gdf.set_crs(epsg=4326)
+            elif gdf.crs.to_epsg() != 4326:
                 gdf = gdf.to_crs(epsg=4326)
             
-            geometry = gdf.geometry.union_all()
-            centroid = geometry.centroid
+            if len(gdf) == 0:
+                return None, None, None, "Shapefile contains no features."
             
-            coords = list(geometry.exterior.coords) if hasattr(geometry, 'exterior') else None
-            if coords is None and hasattr(geometry, 'geoms'):
-                all_coords = []
-                for geom in geometry.geoms:
-                    if hasattr(geom, 'exterior'):
-                        all_coords.extend(list(geom.exterior.coords))
-                coords = all_coords
+            combined_geometry = unary_union(gdf.geometry)
             
-            if coords:
-                ee_geometry = ee.Geometry.Polygon([[[c[0], c[1]] for c in coords]])
-            else:
-                bounds = geometry.bounds
-                ee_geometry = ee.Geometry.Rectangle([bounds[0], bounds[1], bounds[2], bounds[3]])
+            ee_geometry = shapely_to_ee_geometry(combined_geometry)
+            if ee_geometry is None:
+                return None, None, None, "Could not convert geometry to Earth Engine format."
             
+            centroid = combined_geometry.centroid
             center = {"lat": centroid.y, "lon": centroid.x}
             
-            return ee_geometry, center, None
+            geojson_data = {
+                "type": "Feature",
+                "geometry": mapping(combined_geometry),
+                "properties": {}
+            }
+            
+            return ee_geometry, center, geojson_data, None
             
     except Exception as e:
-        return None, None, f"Error processing shapefile: {str(e)}"
+        return None, None, None, f"Error processing shapefile: {str(e)}"
 
 def geojson_file_to_ee_geometry(uploaded_file):
+    """Process uploaded GeoJSON file and return EE geometry, center, and GeoJSON for display."""
     try:
         content = uploaded_file.read().decode('utf-8')
         geojson = json.loads(content)
         
+        all_geometries = []
+        
         if geojson.get("type") == "FeatureCollection":
             features = geojson.get("features", [])
-            if features:
-                geom = features[0].get("geometry", {})
-            else:
-                return None, None, "No features found in GeoJSON"
+            if not features:
+                return None, None, None, "No features found in GeoJSON"
+            for feature in features:
+                geom = feature.get("geometry", {})
+                if geom:
+                    all_geometries.append(shape(geom))
         elif geojson.get("type") == "Feature":
             geom = geojson.get("geometry", {})
+            if geom:
+                all_geometries.append(shape(geom))
         else:
-            geom = geojson
+            all_geometries.append(shape(geojson))
         
-        geom_type = geom.get("type", "")
-        coords = geom.get("coordinates", [])
+        if not all_geometries:
+            return None, None, None, "No valid geometries found in GeoJSON"
         
-        if geom_type == "Polygon":
-            ee_geometry = ee.Geometry.Polygon(coords)
-        elif geom_type == "MultiPolygon":
-            ee_geometry = ee.Geometry.MultiPolygon(coords)
-        else:
-            return None, None, f"Unsupported geometry type: {geom_type}"
+        combined_geometry = unary_union(all_geometries)
         
-        centroid = ee_geometry.centroid().getInfo()["coordinates"]
-        center = {"lat": centroid[1], "lon": centroid[0]}
+        ee_geometry = shapely_to_ee_geometry(combined_geometry)
+        if ee_geometry is None:
+            return None, None, None, "Could not convert geometry to Earth Engine format."
         
-        return ee_geometry, center, None
+        centroid = combined_geometry.centroid
+        center = {"lat": centroid.y, "lon": centroid.x}
+        
+        geojson_data = {
+            "type": "Feature",
+            "geometry": mapping(combined_geometry),
+            "properties": {}
+        }
+        
+        return ee_geometry, center, geojson_data, None
         
     except Exception as e:
-        return None, None, f"Error processing GeoJSON: {str(e)}"
+        return None, None, None, f"Error processing GeoJSON: {str(e)}"
 
 def sample_pixel_value(image, lat, lon, scale=10):
     try:
