@@ -3,320 +3,201 @@ import streamlit as st
 def get_enhanced_css():
     return """
     <style>
-        /* Light Mode Styles */
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #0F172A;
-            text-align: center;
-            padding: 1rem 0;
-            margin-bottom: 0rem;
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        html, body, [class*="css"] {
+            font-family: 'Outfit', sans-serif;
+            scroll-behavior: smooth;
         }
+
+        /* --- ORBITAL COMMAND THEME --- */
+        
+        .stApp {
+            background-color: #050911;
+            background-image: 
+                radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 50%),
+                radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%);
+        }
+
+        .main-header {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(180deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            padding: 2.5rem 0 1rem 0;
+            letter-spacing: -0.03em;
+            text-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
+            text-transform: uppercase;
+        }
+        
         .sub-header {
             font-size: 1.1rem;
-            color: #334155;
+            color: #64748b;
             text-align: center;
-            margin-bottom: 2rem;
-            font-weight: 500;
+            margin-bottom: 3.5rem;
+            font-weight: 400;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.75rem 1.5rem;
+            border-radius: 100px;
+            backdrop-filter: blur(10px);
         }
+
         .map-container {
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 0;
-            margin: 1rem 0;
+            box-shadow: 0 0 0 1px #1e293b, 0 20px 40px -10px rgba(0,0,0,0.5);
+            padding: 4px;
+            background: #0f172a;
+            margin: 1.5rem 0;
         }
-        .card {
-            background: white;
+
+        /* HUD Cards */
+        .card, .feature-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1.75rem;
             margin: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            border: 1px solid #eee;
+            border: 1px solid rgba(56, 189, 248, 0.1); /* Subtle cyan border */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f3ff, transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
         .card-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #1a1a1a;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #f1f5f9;
+            letter-spacing: 0.02em;
         }
+
+        /* Stat Cards */
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 12px;
             padding: 1.5rem;
-            color: white;
             text-align: center;
             margin: 0.5rem 0;
+            transition: transform 0.2s;
+            position: relative;
         }
-        .stat-card-green {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: 20%;
+            width: 60%;
+            height: 2px;
+            background: currentColor;
+            opacity: 0.5;
+            box-shadow: 0 -2px 10px currentColor;
         }
-        .stat-card-orange {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        
+        .stat-card:hover {
+            transform: scale(1.02);
+            background: rgba(30, 41, 59, 0.5);
         }
-        .stat-card-blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
+
+        .stat-card-blue { color: #38bdf8; }
+        .stat-card-green { color: #4ade80; }
+        .stat-card-orange { color: #fb923c; }
+
         .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: white;
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #fff;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
+
         .stat-label {
             font-size: 0.85rem;
-            opacity: 0.9;
-            color: white;
-        }
-        .legend-box {
-            background-color: #f5f7fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin: 1rem 0;
-            color: #1a1a1a;
-            border: 1px solid #e0e0e0;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 0.5rem 0;
-        }
-        .legend-color {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            margin-right: 10px;
-            border: 1px solid #ddd;
-        }
-        .info-box {
-            background-color: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-            color: #1565C0;
-        }
-        .success-box {
-            background-color: #e8f5e9;
-            border-left: 4px solid #4CAF50;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-            color: #2E7D32;
-        }
-        .warning-box {
-            background-color: #fff3e0;
-            border-left: 4px solid #FF9800;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-            color: #E65100;
-        }
-        .error-box {
-            background-color: #ffebee;
-            border-left: 4px solid #f44336;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-            color: #C62828;
-        }
-        .change-positive {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .change-negative {
-            color: #f44336;
-            font-weight: bold;
-        }
-        .gradient-legend {
-            height: 20px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        .legend-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: #333;
-            font-weight: 500;
-        }
-        .pollutant-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            border: 1px solid #e0e0e0;
-        }
-        .pollutant-value {
-            font-size: 1.5rem;
+            opacity: 0.7;
+            color: #94a3b8;
             font-weight: 600;
-            color: #1a1a1a;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
-        .pollutant-unit {
+
+        /* Utility Boxes */
+        .info-box, .success-box, .warning-box, .error-box {
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-left: 3px solid;
+            background: rgba(15, 23, 42, 0.8);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .info-box { border-color: #3b82f6; color: #bfdbfe; }
+        .success-box { border-color: #22c55e; color: #bbf7d0; }
+        .warning-box { border-color: #f97316; color: #fed7aa; }
+        .error-box { border-color: #ef4444; color: #fecaca; }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        
+        /* Form Elements Override */
+        [data-testid="stSelectbox"] label, [data-testid="stSlider"] label {
+            color: #94a3b8 !important;
             font-size: 0.85rem;
-            color: #555;
-            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        .opacity-slider {
-            margin: 0.5rem 0;
-        }
-        .pixel-inspector {
-            background: rgba(0, 0, 0, 0.8);
+        
+        .stButton button {
+            background: linear-gradient(90deg, #0ea5e9, #2563eb);
+            border: none;
             color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
         }
         
-        /* Dark Mode Styles */
-        @media (prefers-color-scheme: dark) {
-            .main-header {
-                color: #90CAF9;
-            }
-            .sub-header {
-                color: #B0BEC5;
-            }
-            .card {
-                background: #1E1E1E;
-                border: 1px solid #333;
-                color: #E0E0E0;
-            }
-            .card-header {
-                color: #E0E0E0;
-            }
-            .stat-card {
-                background: linear-gradient(135deg, #5C6BC0 0%, #7E57C2 100%);
-            }
-            .stat-value {
-                color: #FFFFFF !important;
-            }
-            .stat-label {
-                color: #E0E0E0 !important;
-            }
-            .legend-box {
-                background-color: #2D2D2D;
-                color: #E0E0E0;
-            }
-            .legend-color {
-                border: 1px solid #555;
-            }
-            .info-box {
-                background-color: #1A237E;
-                color: #90CAF9;
-            }
-            .success-box {
-                background-color: #1B5E20;
-                color: #A5D6A7;
-            }
-            .warning-box {
-                background-color: #E65100;
-                color: #FFCC80;
-            }
-            .error-box {
-                background-color: #B71C1C;
-                color: #FFCDD2;
-            }
-            .legend-labels {
-                color: #B0BEC5;
-            }
-            .pollutant-card {
-                background: #1E1E1E;
-                border: 1px solid #444;
-            }
-            .pollutant-value {
-                color: #E0E0E0;
-            }
-            .pollutant-unit {
-                color: #9E9E9E;
-            }
-        }
-        
-        /* Streamlit Dark Theme Detection */
-        [data-testid="stAppViewContainer"][data-theme="dark"] .main-header,
-        .stApp[data-theme="dark"] .main-header {
-            color: #90CAF9 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .sub-header,
-        .stApp[data-theme="dark"] .sub-header {
-            color: #B0BEC5 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .card,
-        .stApp[data-theme="dark"] .card {
-            background: #1E1E1E !important;
-            border: 1px solid #333 !important;
-            color: #E0E0E0 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .card-header,
-        .stApp[data-theme="dark"] .card-header {
-            color: #E0E0E0 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .stat-card,
-        .stApp[data-theme="dark"] .stat-card {
-            background: linear-gradient(135deg, #5C6BC0 0%, #7E57C2 100%) !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .stat-value,
-        .stApp[data-theme="dark"] .stat-value {
-            color: #FFFFFF !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .stat-label,
-        .stApp[data-theme="dark"] .stat-label {
-            color: #E0E0E0 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .legend-box,
-        .stApp[data-theme="dark"] .legend-box {
-            background-color: #2D2D2D !important;
-            color: #E0E0E0 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .info-box,
-        .stApp[data-theme="dark"] .info-box {
-            background-color: #1A237E !important;
-            color: #90CAF9 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .success-box,
-        .stApp[data-theme="dark"] .success-box {
-            background-color: #1B5E20 !important;
-            color: #A5D6A7 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .warning-box,
-        .stApp[data-theme="dark"] .warning-box {
-            background-color: #E65100 !important;
-            color: #FFCC80 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .error-box,
-        .stApp[data-theme="dark"] .error-box {
-            background-color: #B71C1C !important;
-            color: #FFCDD2 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .legend-labels,
-        .stApp[data-theme="dark"] .legend-labels {
-            color: #B0BEC5 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .pollutant-card,
-        .stApp[data-theme="dark"] .pollutant-card {
-            background: #1E1E1E !important;
-            border: 1px solid #444 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .pollutant-value,
-        .stApp[data-theme="dark"] .pollutant-value {
-            color: #E0E0E0 !important;
-        }
-        [data-testid="stAppViewContainer"][data-theme="dark"] .pollutant-unit,
-        .stApp[data-theme="dark"] .pollutant-unit {
-            color: #9E9E9E !important;
-        }
-        
-        /* Additional fixes for Streamlit dark mode - using :has selector for modern browsers */
-        html:has([data-testid="stSidebar"][aria-expanded]) .main-header {
-            color: inherit;
-        }
-        
-        /* Force readable text in stat cards regardless of theme */
-        .stat-card .stat-value,
-        .stat-card .stat-label {
-            color: white !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        .stButton button:hover {
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+            transform: scale(1.02);
         }
     </style>
     """
