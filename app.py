@@ -130,7 +130,7 @@ with col4:
 
 st.markdown("---")
 
-st.markdown("### 🛰️ Integrated Data Sources")
+st.markdown('<h3 style="color: #f1f5f9; margin-bottom: 1rem;">🛰️ Integrated Data Sources</h3>', unsafe_allow_html=True)
 
 data_col1, data_col2, data_col3, data_col4 = st.columns(4)
 
