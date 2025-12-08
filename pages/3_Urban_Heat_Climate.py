@@ -23,8 +23,7 @@ from components.ui import (
     render_info_box, init_common_session_state
 )
 from components.maps import (
-    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
-    add_geojson_boundary
+    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control
 )
 from components.charts import render_line_chart
 from services.exports import (
@@ -97,7 +96,6 @@ with st.sidebar:
     city_coords = None
     uploaded_geometry = None
     uploaded_center = None
-    uploaded_geojson = None
     
     if location_mode == "City Selection":
         states = get_states()
@@ -132,27 +130,21 @@ with st.sidebar:
             if is_geojson:
                 geojson_file = next((f for f in uploaded_files if f.name.endswith('.geojson') or f.name.endswith('.json')), None)
                 if geojson_file:
-                    geom, center, geojson_data, error = geojson_file_to_ee_geometry(geojson_file)
-                    if error:
-                        st.error(error)
-                    else:
-                        uploaded_geometry = geom
-                        uploaded_center = center
-                        uploaded_geojson = geojson_data
-                        city_coords = center
-                        st.success(f"✅ GeoJSON loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+                    result = geojson_file_to_ee_geometry(geojson_file)
+                    if result:
+                        uploaded_geometry, uploaded_center = result
+                        st.success(f"GeoJSON loaded successfully")
                         selected_city = "Custom AOI"
+                    else:
+                        st.error("Failed to parse GeoJSON file")
             elif is_zip or has_shp:
-                geom, center, geojson_data, error = process_shapefile_upload(uploaded_files)
-                if error:
-                    st.error(error)
-                else:
-                    uploaded_geometry = geom
-                    uploaded_center = center
-                    uploaded_geojson = geojson_data
-                    city_coords = center
-                    st.success(f"✅ Shapefile loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
+                result = process_shapefile_upload(uploaded_files)
+                if result:
+                    uploaded_geometry, uploaded_center = result
+                    st.success(f"Shapefile loaded successfully")
                     selected_city = "Custom AOI"
+                else:
+                    st.error("Failed to process shapefile")
     
     st.markdown("---")
     st.markdown("## 📅 Time Period")
@@ -310,9 +302,9 @@ center_coords = None
 if location_mode == "City Selection" and selected_city and selected_city != "Select..." and city_coords:
     geometry = get_city_geometry(city_coords['lat'], city_coords['lon'], buffer_radius)
     center_coords = (city_coords['lat'], city_coords['lon'])
-elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geometry and uploaded_center:
+elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geometry:
     geometry = uploaded_geometry
-    center_coords = (uploaded_center['lat'], uploaded_center['lon'])
+    center_coords = uploaded_center
 
 if center_coords:
     base_map = create_base_map(center_coords[0], center_coords[1], zoom=11)
@@ -320,11 +312,6 @@ if center_coords:
     if location_mode == "City Selection" and selected_city and selected_city != "Select...":
         add_marker(base_map, center_coords[0], center_coords[1], selected_city)
         add_buffer_circle(base_map, center_coords[0], center_coords[1], buffer_radius)
-    elif location_mode == "Upload Shapefile/GeoJSON" and uploaded_geojson:
-        add_geojson_boundary(base_map, uploaded_geojson, name="Uploaded AOI", 
-                           color="#ff7800", weight=3, fill_opacity=0.15)
-        add_marker(base_map, center_coords[0], center_coords[1], 
-                   popup="Custom Area Center", tooltip="Custom Area")
 else:
     base_map = create_base_map(20.5937, 78.9629, zoom=5)
 
@@ -342,8 +329,9 @@ if run_analysis and geometry:
     
     try:
         with st.spinner("Analyzing Land Surface Temperature..."):
-            start_str = start_date.strftime("%Y-%m-%d")
             end_str = end_date.strftime("%Y-%m-%d")
+
+            st.info("⏳ Processing Thermal Analysis... Estimated time: ~90 seconds")
             
             if "LST Map" in analysis_types:
                 with st.spinner("Generating LST map..."):
@@ -425,12 +413,40 @@ if run_analysis and geometry:
                     )
                     st.session_state.lst_time_series = time_series
                     
-                    if show_warming_trend and time_series:
+            if show_warming_trend and time_series:
                         trend = calculate_warming_trend(time_series)
                         st.session_state.warming_trend = trend
             
+            # Auto-generate PDF report
+            st.toast("Generating PDF Report...", icon="📄")
+            try:
+                vulnerability = calculate_heat_vulnerability_score(
+                    st.session_state.lst_stats,
+                    st.session_state.uhi_stats,
+                    st.session_state.lst_time_series,
+                    st.session_state.warming_trend
+                )
+                
+                report_data = {
+                    'city_name': display_name,
+                    'state': selected_state if selected_state != "Custom AOI" else "",
+                    'date_range': f"{start_date} to {end_date}",
+                    'time_of_day': time_of_day,
+                    'data_source': f"MODIS {satellite}",
+                    'lst_stats': st.session_state.lst_stats,
+                    'uhi_stats': st.session_state.uhi_stats,
+                    'vulnerability_score': vulnerability,
+                    'time_series': st.session_state.lst_time_series,
+                    'warming_trend': st.session_state.warming_trend
+                }
+                
+                pdf_data = generate_urban_heat_pdf_report(report_data)
+                if pdf_data:
+                    st.session_state.heat_pdf = pdf_data
+            except Exception as e:
+                print(f"PDF Auto-gen failed: {e}")
+
             st.session_state.lst_analysis_complete = True
-            st.session_state.heat_pdf = None
             st.success("Analysis complete!")
         
     except Exception as e:
@@ -673,38 +689,17 @@ if st.session_state.get("lst_analysis_complete"):
         
         with exp_cols[1]:
             if st.session_state.lst_stats:
-                if 'heat_pdf' not in st.session_state or st.session_state.heat_pdf is None:
-                    vulnerability = calculate_heat_vulnerability_score(
-                        st.session_state.lst_stats,
-                        st.session_state.uhi_stats,
-                        st.session_state.lst_time_series,
-                        st.session_state.warming_trend
-                    )
-                    report_data = {
-                        'city_name': display_name,
-                        'state': selected_state if selected_state != "Custom AOI" else "",
-                        'date_range': f"{start_date} to {end_date}",
-                        'time_of_day': time_of_day,
-                        'data_source': f"MODIS {satellite}",
-                        'lst_stats': st.session_state.lst_stats,
-                        'uhi_stats': st.session_state.uhi_stats,
-                        'vulnerability_score': vulnerability,
-                        'time_series': st.session_state.lst_time_series,
-                        'warming_trend': st.session_state.warming_trend
-                    }
-                    st.session_state.heat_pdf = generate_urban_heat_pdf_report(report_data)
-                
                 if st.session_state.get("heat_pdf"):
                     st.download_button(
-                        "📥 Download PDF Report",
+                        "📥 Download PDF",
                         data=st.session_state.heat_pdf,
                         file_name=f"urban_heat_report_{display_name}.pdf",
                         mime="application/pdf",
                         use_container_width=True,
-                        key="dl_heat_pdf"
+                        key=f"dl_heat_pdf_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     )
                 else:
-                    st.error("Failed to generate PDF")
+                    st.caption("PDF generating...")
     
     if st.session_state.lst_time_series:
         st.markdown("---")

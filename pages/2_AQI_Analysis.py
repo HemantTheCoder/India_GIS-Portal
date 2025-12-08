@@ -22,8 +22,7 @@ from components.ui import (
     render_info_box, init_common_session_state, render_pollutant_stat_card
 )
 from components.maps import (
-    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
-    add_geojson_boundary
+    create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control
 )
 from components.legends import (
     render_pollutant_legend_with_opacity, render_anomaly_legend, render_hotspot_legend
@@ -101,7 +100,6 @@ with st.sidebar:
     city_coords = None
     uploaded_geometry = None
     uploaded_center = None
-    uploaded_geojson = None
     
     if location_mode == "City Selection":
         states = get_states()
@@ -133,24 +131,22 @@ with st.sidebar:
             shp_files = [f for f in uploaded_files if f.name.endswith('.shp')]
             
             if geojson_files:
-                geom, center, geojson_data, error = geojson_file_to_ee_geometry(geojson_files[0])
+                geom, center, error = geojson_file_to_ee_geometry(geojson_files[0])
                 if error:
                     st.error(error)
                 else:
                     uploaded_geometry = geom
                     uploaded_center = center
-                    uploaded_geojson = geojson_data
                     city_coords = center
                     selected_city = "Custom Area"
                     st.success(f"✅ GeoJSON loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
             elif zip_files or shp_files:
-                geom, center, geojson_data, error = process_shapefile_upload(uploaded_files)
+                geom, center, error = process_shapefile_upload(uploaded_files)
                 if error:
                     st.error(error)
                 else:
                     uploaded_geometry = geom
                     uploaded_center = center
-                    uploaded_geojson = geojson_data
                     city_coords = center
                     selected_city = "Custom Area"
                     st.success(f"✅ Shapefile loaded! Center: {center['lat']:.4f}, {center['lon']:.4f}")
@@ -223,9 +219,6 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                    popup=f"{selected_city}", tooltip=selected_city)
         add_buffer_circle(base_map, city_coords["lat"], city_coords["lon"], buffer_km)
     else:
-        if uploaded_geojson:
-            add_geojson_boundary(base_map, uploaded_geojson, name="Uploaded AOI", 
-                               color="#ff7800", weight=3, fill_opacity=0.15)
         add_marker(base_map, city_coords["lat"], city_coords["lon"], 
                    popup="Custom Area Center", tooltip="Custom Area")
     
@@ -237,6 +230,8 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                     st.info("Using uploaded shapefile/GeoJSON geometry")
                 else:
                     geometry = get_city_geometry(city_coords["lat"], city_coords["lon"], buffer_km)
+                
+                st.info("⏳ Processing AQI Data... Estimated time: ~45 seconds")
                 st.session_state.current_geometry = geometry
                 
                 start_str = start_date.strftime("%Y-%m-%d")
@@ -246,11 +241,19 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 st.session_state.pollutant_stats = {}
                 st.session_state.aqi_tile_urls = {}
                 st.session_state.aqi_primary_pollutant = primary_pollutant
+                st.session_state.aqi_pdf = None # FORCE CLEAR PDF to prevent caching
                 
-                for pollutant in selected_pollutants:
+                # Ensure PM2.5 and PM10 are fetched for AQI calculation, even if not selected for map
+                required_aqi_pollutants = ['PM2.5', 'PM10']
+                all_pollutants_to_fetch = list(set(selected_pollutants + required_aqi_pollutants))
+                
+                for pollutant in all_pollutants_to_fetch:
                     image = get_pollutant_image(geometry, pollutant, start_str, end_str)
                     if image:
-                        st.session_state.pollutant_images[pollutant] = image
+                        # Store image only if selected (to save memory/confusion) or if needed for stats
+                        if pollutant in selected_pollutants:
+                            st.session_state.pollutant_images[pollutant] = image
+                        
                         stats = calculate_pollutant_statistics(image, geometry, pollutant)
                         st.session_state.pollutant_stats[pollutant] = stats
                 
@@ -310,8 +313,33 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                         geometry, selected_pollutants, start_str, end_str
                     )
                 
+                # Auto-generate PDF Report
+                st.toast("Generating PDF Report...", icon="📄")
+                try:
+                    compliance = calculate_aqi_compliance_score(st.session_state.pollutant_stats)
+                    print(f"DEBUG: Calculated Compliance: {compliance}") # DEBUG LOG
+                    ts_data = {}
+                    if st.session_state.get("aqi_time_series"):
+                        ts_data = st.session_state.aqi_time_series
+                    
+                    report_data = {
+                        'city_name': selected_city,
+                        'state': selected_state,
+                        'date_range': f"{start_date} to {end_date}",
+                        'pollutants': selected_pollutants,
+                        'pollutant_stats': st.session_state.pollutant_stats,
+                        'compliance': compliance,
+                        'time_series': ts_data
+                    }
+                    
+                    pdf_data = generate_aqi_pdf_report(report_data)
+                    if pdf_data:
+                        st.session_state.aqi_pdf = pdf_data
+                except Exception as e:
+                    st.error(f"PDF Generation Failed: {e}")
+                    print(f"PDF Auto-gen failed: {e}")
+
                 st.session_state.aqi_analysis_complete = True
-                st.session_state.aqi_pdf = None
                 st.success("Analysis complete!")
             
             except Exception as e:
@@ -332,6 +360,26 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
     if st.session_state.get("aqi_analysis_complete"):
         st.markdown("---")
         st.markdown("## 📊 Analysis Results")
+        
+        # --- AQI Index Display ---
+        compliance = calculate_aqi_compliance_score(st.session_state.pollutant_stats)
+        if compliance and compliance.get('aqi_val'):
+             val = compliance.get('aqi_val')
+             cat = compliance.get('aqi_cat')
+             color = compliance.get('aqi_color', '#808080')
+             dominant = compliance.get('dominant', 'N/A')
+             
+             text_col = "#000000" if cat in ['Moderate', 'Satisfactory', 'Good'] else "#ffffff"
+             
+             st.markdown(f"""
+             <div style="background-color: {color}; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                 <p style="color: {text_col}; margin: 0; font-size: 0.9rem; font-weight: 500;">LIVE AIR QUALITY INDEX</p>
+                 <h1 style="color: {text_col}; margin: 5px 0; font-size: 2.0rem; font-weight: 700;">{val}</h1>
+                 <h2 style="color: {text_col}; margin: 0; font-size: 1.25rem; font-weight: 600;">{cat}</h2>
+                 <p style="color: {text_col}; margin-top: 5px; opacity: 0.9; font-size: 0.8rem;">Dominant Pollutant: <b>{dominant}</b></p>
+             </div>
+             """, unsafe_allow_html=True)
+        # -------------------------
         
         if st.session_state.get("pollutant_stats"):
             num_pollutants = len(selected_pollutants)
@@ -424,31 +472,17 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
             
             with exp_col3:
                 if st.session_state.pollutant_stats:
-                    if 'aqi_pdf' not in st.session_state or st.session_state.aqi_pdf is None:
-                        compliance = calculate_aqi_compliance_score(st.session_state.pollutant_stats)
-                        ts_data = st.session_state.get("aqi_time_series", {})
-                        report_data = {
-                            'city_name': selected_city,
-                            'state': selected_state,
-                            'date_range': f"{start_date} to {end_date}",
-                            'pollutants': selected_pollutants,
-                            'pollutant_stats': st.session_state.pollutant_stats,
-                            'compliance_score': compliance,
-                            'time_series': ts_data
-                        }
-                        st.session_state.aqi_pdf = generate_aqi_pdf_report(report_data)
-                    
                     if st.session_state.get("aqi_pdf"):
                         st.download_button(
-                            "📥 Download PDF Report",
+                            "📥 Download PDF",
                             data=st.session_state.aqi_pdf,
                             file_name=f"aqi_report_{selected_city}.pdf",
                             mime="application/pdf",
                             use_container_width=True,
-                            key="dl_aqi_pdf"
+                            key=f"dl_aqi_pdf_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                         )
                     else:
-                        st.error("Failed to generate PDF")
+                        st.caption("PDF generating...")
         
         if show_time_series and st.session_state.get("aqi_time_series"):
             st.markdown("---")
