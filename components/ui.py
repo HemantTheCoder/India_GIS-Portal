@@ -199,6 +199,36 @@ def get_enhanced_css():
             box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
             transform: scale(1.02);
         }
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            .main-header {
+                font-size: 2.2rem !important;
+                padding-top: 1.5rem;
+            }
+            .sub-header {
+                font-size: 0.95rem !important;
+                padding: 1rem;
+                margin-bottom: 2rem;
+            }
+            .stat-value {
+                font-size: 1.75rem !important;
+            }
+            .stat-label {
+                font-size: 0.75rem;
+            }
+            .card-header {
+                font-size: 1.1rem;
+            }
+            .feature-card, .card, .stat-card {
+                padding: 1.25rem !important;
+                margin: 0.75rem 0;
+            }
+            .stApp {
+                background-image: none !important; /* Performance on mobile */
+                background-color: #050911 !important;
+            }
+        }
     </style>
     """
 
