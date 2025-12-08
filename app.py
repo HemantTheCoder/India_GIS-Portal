@@ -136,8 +136,8 @@ data_col1, data_col2, data_col3, data_col4 = st.columns(4)
 
 source_style = """
 <div class="feature-card" style="padding: 1rem; text-align: center;">
-    <div style="font-weight: 700; color: #0f172a; margin-bottom: 0.25rem;">{title}</div>
-    <div style="font-size: 0.8rem; color: #64748b;">{desc}</div>
+    <div style="font-weight: 700; color: #f1f5f9; margin-bottom: 0.25rem;">{title}</div>
+    <div style="font-size: 0.8rem; color: #94a3b8;">{desc}</div>
 </div>
 """
 
