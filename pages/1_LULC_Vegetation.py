@@ -227,6 +227,7 @@ if city_coords and st.session_state.gee_initialized:
                 else:
                     geometry = get_city_geometry(city_coords["lat"], city_coords["lon"], buffer_km)
                 
+                st.info("⏳ Processing LULC Classification... Estimated time: ~60 seconds")
                 st.session_state.current_geometry = geometry
                 
                 if satellite == "Sentinel-2":
@@ -282,6 +283,28 @@ if city_coords and st.session_state.gee_initialized:
                                 st.warning(f"Could not calculate {idx}: {str(e)}")
                     
                     st.session_state.analysis_complete = True
+                    
+                    # Auto-generate PDF Report
+                    st.toast("Generating PDF Report...", icon="📄")
+                    try:
+                        sustainability = calculate_land_sustainability_score(st.session_state.lulc_stats)
+                        report_data = {
+                            'city_name': selected_city,
+                            'state': selected_state,
+                            'year': selected_year,
+                            'date_range': f"{start_date} to {end_date}",
+                            'satellite': satellite,
+                            'total_area': st.session_state.lulc_stats.get('total_area_sqkm', 0),
+                            'stats': st.session_state.lulc_stats.get('classes', {}),
+                            'sustainability_score': sustainability,
+                            'indices': st.session_state.get('index_means', {})
+                        }
+                        pdf_data = generate_lulc_pdf_report(report_data)
+                        if pdf_data:
+                            st.session_state.lulc_pdf = pdf_data
+                    except Exception as e:
+                        print(f"PDF Auto-gen failed: {e}")
+
                     st.success("Analysis complete!")
             
             except Exception as e:
@@ -538,39 +561,17 @@ if city_coords and st.session_state.gee_initialized:
             
             with export_col3:
                 st.markdown("**PDF Report**")
-                if st.session_state.get("lulc_stats"):
-                    if st.button("📑 Generate PDF Report", use_container_width=True, key="gen_pdf"):
-                        with st.spinner("Generating PDF report..."):
-                            sustainability = calculate_land_sustainability_score(st.session_state.lulc_stats)
-                            
-                            report_data = {
-                                'city_name': selected_city,
-                                'state': selected_state,
-                                'year': selected_year,
-                                'date_range': f"{start_date} to {end_date}",
-                                'satellite': satellite,
-                                'total_area': st.session_state.lulc_stats.get('total_area_sqkm', 0),
-                                'stats': st.session_state.lulc_stats.get('classes', {}),
-                                'sustainability_score': sustainability,
-                                'indices': st.session_state.get('index_means', {})
-                            }
-                            
-                            pdf_data = generate_lulc_pdf_report(report_data)
-                            if pdf_data:
-                                st.session_state.lulc_pdf = pdf_data
-                                st.success("PDF ready!")
-                    
-                    if st.session_state.get("lulc_pdf"):
-                        st.download_button(
-                            "📥 Download PDF Report",
-                            data=st.session_state.lulc_pdf,
-                            file_name=f"lulc_report_{selected_city}_{selected_year}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True,
-                            key="dl_pdf"
-                        )
+                if st.session_state.get("lulc_pdf"):
+                    st.download_button(
+                        "📥 Download PDF Report",
+                        data=st.session_state.lulc_pdf,
+                        file_name=f"lulc_report_{selected_city}_{selected_year}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key=f"dl_pdf_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    )
                 else:
-                    st.caption("Run analysis to enable PDF export")
+                    st.caption("PDF generating or analysis required...")
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")

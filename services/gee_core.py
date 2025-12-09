@@ -97,6 +97,33 @@ def get_safe_download_url(image, geometry, scale=30, max_pixels=5e8):
             return None, "File too large (>50MB). Please increase the scale value to reduce file size."
         return None, f"Export error: {error_msg}"
 
+def _geometry_to_ee(geometry):
+    """
+    Helper to reliably convert shapely geometry to ee.Geometry
+    """
+    try:
+        # Convert to GeoJSON dict/feature
+        if hasattr(geometry, "__geo_interface__"):
+            geojson = geometry.__geo_interface__
+        else:
+            return None, "Invalid geometry object"
+            
+        type_ = geojson.get("type")
+        coords = geojson.get("coordinates")
+        
+        if type_ == "Polygon":
+            return ee.Geometry.Polygon(coords), None
+        elif type_ == "MultiPolygon":
+            return ee.Geometry.MultiPolygon(coords), None
+        elif type_ == "Point":
+             return ee.Geometry.Point(coords).buffer(1000), None # Default buffer for points
+        else:
+             # Fallback for others
+             return ee.Geometry(geojson), None
+             
+    except Exception as e:
+        return None, str(e)
+
 def process_shapefile_upload(uploaded_files):
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -120,24 +147,21 @@ def process_shapefile_upload(uploaded_files):
             if gdf.crs and gdf.crs.to_epsg() != 4326:
                 gdf = gdf.to_crs(epsg=4326)
             
-            geometry = gdf.geometry.union_all()
+            # Combine all features into one geometry (Union)
+            # Use unary_union which is standard for merging all geometries in a GDF
+            geometry = gdf.unary_union
+            
+            # Get centroid for map centering
             centroid = geometry.centroid
+            center = {"lat": centroid.y, "lon": centroid.x}
             
-            coords = list(geometry.exterior.coords) if hasattr(geometry, 'exterior') else None
-            if coords is None and hasattr(geometry, 'geoms'):
-                all_coords = []
-                for geom in geometry.geoms:
-                    if hasattr(geom, 'exterior'):
-                        all_coords.extend(list(geom.exterior.coords))
-                coords = all_coords
+            # Convert to Earth Engine Geometry
+            ee_geometry, error = _geometry_to_ee(geometry)
             
-            if coords:
-                ee_geometry = ee.Geometry.Polygon([[[c[0], c[1]] for c in coords]])
-            else:
+            if error:
+                # Fallback: Try bounds if complex conversion fails (though unlikely with unicary_union)
                 bounds = geometry.bounds
                 ee_geometry = ee.Geometry.Rectangle([bounds[0], bounds[1], bounds[2], bounds[3]])
-            
-            center = {"lat": centroid.y, "lon": centroid.x}
             
             return ee_geometry, center, None
             
@@ -149,30 +173,47 @@ def geojson_file_to_ee_geometry(uploaded_file):
         content = uploaded_file.read().decode('utf-8')
         geojson = json.loads(content)
         
+        # Handle FeatureCollection: Merge all geometries
         if geojson.get("type") == "FeatureCollection":
             features = geojson.get("features", [])
-            if features:
-                geom = features[0].get("geometry", {})
-            else:
+            if not features:
                 return None, None, "No features found in GeoJSON"
+            
+            # Simple approach: Load into GeoDataFrame to handle merging easily
+            # This is robust because GPD handles CRS and topology
+            gdf = gpd.GeoDataFrame.from_features(features)
+            if not gdf.crs:
+                gdf.set_crs(epsg=4326, inplace=True) # Assume 4326 if missing
+            elif gdf.crs.to_epsg() != 4326:
+                gdf = gdf.to_crs(epsg=4326)
+                
+            geometry = gdf.unary_union
+            
         elif geojson.get("type") == "Feature":
-            geom = geojson.get("geometry", {})
+            # load as single feature gdf
+            gdf = gpd.GeoDataFrame.from_features([geojson])
+            if not gdf.crs: gdf.set_crs(epsg=4326, inplace=True)
+            geometry = gdf.unary_union
+            
         else:
-            geom = geojson
+             # Just geometry
+             # Create a dummy feature to load into GPD or handle directly
+             # Handling directly is riskier if it's complex, let's wrap in feature
+             feature = {"type": "Feature", "geometry": geojson, "properties": {}}
+             gdf = gpd.GeoDataFrame.from_features([feature])
+             if not gdf.crs: gdf.set_crs(epsg=4326, inplace=True)
+             geometry = gdf.unary_union
+             
+        # Extract centroid
+        centroid = geometry.centroid
+        center = {"lat": centroid.y, "lon": centroid.x}
         
-        geom_type = geom.get("type", "")
-        coords = geom.get("coordinates", [])
+        # Convert to EE
+        ee_geometry, error = _geometry_to_ee(geometry)
         
-        if geom_type == "Polygon":
-            ee_geometry = ee.Geometry.Polygon(coords)
-        elif geom_type == "MultiPolygon":
-            ee_geometry = ee.Geometry.MultiPolygon(coords)
-        else:
-            return None, None, f"Unsupported geometry type: {geom_type}"
-        
-        centroid = ee_geometry.centroid().getInfo()["coordinates"]
-        center = {"lat": centroid[1], "lon": centroid[0]}
-        
+        if error:
+             return None, None, f"Geometry Conversion Error: {error}"
+             
         return ee_geometry, center, None
         
     except Exception as e:

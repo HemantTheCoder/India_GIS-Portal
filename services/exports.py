@@ -110,7 +110,307 @@ WHO_STANDARDS = {
     'SO2': {'daily': 40, 'unit': 'µg/m³', 'name': 'Sulfur Dioxide'},
     'CO': {'daily': 4, 'unit': 'mg/m³', 'name': 'Carbon Monoxide'},
     'O3': {'8hr': 100, 'unit': 'µg/m³', 'name': 'Ozone'},
+    'PM2.5': {'daily': 15, 'unit': 'µg/m³', 'name': 'Particulate Matter < 2.5µm'},
+    'PM10': {'daily': 45, 'unit': 'µg/m³', 'name': 'Particulate Matter < 10µm'},
 }
+
+from services.aqi_logic import calculate_cpcb_aqi
+
+def generate_aqi_pdf_report(report_data):
+    """Generates a Premium PDF Report for AQI Analysis (Updated Phase 7)."""
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch, cm
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Custom Styles
+        title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=24, 
+                                      spaceAfter=20, alignment=TA_CENTER, textColor=colors.HexColor('#d32f2f'))
+        heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=16, 
+                                        spaceBefore=15, spaceAfter=10, textColor=colors.HexColor('#1976d2'))
+        subheading_style = ParagraphStyle('SubHeading', parent=styles['Heading3'], fontSize=12, 
+                                        textColor=colors.grey)
+
+        # Header
+        elements.append(Paragraph("Air Quality Detailed Assessment", title_style))
+        elements.append(Paragraph(f"Analysis Report | {report_data.get('city_name', 'Region')}", subheading_style))
+        elements.append(Spacer(1, 20))
+
+        # Info Table
+        info_data = [
+            ['Location', report_data.get('city_name', 'N/A')],
+            ['Analysis Date', datetime.now().strftime('%Y-%m-%d')],
+            ['Data Source', "Sentinel-5P (Gases) & ECMWF CAMS (PM)"]
+        ]
+        info_table = Table(info_data, colWidths=[5*cm, 12*cm])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#ffebee')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 20))
+
+        # --- Section 1: Surface AQI (PM2.5 / PM10) ---
+        elements.append(Paragraph("1. Surface Pollution & AQI", heading_style))
+        elements.append(Paragraph("Based on Particulate Matter (PM2.5 / PM10) - CPCB Standards", styles['Italic']))
+        elements.append(Spacer(1, 10))
+
+        compliance = report_data.get('compliance', {})
+        aqi_val = compliance.get('aqi_val', None)
+        aqi_cat = compliance.get('aqi_cat', 'Insufficient Data')
+        aqi_color = compliance.get('aqi_color', '#808080')
+        dominant = compliance.get('dominant', 'N/A')
+        
+        # New Style for Big Stats
+        aqi_style = ParagraphStyle('AQI_Big', parent=styles['Normal'], fontSize=24, leading=28,
+                                   alignment=TA_CENTER, textColor=colors.HexColor(aqi_color if aqi_color else '#000000'))
+        
+        cat_style = ParagraphStyle('AQI_Cat', parent=styles['Normal'], fontSize=16, leading=20, 
+                                   alignment=TA_CENTER, textColor=colors.black)
+
+        # Draw Gauge if data exists
+        if aqi_val is not None:
+             # 1. ADD TEXT FIRST (Safe)
+             try:
+                 elements.append(Paragraph(f"<b>AQI INDEX: {aqi_val}</b>", 
+                     ParagraphStyle('AQI_Val', parent=styles['Heading1'], fontSize=24, alignment=TA_CENTER, textColor=colors.HexColor(aqi_color if aqi_color else '#000000'))))
+                     
+                 elements.append(Paragraph(f"<b>{aqi_cat.upper()}</b>", 
+                     ParagraphStyle('AQI_Cat', parent=styles['Normal'], fontSize=18, alignment=TA_CENTER, textColor=colors.black)))
+             except Exception as e:
+                 elements.append(Paragraph(f"Error rendering AQI Text: {e}", styles['Normal']))
+             
+             elements.append(Spacer(1, 10))
+             
+             # 2. ADD GAUGE SECOND (Risky - Wrap in try/catch)
+             try:
+                 gauge_buf = _create_chart_image('gauge', {'score': aqi_val}, "", width=400, height=200)
+                 elements.append(Image(gauge_buf, width=4*inch, height=2*inch))
+             except Exception as e:
+                 print(f"Gauge Gen Error: {e}")
+                 elements.append(Paragraph("(Gauge visualization unavailable)", styles['Italic']))
+             
+             elements.append(Paragraph(f"Dominant Pollutant: {dominant}", styles['Normal']))
+             
+        else:
+             # Fallback if no PM data
+             elements.append(Paragraph("<b>AQI: N/A</b>", aqi_style))
+             elements.append(Paragraph("(Requires PM2.5 or PM10 data)", cat_style))
+        
+        elements.append(Spacer(1, 15))
+
+        # PM Detail Table
+        pm_data = [['Pollutant', 'Concentration', 'Unit', 'WHO Limit', 'Status']]
+        
+        details = compliance.get('details', [])
+        pm_details = [d for d in details if d['type'] == 'particles']
+        
+        if pm_details:
+            for d in pm_details:
+                status_color = colors.green if d['status'] in ['Excellent', 'Good'] else (colors.orange if d['status'] in ['Moderate', 'Satisfactory'] else colors.red)
+                pm_data.append([
+                    d['pollutant'],
+                    f"{d['measured']:.2f}",
+                    d['unit'],
+                    f"{d['limit']}",
+                    Paragraph(f"<font color='{status_color.hexval()}'><b>{d['status']}</b></font>", styles['Normal'])
+                ])
+            
+            t_pm = Table(pm_data, colWidths=[3*cm, 4*cm, 2*cm, 3*cm, 4*cm])
+            t_pm.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5c6bc0')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#e8eaf6')])
+            ]))
+            elements.append(t_pm)
+        else:
+             elements.append(Paragraph("No PM2.5/PM10 data available for AQI calculation.", styles['Normal']))
+
+        elements.append(Spacer(1, 20))
+
+        # --- Section 2: Trace Gases (Satellite Column Density) ---
+        elements.append(Paragraph("2. Trace Gas Analysis (Satellite)", heading_style))
+        elements.append(Paragraph(
+            "Values represent <b>Total Column Density</b> (vertical sum of gas molecules from ground to space). "
+            "<i>Note: High column density usually correlates with ground pollution, but these are NOT direct breathing-level concentrations.</i>",
+            styles['Normal']))
+        elements.append(Spacer(1, 10))
+
+        gas_data = [['Gas', 'Column Density', 'Unit', 'Interpretation']]
+        gas_details = [d for d in details if d['type'] == 'gas']
+
+        if gas_details:
+            for d in gas_details:
+                gas_data.append([
+                    d['pollutant'],
+                    f"{d['measured']:.2f}", 
+                    d['unit'],
+                    "Satellite Observation"
+                ])
+            
+            t_gas = Table(gas_data, colWidths=[3*cm, 5*cm, 3*cm, 5*cm])
+            t_gas.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#455a64')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#eceff1')])
+            ]))
+            elements.append(t_gas)
+        else:
+             elements.append(Paragraph("No Trace Gas data available.", styles['Normal']))
+             
+        elements.append(Spacer(1, 20))
+
+        # Visualizations
+        if 'charts' in report_data:
+            elements.append(PageBreak())
+            elements.append(Paragraph("Visual Analysis", heading_style))
+            for title, chart_buf in report_data['charts'].items():
+                elements.append(Paragraph(title, subheading_style))
+                elements.append(Image(chart_buf, width=6*inch, height=3.5*inch))
+                elements.append(Spacer(1, 15))
+        
+        # Auto-generate Charts from Time Series
+        if report_data.get('time_series'):
+            ts_data = report_data['time_series']
+            for pollutant, data in ts_data.items():
+                if data:
+                    try:
+                        chart_type = "Surface Concentration" if pollutant in ['PM2.5', 'PM10'] else "Column Density"
+                        chart_buf = _create_chart_image('line', data, f"{pollutant} Trends ({chart_type})", width=600, height=300)
+                        elements.append(Paragraph(f"Trend: {pollutant}", subheading_style))
+                        elements.append(Image(chart_buf, width=6*inch, height=3*inch))
+                        elements.append(Spacer(1, 15))
+                    except Exception as e:
+                        print(f"Chart Gen Error: {e}")
+
+        doc.build(elements)
+        return buffer.getvalue()
+    except Exception as e:
+        print(f"PDF Gen Error: {e}")
+        return None
+
+def generate_prediction_pdf_report(report_data):
+    """Generates a PDF for Predictive Analysis (Phase 3 Upgrade)."""
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch, cm
+        from reportlab.lib.enums import TA_CENTER
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=24, 
+                                      alignment=TA_CENTER, textColor=colors.HexColor('#7b1fa2'))
+                                      
+        elements.append(Paragraph("Predictive Impact Assessment", title_style))
+        elements.append(Paragraph(f"Horizon: {report_data.get('current_year')} ⮕ {report_data.get('target_year')}", 
+                                  ParagraphStyle('Sub', parent=styles['Heading2'], alignment=TA_CENTER)))
+        elements.append(Spacer(1, 20))
+
+        # Key Metrics
+        metrics = report_data.get('metrics', {})
+        if metrics:
+            data = [['Metric', 'Current', 'Predicted', 'Change']]
+            for k, v in metrics.items():
+                change_color = colors.red if v.get('delta', 0) < 0 and 'Trees' in k else colors.black
+                if 'Built' in k and v.get('delta', 0) > 0: change_color = colors.red # Bad sign usually
+                
+                data.append([
+                    k,
+                    f"{v.get('current',0):.1f}",
+                    f"{v.get('future',0):.1f}",
+                    Paragraph(f"<font color='{change_color.hexval()}'>{v.get('delta',0):+.1f} ({v.get('pct',0):+.1f}%)</font>", styles['Normal'])
+                ])
+            
+            t = Table(data, colWidths=[5*cm, 3*cm, 3*cm, 4*cm])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ab47bc')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('PADDING', (0, 0), (-1, -1), 10),
+            ]))
+            elements.append(t)
+            elements.append(Spacer(1, 20))
+
+        # Charts
+        if 'charts' in report_data:
+            for title, chart_buf in report_data['charts'].items():
+                elements.append(Paragraph(title, styles['Heading2']))
+                elements.append(Image(chart_buf, width=7*inch, height=4*inch))
+                elements.append(Spacer(1, 20))
+        
+        # Auto-Plot Forecasts
+        if report_data.get('forecast_data'):
+            import matplotlib.pyplot as plt
+            import pandas as pd
+            
+            f_data = pd.DataFrame(report_data['forecast_data'])
+            # We expect columns: date, value, type (historical/predicted)
+            
+            if not f_data.empty:
+                # Plot for the primary metric
+                # Determine value col (first non-date/type col)
+                val_cols = [c for c in f_data.columns if c not in ['date', 'type']]
+                
+                for col in val_cols[:2]: # Plot max 2 metrics to save space
+                    try:
+                        fig, ax = plt.subplots(figsize=(8, 4))
+                        
+                        # Plot Historical
+                        hist = f_data[f_data['type'] == 'historical']
+                        ax.plot(pd.to_datetime(hist['date']), hist[col], label='Historical', color='#3b82f6', linewidth=2)
+                        
+                        # Plot Forecast
+                        pred = f_data[f_data['type'] == 'predicted']
+                        ax.plot(pd.to_datetime(pred['date']), pred[col], label='Forecast', color='#10b981', linestyle='--', linewidth=2)
+                        
+                        ax.set_title(f"{col} Projection", fontweight='bold')
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
+                        
+                        buf = io.BytesIO()
+                        fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+                        plt.close(fig)
+                        buf.seek(0)
+                        
+                        elements.append(Paragraph(f"Trend Analysis: {col}", styles['Heading2']))
+                        elements.append(Image(buf, width=6.5*inch, height=3.5*inch))
+                        elements.append(Spacer(1, 15))
+                    except Exception as e:
+                        print(f"Pred Chart Error: {e}")
+                
+        elements.append(Paragraph(f"Model Confidence: {report_data.get('confidence', 'N/A')}", styles['Italic']))
+
+        doc.build(elements)
+        return buffer.getvalue()
+
+    except Exception as e:
+        print(f"PDF Gen Error: {e}")
+        return None
 
 NAAQS_STANDARDS = {
     'NO2': {'annual': 40, 'unit': 'µg/m³'},
@@ -120,77 +420,70 @@ NAAQS_STANDARDS = {
 }
 
 def calculate_aqi_compliance_score(pollutant_stats):
+    """
+    Refined Function (Phase 7.1):
+    - Focuses strictly on CPCB AQI for Surface PM2.5/PM10.
+    - Removes the misleading 'Overall Score' that mixed Satellite Gases.
+    """
     if not pollutant_stats:
-        return {'score': 0, 'rating': 'Unknown', 'details': []}
+        return {'aqi_val': None, 'details': []}
     
-    total_score = 0
-    max_score = 0
     details = []
     
-    for pollutant, stats in pollutant_stats.items():
-        if pollutant not in WHO_STANDARDS:
-            continue
+    # 1. Surface Pollutants (PM2.5, PM10)
+    # We strictly use these for the AQI Gauge
+    pm25_val = None
+    pm10_val = None
+    
+    if 'PM2.5' in pollutant_stats:
+        stats = pollutant_stats['PM2.5']
+        val = stats.get('mean', 0)
+        pm25_val = val
         
-        mean_val = stats.get('mean', 0)
-        if mean_val is None or mean_val == 0:
-            continue
+        # WHO Limit Check (Daily Mean: 15 µg/m³)
+        limit = 15
+        ratio = val / limit if limit else 0
+        status = "Good" if ratio <= 1 else ("Moderate" if ratio <= 2 else "Poor")
         
-        who_limit = list(WHO_STANDARDS[pollutant].values())[0]
-        if isinstance(who_limit, str):
-            who_limit = list(WHO_STANDARDS[pollutant].values())[1] if len(WHO_STANDARDS[pollutant]) > 1 else 0
-        
-        if who_limit == 0:
-            continue
-        
-        ratio = mean_val / who_limit if who_limit else 1
-        
-        if ratio <= 0.5:
-            score = 100
-            status = "Excellent"
-        elif ratio <= 1.0:
-            score = 80
-            status = "Good"
-        elif ratio <= 1.5:
-            score = 60
-            status = "Moderate"
-        elif ratio <= 2.0:
-            score = 40
-            status = "Poor"
-        elif ratio <= 3.0:
-            score = 20
-            status = "Very Poor"
-        else:
-            score = 0
-            status = "Severe"
-        
-        total_score += score
-        max_score += 100
         details.append({
-            'pollutant': pollutant,
-            'measured': mean_val,
-            'who_limit': who_limit,
-            'ratio': ratio,
-            'score': score,
-            'status': status,
-            'unit': stats.get('unit', '')
+            'type': 'particles', 'pollutant': 'PM2.5', 'measured': val, 'unit': 'µg/m³',
+            'limit': limit, 'status': status
         })
+        
+    if 'PM10' in pollutant_stats:
+        stats = pollutant_stats['PM10']
+        val = stats.get('mean', 0)
+        pm10_val = val
+        
+        # WHO Limit Check (Daily Mean: 45 µg/m³)
+        limit = 45
+        ratio = val / limit if limit else 0
+        status = "Good" if ratio <= 1 else ("Moderate" if ratio <= 2 else "Poor")
+        
+        details.append({
+            'type': 'particles', 'pollutant': 'PM10', 'measured': val, 'unit': 'µg/m³',
+            'limit': limit, 'status': status
+        })
+        
+    # Calculate real AQI using CPCB logic
+    aqi_val, aqi_cat, aqi_color, dominant = calculate_cpcb_aqi(pm25_val, pm10_val)
     
-    overall_score = (total_score / max_score * 100) if max_score > 0 else 0
-    
-    if overall_score >= 80:
-        rating = "Good - Meets WHO Guidelines"
-    elif overall_score >= 60:
-        rating = "Moderate - Minor Exceedances"
-    elif overall_score >= 40:
-        rating = "Poor - Significant Exceedances"
-    elif overall_score >= 20:
-        rating = "Very Poor - Major Exceedances"
-    else:
-        rating = "Severe - Critical Pollution Levels"
-    
+    # 2. Trace Gases (NO2, SO2, CO, O3)
+    # Purely informational - no "status" or "score" assigned to avoid confusion
+    for p in ['NO2', 'SO2', 'CO', 'O3']:
+        if p in pollutant_stats:
+            stats = pollutant_stats[p]
+            val = stats.get('mean', 0)
+            unit = stats.get('unit', '')
+            details.append({
+                'type': 'gas', 'pollutant': p, 'measured': val, 'unit': unit
+            })
+            
     return {
-        'score': round(overall_score, 1),
-        'rating': rating,
+        'aqi_val': aqi_val,
+        'aqi_cat': aqi_cat,
+        'aqi_color': aqi_color,
+        'dominant': dominant,
         'details': details
     }
 

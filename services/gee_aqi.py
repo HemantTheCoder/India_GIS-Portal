@@ -74,6 +74,30 @@ POLLUTANT_INFO = {
         "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066"],
         "description": "Methane concentration",
     },
+    "PM2.5": {
+        "name": "Particulate Matter < 2.5µm",
+        "collection": "ECMWF/CAMS/NRT",
+        "band": "particulate_matter_d_less_than_25_um_surface",
+        "unit": "kg/m³",
+        "scale_factor": 1e9, # kg to µg
+        "display_unit": "µg/m³",
+        "min": 0,
+        "max": 250,
+        "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066", "#800000"],
+        "description": "Fine particles from combustion/dust",
+    },
+    "PM10": {
+        "name": "Particulate Matter < 10µm",
+        "collection": "ECMWF/CAMS/NRT",
+        "band": "particulate_matter_d_less_than_10_um_surface",
+        "unit": "kg/m³",
+        "scale_factor": 1e9, # kg to µg
+        "display_unit": "µg/m³",
+        "min": 0,
+        "max": 500,
+        "palette": ["#00ff00", "#ffff00", "#ff9900", "#ff0000", "#990066", "#800000"],
+        "description": "Coarse particles from dust/industry",
+    },
 }
 
 def get_pollutant_image(geometry, pollutant, start_date, end_date):
