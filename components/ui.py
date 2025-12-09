@@ -14,6 +14,7 @@ def get_enhanced_css():
         
         .stApp {
             background-color: #050911;
+            color: #f1f5f9;
             background-image: 
                 radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 50%),
                 radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%);
@@ -22,9 +23,7 @@ def get_enhanced_css():
         .main-header {
             font-size: 3.5rem;
             font-weight: 800;
-            background: linear-gradient(180deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffffff;
             text-align: center;
             padding: 2.5rem 0 1rem 0;
             letter-spacing: -0.03em;
@@ -34,7 +33,7 @@ def get_enhanced_css():
         
         .sub-header {
             font-size: 1.1rem;
-            color: #64748b;
+            color: #f8fafc;
             text-align: center;
             margin-bottom: 3.5rem;
             font-weight: 400;
@@ -69,6 +68,7 @@ def get_enhanced_css():
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            color: #f1f5f9;
         }
         
         .feature-card::before {
@@ -149,8 +149,8 @@ def get_enhanced_css():
 
         .stat-label {
             font-size: 0.85rem;
-            opacity: 0.7;
-            color: #94a3b8;
+            opacity: 0.9;
+            color: #e2e8f0;
             font-weight: 600;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -181,7 +181,7 @@ def get_enhanced_css():
         
         /* Form Elements Override */
         [data-testid="stSelectbox"] label, [data-testid="stSlider"] label {
-            color: #94a3b8 !important;
+            color: #f1f5f9 !important;
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -293,19 +293,15 @@ def render_page_header(title, subtitle="", author_info=True):
             <div class="author-info" style="text-align: center; font-size: 15px; padding: 0rem 0; margin-top: -50px;">
                 <hr class="header-divider" style="border: none; border-top: 1px solid currentColor; opacity: 0.3; margin-bottom: 0px;">
                 Made with ❤️ by <strong>Hemant Kumar</strong> • 
-                <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
+                <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank" style="color: #60a5fa;">LinkedIn</a>
             </div>
             <style>
-                .author-info { color: #475569; }
-                .author-info a { color: #2563EB; }
+                .author-info { color: #94a3b8; }
+                .author-info a { color: #60a5fa; }
                 @media (prefers-color-scheme: dark) {
-                    .author-info { color: #B0BEC5; }
-                    .author-info a { color: #64B5F6; }
+                    .author-info { color: #e2e8f0; }
+                    .author-info a { color: #93c5fd; }
                 }
-                [data-testid="stAppViewContainer"][data-theme="dark"] .author-info,
-                .stApp[data-theme="dark"] .author-info { color: #B0BEC5; }
-                [data-testid="stAppViewContainer"][data-theme="dark"] .author-info a,
-                .stApp[data-theme="dark"] .author-info a { color: #64B5F6; }
             </style>
             """,
             unsafe_allow_html=True,
