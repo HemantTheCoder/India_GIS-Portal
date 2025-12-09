@@ -364,87 +364,6 @@ def get_enhanced_css():
 
         /* --- HEADER & FOOTER CUSTOMIZATION --- */
         
-        /* --- HEADER & FOOTER CUSTOMIZATION --- */
-        
-        /* Restore Header Visibility with Glassmorphism & High Contrast */
-        header[data-testid="stHeader"] {
-            background-color: rgba(15, 23, 42, 0.85) !important; /* Slightly more transparent */
-            backdrop-filter: blur(16px); /* Stronger blur for premium glass effect */
-            color: #f1f5f9 !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
-            height: 3.5rem !important; /* Fixed cleaner height */
-        }
-        
-        /* Force details/icons to be white */
-        header[data-testid="stHeader"] > div,
-        header[data-testid="stHeader"] button,
-        header[data-testid="stHeader"] svg,
-        header[data-testid="stHeader"] span {
-            color: #f1f5f9 !important;
-            fill: #f1f5f9 !important;
-        }
-        
-        /* Decoration/Running Man - Hide for cleaner look */
-        [data-testid="stDecoration"] {
-             display: none;
-        }
-        
-        /* Ensure Toolbar (Hamburger, Options) is Visible and Contrasting */
-        [data-testid="stToolbar"] {
-             opacity: 1 !important;
-             display: block !important;
-             visibility: visible !important;
-             right: 1rem; /* Reset to standard corner */
-             top: 0.5rem;
-        }
-        
-        /* Specific fix for Toolbar Icons (like the running man or kebab menu) */
-        [data-testid="stToolbar"] button {
-             color: #f1f5f9 !important;
-             border-color: transparent !important;
-             transform: scale(1.1); /* Slightly larger icons */
-        }
-        
-        /* Enlarged Mobile Hamburger Navigation */
-        [data-testid="collapsedControl"] {
-             color: #f1f5f9 !important;
-             transform: scale(1.35) !important; /* Make it significantly bigger */
-             margin-left: 0.5rem; /* Push slightly right so it's not glued to edge */
-             margin-top: 0.2rem;
-             background-color: rgba(15, 23, 42, 0.4); /* subtle backing */
-             border-radius: 8px;
-             padding: 4px;
-        }
-        
-        /* Ensure specific svg within the button is visible */
-        [data-testid="collapsedControl"] svg {
-            stroke-width: 3px !important; /* Thicker lines */
-        }
-
-        [data-testid="stToolbar"] svg {
-             fill: #f1f5f9 !important;
-             stroke: #f1f5f9 !important;
-        }
-        
-        /* Ensure Status Widget (Running Man / Loading) is visible and white */
-        [data-testid="stStatusWidget"] {
-             visibility: visible !important;
-             display: block !important;
-             color: #f1f5f9 !important;
-        }
-        
-        [data-testid="stStatusWidget"] > div > div {
-             fill: #f1f5f9 !important;
-        }
-        
-        /* Hide GitHub Icon specifically if present in toolbar */
-        /* Note: This depends on the specific title or exact structure, providing a best-effort approach */
-        [data-testid="stToolbar"] button[title="View on GitHub"],
-        [data-testid="stToolbar"] a[href*="github.com"] {
-             display: none !important;
-        }
-
         /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
         footer {
             visibility: hidden;
@@ -453,11 +372,6 @@ def get_enhanced_css():
         
         .stDeployButton {
             display: none !important;
-        }
-        
-        /* Reset manual mobile nav hacks since we are restoring the header */
-        [data-testid="collapsedControl"] {
-             color: #f1f5f9 !important;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
