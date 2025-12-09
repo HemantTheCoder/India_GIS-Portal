@@ -373,7 +373,7 @@ def get_enhanced_css():
         header[data-testid="stHeader"] {
             background-color: #ffffff !important;
             border-bottom: 1px solid #e2e8f0;
-            height: 3.5rem !important; /* "Little smallen" - compact height */
+            height: 3rem !important; /* "Lessen a little" -> 3rem */
             padding-top: 0 !important;
             padding-bottom: 0 !important;
             /* Ensure vertical centering */
