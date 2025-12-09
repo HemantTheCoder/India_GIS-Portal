@@ -284,6 +284,34 @@ def get_enhanced_css():
             color: #38bdf8 !important; /* Cyan hover */
         }
 
+        /* --- HEADER & FOOTER CUSTOMIZATION --- */
+        
+        /* Transparent/Dark Header */
+        header[data-testid="stHeader"] {
+            background-color: rgba(5, 9, 17, 0.8) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Hide "Hosted with Streamlit" and standard footer */
+        footer {
+            visibility: hidden;
+        }
+        
+        .stDeployButton {
+            display: none;
+        }
+        
+        /* Hide Toolbar / Profile Actions */
+        [data-testid="stToolbar"] {
+            visibility: hidden;
+            display: none !important;
+        }
+        
+        /* Ensure the main content doesn't get cut off */
+        .block-container {
+            padding-top: 3rem;
+        }
+
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
             .main-header {
