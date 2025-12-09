@@ -378,6 +378,11 @@ def get_enhanced_css():
         /* 2. Hamburger Menu (Top Left) */
         [data-testid="collapsedControl"] {
             color: #000000 !important;
+            display: block !important;
+            position: fixed !important; /* Force stay in view */
+            top: 1.2rem !important;
+            left: 1.2rem !important;
+            z-index: 1000005 !important; /* Standard Streamlit z-index override */
         }
         [data-testid="collapsedControl"] svg {
             fill: #000000 !important;
@@ -387,7 +392,12 @@ def get_enhanced_css():
         [data-testid="stToolbar"] {
             visibility: visible !important;
             opacity: 1 !important;
-            right: 2rem !important; /* Slight adjust to ensure it's not cut off */
+            display: block !important;
+            position: fixed !important; /* Force stay in view */
+            top: 1.2rem !important;
+            right: 1.2rem !important;
+            z-index: 1000005 !important;
+            color: #000000 !important;
         }
         
         /* Force buttons in toolbar to be black */
