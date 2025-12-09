@@ -247,22 +247,31 @@ def get_enhanced_css():
         }
 
         /* --- SIDEBAR SPECIFIC OVERRIDES --- */
-        [data-testid="stSidebar"] {
-            background-color: #0f172a; /* Ensure dark background */
-        }
-        
-        [data-testid="stSidebar"] .stMarkdown p, 
-        [data-testid="stSidebar"] .stCaption,
-        [data-testid="stSidebar"] span,
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p {
+        section[data-testid="stSidebar"] {
+            background-color: #0f172a !important;
             color: #f1f5f9 !important;
         }
         
-        /* Specific fix for small captions/help text which might be gray */
-        [data-testid="stSidebar"] [data-testid="stCaptionContainer"],
-        [data-testid="stSidebar"] .st-emotion-cache-1629p8f { /* Generic Streamlit class catch-all if possible, but rely on broader selectors */
-             color: #e2e8f0 !important;
+        section[data-testid="stSidebar"] > div {
+            background-color: #0f172a !important;
+        }
+        
+        /* Force text colors in sidebar */
+        section[data-testid="stSidebar"] .stMarkdown p, 
+        section[data-testid="stSidebar"] .stCaption,
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p,
+        section[data-testid="stSidebar"] .stMultiSelect,
+        section[data-testid="stSidebar"] .stSelectbox,
+        section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
+             color: #f1f5f9 !important;
+        }
+        
+        /* Specific fix for help text/captions */
+        section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+        section[data-testid="stSidebar"] small {
+             color: #cbd5e1 !important;
+             opacity: 1 !important;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
