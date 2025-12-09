@@ -366,34 +366,36 @@ def get_enhanced_css():
         
         /* --- HEADER & FOOTER CUSTOMIZATION --- */
         
-        /* STRICT FIX: Force Header Text & Icons to be White */
+        /* STRICT FIX: LIGHT THEME HEADER */
+        /* User requested white header with black text */
         header[data-testid="stHeader"] {
-            background-color: transparent !important; /* Allow dark app background */
-            color: #f1f5f9 !important;
+            background-color: #ffffff !important; /* Solid White */
+            color: #000000 !important;
+            border-bottom: 1px solid #e2e8f0;
         }
         
-        /* Force EVERYTHING in the header to be white (Titles, decorations, etc) */
+        /* Force EVERYTHING in the header to be BLACK */
         header[data-testid="stHeader"] * {
-            color: #f1f5f9 !important;
-            fill: #f1f5f9 !important;
+            color: #000000 !important;
+            fill: #000000 !important;
         }
         
-        /* Fix Toolbar (3 dots, running man) visibility */
+        /* Fix Toolbar (3 dots, running man) to be BLACK */
         [data-testid="stToolbar"] {
             visibility: visible !important;
             opacity: 1 !important;
             display: block !important;
-            color: #f1f5f9 !important;
+            color: #000000 !important;
         }
         
         [data-testid="stToolbar"] button {
-            color: #f1f5f9 !important;
+            color: #000000 !important;
             border-color: transparent !important;
         }
         
         [data-testid="stToolbar"] svg {
-            fill: #f1f5f9 !important;
-            stroke: #f1f5f9 !important;
+            fill: #000000 !important;
+            stroke: #000000 !important;
         }
 
         /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
