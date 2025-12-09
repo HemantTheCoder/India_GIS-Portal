@@ -188,27 +188,34 @@ def get_enhanced_css():
             letter-spacing: 0.05em;
         }
         
-        /* Primary Buttons */
-        .stButton button[kind="primary"] {
-            background: linear-gradient(90deg, #0ea5e9, #2563eb);
-            border: none;
-            color: white !important;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        /* Secondary/Default Buttons (often transparent/gray) */
-        .stButton button[kind="secondary"] {
-            background-color: rgba(30, 41, 59, 0.8);
-            border: 1px solid #475569;
+        /* Generic Button Styling - catch all standard buttons */
+        .stButton button {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
             color: #f1f5f9 !important;
             transition: all 0.2s;
+        }
+
+        /* Primary Buttons - Override Generic */
+        .stButton button[kind="primary"] {
+            background: linear-gradient(90deg, #0ea5e9, #2563eb) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 600;
+        }
+        
+        /* Secondary/Default Buttons - Explicit targeting if needed, but generic covers it */
+        .stButton button[kind="secondary"] {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
         }
 
         .stButton button:hover {
             box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
             transform: scale(1.02);
             border-color: #38bdf8 !important;
+            background-color: #1e293b !important;
             color: white !important;
         }
         
@@ -237,6 +244,25 @@ def get_enhanced_css():
         span[data-baseweb="tag"] {
             background-color: #1e293b !important;
             color: #f1f5f9 !important;
+        }
+
+        /* --- SIDEBAR SPECIFIC OVERRIDES --- */
+        [data-testid="stSidebar"] {
+            background-color: #0f172a; /* Ensure dark background */
+        }
+        
+        [data-testid="stSidebar"] .stMarkdown p, 
+        [data-testid="stSidebar"] .stCaption,
+        [data-testid="stSidebar"] span,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p {
+            color: #f1f5f9 !important;
+        }
+        
+        /* Specific fix for small captions/help text which might be gray */
+        [data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+        [data-testid="stSidebar"] .st-emotion-cache-1629p8f { /* Generic Streamlit class catch-all if possible, but rely on broader selectors */
+             color: #e2e8f0 !important;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
