@@ -409,8 +409,19 @@ def get_enhanced_css():
         [data-testid="collapsedControl"] {
              color: #f1f5f9 !important;
              display: block !important;
+             visibility: visible !important;
+             opacity: 1 !important;
+             z-index: 1000002 !important; /* Extreme z-index */
+             position: relative !important;
         }
         
+        /* Add a subtle background to the hamburger button purely to spot it if contrast fails */
+        [data-testid="collapsedControl"] button {
+            background-color: rgba(15, 23, 42, 0.5) !important;
+            border-radius: 4px !important;
+            padding: 4px !important;
+        }
+
         /* Hide ONLY the toolbar actions (top right) but keep the header available for the hamburger */
         [data-testid="stToolbar"] {
              opacity: 0 !important; /* Use opacity/pointer-events instead of display:none to prevent layout shifts */
