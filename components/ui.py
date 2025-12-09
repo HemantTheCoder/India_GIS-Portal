@@ -259,6 +259,30 @@ def get_enhanced_css():
         [data-testid="stCheckbox"] label, [data-testid="stRadio"] label {
             color: #e2e8f0 !important;
         }
+
+        /* Specific fix for Slider and Chart Selection (Radio) text visibility */
+        
+        /* Sliders */
+        [data-testid="stSlider"] div[data-testid="stMarkdownContainer"] p,
+        [data-testid="stSlider"] div[data-testid="stSliderTickBar"] + div, /* Tick labels */
+        [data-testid="stSlider"] div[data-testid="stSliderValueLabel"] {
+             color: #e2e8f0 !important;
+        }
+
+        /* Chart Selection (Horizontal Radio Buttons) */
+        [data-testid="stRadio"] div[role="radiogroup"] label {
+             color: #f1f5f9 !important;
+        }
+        
+        [data-testid="stRadio"] div[role="radiogroup"] label[data-baseweb="radio"] {
+             background-color: transparent; /* Clean background */
+        }    
+        
+        [data-testid="stRadio"] div[role="radiogroup"] {
+             background-color: rgba(15, 23, 42, 0.4);
+             padding: 4px;
+             border-radius: 8px;
+        }
         
         /* Input Fields & Selectboxes */
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
