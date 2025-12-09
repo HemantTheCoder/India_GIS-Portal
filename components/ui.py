@@ -374,6 +374,46 @@ def get_enhanced_css():
             display: none !important;
         }
 
+        /* --- FINAL CONTRAST POLISH --- */
+        
+        /* 1. Hide GitHub Icon (Re-applied) */
+        [data-testid="stToolbar"] button[title="View on GitHub"],
+        [data-testid="stToolbar"] a[href*="github.com"] {
+             display: none !important;
+        }
+        
+        /* 2. Global Text High Contrast Enforcement */
+        /* Ensure all standard text elements are readable */
+        .stMarkdown p, .stMarkdown li, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown span {
+             color: #e2e8f0 !important;
+        }
+        
+        /* 3. Input Fields & Widget Contrast */
+        /* Force dark background and white text for inputs */
+        div[data-baseweb="input"] > div,
+        div[data-baseweb="base-input"] > div,
+        div[data-baseweb="select"] > div,
+        div[data-baseweb="number-input"] > div {
+            background-color: #1e293b !important; /* Slate-800 for inputs */
+            color: #f1f5f9 !important;
+            border-color: #475569 !important;
+        }
+        
+        /* Ensure input text itself is white (the actual typed chars) */
+        input[data-baseweb="input"], 
+        div[data-baseweb="select"] span {
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important; /* Webkit override */
+        }
+        
+        /* 4. Dataframes and Tables */
+        [data-testid="stDataFrame"] div, [data-testid="stTable"] div {
+            color: #e2e8f0 !important;
+        }
+        [data-testid="stDataFrame"] {
+            background-color: rgba(15, 23, 42, 0.4);
+        }
+
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
             .main-header {
