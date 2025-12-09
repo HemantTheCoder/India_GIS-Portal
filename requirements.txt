@@ -1,0 +1,12 @@
+streamlit
+earthengine-api
+geemap
+folium
+streamlit-folium
+pandas
+numpy
+geopandas
+matplotlib
+scipy
+scikit-learn>=1.5.0
+# Force rebuild for sklearn
