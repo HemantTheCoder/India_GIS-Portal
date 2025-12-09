@@ -386,19 +386,30 @@ def get_enhanced_css():
             display: none !important;
         }
         
-        /* 2. Hamburger Menu (Top Left) */
+        /* 2. Hamburger Menu (Top Left) - FORCE VERTICAL CENTER */
         [data-testid="collapsedControl"] {
             color: #000000 !important;
+            display: block !important;
+            position: fixed !important;
+            top: 1.75rem !important; /* Half of 3.5rem header height */
+            left: 1rem !important;
+            transform: translateY(-50%) !important;
+            z-index: 1000005 !important;
         }
         [data-testid="collapsedControl"] svg {
             fill: #000000 !important;
         }
 
-        /* 3. Toolbar (Top Right - 3 dots, etc) */
+        /* 3. Toolbar (Top Right) - FORCE VERTICAL CENTER */
         [data-testid="stToolbar"] {
             visibility: visible !important;
             opacity: 1 !important;
             display: block !important;
+            position: fixed !important;
+            top: 1.75rem !important; /* Half of 3.5rem header height */
+            right: 1rem !important;
+            transform: translateY(-50%) !important;
+            z-index: 1000005 !important;
             color: #000000 !important;
         }
         
