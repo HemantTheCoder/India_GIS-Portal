@@ -620,7 +620,7 @@ else:
     st.markdown("""
     <div class="animate-fade-in" style="text-align: center; padding: 4rem 2rem;">
         <h2>🤖 Environmental Time Machine</h2>
-        <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+        <p style="color: #cbd5e1; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
             Select any pollutant or land cover class, define your timeline, and let the AI predict the future of your city.
         </p>
     </div>

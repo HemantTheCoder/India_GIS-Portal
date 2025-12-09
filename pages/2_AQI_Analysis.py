@@ -578,8 +578,8 @@ for i, (pollutant, info) in enumerate(POLLUTANT_INFO.items()):
     with ref_cols[i % 3]:
         st.markdown(f"""
         <div class="stat-card" style="margin-bottom: 0.5rem;">
-            <div style="font-weight: 600;">{pollutant}</div>
-            <div style="font-size: 0.85rem; color: #666;">{info['name']}</div>
-            <div style="font-size: 0.75rem; margin-top: 0.5rem;">{info['description']}</div>
+            <div style="font-weight: 600; color: #f1f5f9;">{pollutant}</div>
+            <div style="font-size: 0.85rem; color: #cbd5e1;">{info['name']}</div>
+            <div style="font-size: 0.75rem; margin-top: 0.5rem; color: #94a3b8;">{info['description']}</div>
         </div>
         """, unsafe_allow_html=True)
