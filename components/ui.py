@@ -364,73 +364,32 @@ def get_enhanced_css():
 
         /* --- HEADER & FOOTER CUSTOMIZATION --- */
         
-        /* Transparent/Dark Header */
+        /* Restore Header Visibility with Dark Theme */
         header[data-testid="stHeader"] {
-            background-color: rgba(5, 9, 17, 0.8) !important;
-            backdrop-filter: blur(10px);
+            background-color: #0f172a !important; /* Solid dark background */
+            color: #f1f5f9 !important;
         }
         
-        /* Hide "Hosted with Streamlit" and standard footer */
-        footer {
-            visibility: hidden;
-        }
-        
-        .stDeployButton {
-            display: none;
-        }
-        
-        /* Hide Toolbar / Profile Actions */
+        /* Ensure Toolbar (Hamburger, Options) is Visible */
         [data-testid="stToolbar"] {
+             opacity: 1 !important;
+             display: block !important;
+             visibility: visible !important;
+        }
+        
+        /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
+        footer {
             visibility: hidden;
             display: none !important;
         }
         
-        /* Ensure the main content doesn't get cut off */
-        .block-container {
-             padding-top: 3rem;
+        .stDeployButton {
+            display: none !important;
         }
         
-        /* --- MOBILE NAV & HAMBURGER FIX --- */
-        /* Make sure the hamburger menu is visible and white */
-        header[data-testid="stHeader"] button {
-             color: #f1f5f9 !important;
-             display: block !important;
-             visibility: visible !important;
-             background-color: transparent !important;
-        }
-        
-        header[data-testid="stHeader"] button:active, 
-        header[data-testid="stHeader"] button:focus, 
-        header[data-testid="stHeader"] button:hover {
-             color: #38bdf8 !important;
-        }
-        
-        /* Ensure specifically the 'collapsedControl' or sidebar toggle is targeted */
+        /* Reset manual mobile nav hacks since we are restoring the header */
         [data-testid="collapsedControl"] {
              color: #f1f5f9 !important;
-             display: block !important;
-             visibility: visible !important;
-             opacity: 1 !important;
-             z-index: 1000002 !important; /* Extreme z-index */
-             position: relative !important;
-        }
-        
-        /* Add a subtle background to the hamburger button purely to spot it if contrast fails */
-        [data-testid="collapsedControl"] button {
-            background-color: rgba(15, 23, 42, 0.5) !important;
-            border-radius: 4px !important;
-            padding: 4px !important;
-        }
-
-        /* Hide ONLY the toolbar actions (top right) but keep the header available for the hamburger */
-        [data-testid="stToolbar"] {
-             opacity: 0 !important; /* Use opacity/pointer-events instead of display:none to prevent layout shifts */
-             pointer-events: none !important;
-        }
-        
-        /* Decoration/Running Man */
-        [data-testid="stDecoration"] {
-             display: none;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
