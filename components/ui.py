@@ -364,89 +364,15 @@ def get_enhanced_css():
         }
 
         /* --- HEADER & FOOTER CUSTOMIZATION --- */
+        /* Keep default Streamlit header with visible buttons */
 
-        /* --- HEADER & FOOTER CUSTOMIZATION --- */
-
-        /* STRICT FIX: LIGHT HEADER with BLACK ICONS */
-        /* Forces header to be white, and ALL interactions to be black */
-
-/* 1. Header Background & Dimensions */
-        header[data-testid="stHeader"] {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #e2e8f0;
-            height: 3rem !important;
-            min-height: 3rem !important; /* Force constraint */
-            max-height: 3rem !important; /* Force constraint */
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            /* Ensure vertical centering */
-            display: flex !important;
-            align-items: center !important;
-        }
-
-        /* Hide the top decoration bar to save space */
-        header[data-testid="stHeader"] [data-testid="stDecoration"] {
-            display: none !important;
-        }
-
-        /* 2. Hamburger Menu (Top Left) - GENTLE NUDGE */
-        [data-testid="collapsedControl"] {
-            color: #000000 !important;
-            display: block !important;
-            transform: translateY(0.5rem) !important; /* Safe nudge down to center */
-        }
-        [data-testid="collapsedControl"] svg {
-            fill: #000000 !important;
-        }
-
-        /* 3. Toolbar (Top Right) - GENTLE NUDGE */
-        [data-testid="stToolbar"] {
-            visibility: visible !important;
-            opacity: 1 !important;
-            display: block !important;
-            color: #000000 !important;
-            transform: translateY(0.5rem) !important; /* Safe nudge down to center */
-        }
-
-        /* Force buttons in toolbar to be black */
-        [data-testid="stToolbar"] button {
-            color: #000000 !important;
-            border-color: transparent !important;
-            background: transparent !important;
-        }
-
-        /* Force specific icons in toolbar to be black */
-        [data-testid="stToolbar"] svg,
-        [data-testid="stHeader"] svg {
-            fill: #000000 !important;
-            stroke: #000000 !important; /* Some icons use stroke */
-            color: #000000 !important;
-        }
-
-        /* 4. Status Widget (Running Man) */
-        [data-testid="stStatusWidget"] {
-            color: #000000 !important;
-        }
-        [data-testid="stStatusWidget"] svg {
-            fill: #000000 !important;
-        }
-
-        /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
-        footer {
+        /* Hide ONLY the Streamlit branding footer */
+        footer[class*="css"] {
             visibility: hidden;
-            display: none !important;
         }
 
         .stDeployButton {
             display: none !important;
-        }
-
-        /* --- FINAL CONTRAST POLISH --- */
-
-        /* 1. Hide GitHub Icon (Re-applied) */
-        [data-testid="stToolbar"] button[title="View on GitHub"],
-        [data-testid="stToolbar"] a[href*="github.com"] {
-             display: none !important;
         }
 
         /* 2. Global Text High Contrast Enforcement */
