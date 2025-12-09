@@ -273,6 +273,16 @@ def get_enhanced_css():
              color: #cbd5e1 !important;
              opacity: 1 !important;
         }
+        
+        /* Navigation Links Fix */
+        [data-testid="stSidebarNav"] a, 
+        [data-testid="stSidebarNav"] span {
+            color: #f1f5f9 !important;
+        }
+        
+        [data-testid="stSidebarNav"] a:hover {
+            color: #38bdf8 !important; /* Cyan hover */
+        }
 
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
