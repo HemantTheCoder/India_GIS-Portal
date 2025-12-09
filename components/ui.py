@@ -395,16 +395,33 @@ def get_enhanced_css():
              opacity: 1 !important;
              display: block !important;
              visibility: visible !important;
-             right: 1.5rem; /* Better spacing from edge */
-             top: 0.5rem; /* Better vertical alignment */
+             right: 1rem; /* Reset to standard corner */
+             top: 0.5rem;
         }
         
         /* Specific fix for Toolbar Icons (like the running man or kebab menu) */
         [data-testid="stToolbar"] button {
              color: #f1f5f9 !important;
              border-color: transparent !important;
+             transform: scale(1.1); /* Slightly larger icons */
         }
         
+        /* Enlarged Mobile Hamburger Navigation */
+        [data-testid="collapsedControl"] {
+             color: #f1f5f9 !important;
+             transform: scale(1.35) !important; /* Make it significantly bigger */
+             margin-left: 0.5rem; /* Push slightly right so it's not glued to edge */
+             margin-top: 0.2rem;
+             background-color: rgba(15, 23, 42, 0.4); /* subtle backing */
+             border-radius: 8px;
+             padding: 4px;
+        }
+        
+        /* Ensure specific svg within the button is visible */
+        [data-testid="collapsedControl"] svg {
+            stroke-width: 3px !important; /* Thicker lines */
+        }
+
         [data-testid="stToolbar"] svg {
              fill: #f1f5f9 !important;
              stroke: #f1f5f9 !important;
