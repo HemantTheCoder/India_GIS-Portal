@@ -427,6 +427,24 @@ def get_enhanced_css():
              stroke: #f1f5f9 !important;
         }
         
+        /* Ensure Status Widget (Running Man / Loading) is visible and white */
+        [data-testid="stStatusWidget"] {
+             visibility: visible !important;
+             display: block !important;
+             color: #f1f5f9 !important;
+        }
+        
+        [data-testid="stStatusWidget"] > div > div {
+             fill: #f1f5f9 !important;
+        }
+        
+        /* Hide GitHub Icon specifically if present in toolbar */
+        /* Note: This depends on the specific title or exact structure, providing a best-effort approach */
+        [data-testid="stToolbar"] button[title="View on GitHub"],
+        [data-testid="stToolbar"] a[href*="github.com"] {
+             display: none !important;
+        }
+
         /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
         footer {
             visibility: hidden;
