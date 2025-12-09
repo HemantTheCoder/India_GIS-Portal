@@ -380,8 +380,8 @@ def get_enhanced_css():
             color: #000000 !important;
             display: block !important;
             position: fixed !important; /* Force stay in view */
-            top: 1.2rem !important;
-            left: 1.2rem !important;
+            top: 2rem !important;
+            left: 3rem !important;
             z-index: 1000005 !important; /* Standard Streamlit z-index override */
         }
         [data-testid="collapsedControl"] svg {
@@ -394,8 +394,8 @@ def get_enhanced_css():
             opacity: 1 !important;
             display: block !important;
             position: fixed !important; /* Force stay in view */
-            top: 1.2rem !important;
-            right: 1.2rem !important;
+            top: 2rem !important;
+            right: 3rem !important;
             z-index: 1000005 !important;
             color: #000000 !important;
         }
