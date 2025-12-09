@@ -219,6 +219,42 @@ def get_enhanced_css():
             color: white !important;
         }
         
+        /* Specific Override for Download Buttons */
+        .stDownloadButton button {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+        
+        .stDownloadButton button:hover {
+            border-color: #38bdf8 !important;
+            background-color: #1e293b !important;
+            color: white !important;
+        }
+        
+        /* Expander Headers ("Clickable Drops") */
+        div[data-testid="stExpander"] details > summary {
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            color: #f1f5f9 !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        div[data-testid="stExpander"] details > summary:hover {
+            color: #38bdf8 !important;
+            border-color: #38bdf8 !important;
+        }
+        
+        div[data-testid="stExpander"] details[open] > summary {
+             border-bottom-left-radius: 0 !important;
+             border-bottom-right-radius: 0 !important;
+        }
+        
+        div[data-testid="stExpander"] {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
         /* Checkbox & Radio */
         [data-testid="stCheckbox"] label, [data-testid="stRadio"] label {
             color: #e2e8f0 !important;
