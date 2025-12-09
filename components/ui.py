@@ -369,10 +369,21 @@ def get_enhanced_css():
         /* STRICT FIX: LIGHT HEADER with BLACK ICONS */
         /* Forces header to be white, and ALL interactions to be black */
         
-        /* 1. Header Background */
+        /* 1. Header Background & Dimensions */
         header[data-testid="stHeader"] {
             background-color: #ffffff !important;
             border-bottom: 1px solid #e2e8f0;
+            height: 3.5rem !important; /* "Little smallen" - compact height */
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            /* Ensure vertical centering */
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        /* Hide the top decoration bar to save space */
+        header[data-testid="stHeader"] [data-testid="stDecoration"] {
+            display: none !important;
         }
         
         /* 2. Hamburger Menu (Top Left) */
