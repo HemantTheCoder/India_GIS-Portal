@@ -369,11 +369,13 @@ def get_enhanced_css():
         /* STRICT FIX: LIGHT HEADER with BLACK ICONS */
         /* Forces header to be white, and ALL interactions to be black */
         
-        /* 1. Header Background & Dimensions */
+/* 1. Header Background & Dimensions */
         header[data-testid="stHeader"] {
             background-color: #ffffff !important;
             border-bottom: 1px solid #e2e8f0;
-            height: 3rem !important; /* "Lessen a little" -> 3rem */
+            height: 3rem !important;
+            min-height: 3rem !important; /* Force constraint */
+            max-height: 3rem !important; /* Force constraint */
             padding-top: 0 !important;
             padding-bottom: 0 !important;
             /* Ensure vertical centering */
