@@ -284,6 +284,24 @@ def get_enhanced_css():
              border-radius: 8px;
         }
         
+        /* Force high contrast for all slider elements - Robust Fix */
+        div[data-testid="stSlider"],
+        div[data-testid="stSlider"] label,
+        div[data-testid="stSlider"] p,
+        div[data-testid="stSlider"] div {
+            color: #f1f5f9 !important;
+        }
+        
+        /* Ensure specific tick labels are visible */
+        div[data-testid="stSliderTickBar"] > div {
+            color: #cbd5e1 !important;
+        }
+        
+        /* Force Radio text color again with higher specificity */
+        div[data-testid="stRadio"] label p {
+            color: #f1f5f9 !important;
+        }
+        
         /* Input Fields & Selectboxes */
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
             background-color: rgba(15, 23, 42, 0.8) !important;
@@ -369,7 +387,39 @@ def get_enhanced_css():
         
         /* Ensure the main content doesn't get cut off */
         .block-container {
-            padding-top: 3rem;
+             padding-top: 3rem;
+        }
+        
+        /* --- MOBILE NAV & HAMBURGER FIX --- */
+        /* Make sure the hamburger menu is visible and white */
+        header[data-testid="stHeader"] button {
+             color: #f1f5f9 !important;
+             display: block !important;
+             visibility: visible !important;
+             background-color: transparent !important;
+        }
+        
+        header[data-testid="stHeader"] button:active, 
+        header[data-testid="stHeader"] button:focus, 
+        header[data-testid="stHeader"] button:hover {
+             color: #38bdf8 !important;
+        }
+        
+        /* Ensure specifically the 'collapsedControl' or sidebar toggle is targeted */
+        [data-testid="collapsedControl"] {
+             color: #f1f5f9 !important;
+             display: block !important;
+        }
+        
+        /* Hide ONLY the toolbar actions (top right) but keep the header available for the hamburger */
+        [data-testid="stToolbar"] {
+             opacity: 0 !important; /* Use opacity/pointer-events instead of display:none to prevent layout shifts */
+             pointer-events: none !important;
+        }
+        
+        /* Decoration/Running Man */
+        [data-testid="stDecoration"] {
+             display: none;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
