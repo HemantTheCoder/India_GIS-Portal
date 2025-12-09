@@ -386,23 +386,23 @@ def get_enhanced_css():
             display: none !important;
         }
         
-        /* 2. Hamburger Menu (Top Left) - RESTORED FLOW */
+        /* 2. Hamburger Menu (Top Left) - GENTLE NUDGE */
         [data-testid="collapsedControl"] {
             color: #000000 !important;
             display: block !important;
-            /* Removed fixed/transform to fix "out of header" issue */
+            transform: translateY(0.5rem) !important; /* Safe nudge down to center */
         }
         [data-testid="collapsedControl"] svg {
             fill: #000000 !important;
         }
 
-        /* 3. Toolbar (Top Right) - RESTORED FLOW */
+        /* 3. Toolbar (Top Right) - GENTLE NUDGE */
         [data-testid="stToolbar"] {
             visibility: visible !important;
             opacity: 1 !important;
             display: block !important;
             color: #000000 !important;
-            /* Removed fixed/transform to fix "out of header" issue */
+            transform: translateY(0.5rem) !important; /* Safe nudge down to center */
         }
         
         /* Force buttons in toolbar to be black */
