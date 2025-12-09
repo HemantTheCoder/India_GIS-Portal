@@ -180,24 +180,63 @@ def get_enhanced_css():
         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
         
         /* Form Elements Override */
-        [data-testid="stSelectbox"] label, [data-testid="stSlider"] label {
+        [data-testid="stSelectbox"] label, [data-testid="stSlider"] label, [data-testid="stDateInput"] label, 
+        [data-testid="stMultiSelect"] label, [data-testid="stTextInput"] label, [data-testid="stNumberInput"] label {
             color: #f1f5f9 !important;
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         
-        .stButton button {
+        /* Primary Buttons */
+        .stButton button[kind="primary"] {
             background: linear-gradient(90deg, #0ea5e9, #2563eb);
             border: none;
-            color: white;
+            color: white !important;
             font-weight: 600;
             transition: all 0.2s;
         }
         
+        /* Secondary/Default Buttons (often transparent/gray) */
+        .stButton button[kind="secondary"] {
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            color: #f1f5f9 !important;
+            transition: all 0.2s;
+        }
+
         .stButton button:hover {
             box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
             transform: scale(1.02);
+            border-color: #38bdf8 !important;
+            color: white !important;
+        }
+        
+        /* Checkbox & Radio */
+        [data-testid="stCheckbox"] label, [data-testid="stRadio"] label {
+            color: #e2e8f0 !important;
+        }
+        
+        /* Input Fields & Selectboxes */
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+        
+        /* Dropdowns menu */
+        ul[data-testid="stSelectboxVirtualDropdown"] {
+            background-color: #0f172a !important;
+        }
+        
+        li[role="option"] {
+            color: #e2e8f0 !important;
+        }
+        
+        /* Multiselect pills */
+        span[data-baseweb="tag"] {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
