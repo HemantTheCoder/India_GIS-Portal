@@ -378,11 +378,6 @@ def get_enhanced_css():
         /* 2. Hamburger Menu (Top Left) */
         [data-testid="collapsedControl"] {
             color: #000000 !important;
-            display: block !important;
-            position: fixed !important; /* Force stay in view */
-            top: 2rem !important;
-            left: 3rem !important;
-            z-index: 1000005 !important; /* Standard Streamlit z-index override */
         }
         [data-testid="collapsedControl"] svg {
             fill: #000000 !important;
@@ -393,10 +388,6 @@ def get_enhanced_css():
             visibility: visible !important;
             opacity: 1 !important;
             display: block !important;
-            position: fixed !important; /* Force stay in view */
-            top: 2rem !important;
-            right: 3rem !important;
-            z-index: 1000005 !important;
             color: #000000 !important;
         }
         
