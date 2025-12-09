@@ -15,6 +15,7 @@ from components.ui import apply_enhanced_css, render_page_header
 
 # Import prediction service
 from services.prediction import prepare_time_series_data, train_forecast_model, generate_forecast, calculate_trend_slope
+from services.insights import generate_predictive_insights
 
 # Import specific data extractors from other modules
 # Note: We might need to slightly adapt these or use the logic directly if imports are tricky due to streamlit page structure
@@ -588,8 +589,24 @@ if run_btn:
                         'type': 'historical'
                     })
 
-                from services.exports import generate_prediction_pdf_report
-                pdf_bytes = generate_prediction_pdf_report({
+                # Generate Insights for the most changed class
+                max_change_cls = None
+                max_change_val = 0
+                for cls, m in pdf_metrics.items():
+                    if abs(m['delta']) > abs(max_change_val):
+                        max_change_val = m['delta']
+                        max_change_cls = cls
+                
+                insight_stats = {
+                    'target_name': max_change_cls if max_change_cls else 'Land Cover',
+                    'current_value': pdf_metrics[max_change_cls]['current'] if max_change_cls else 0,
+                    'future_value': pdf_metrics[max_change_cls]['future'] if max_change_cls else 0,
+                    'trend_percentage': pdf_metrics[max_change_cls]['pct'] if max_change_cls else 0
+                }
+                insights = generate_predictive_insights(insight_stats)
+
+                from services.exports import generate_predictive_pdf_report
+                pdf_bytes = generate_predictive_pdf_report({
                     'current_year':
                     current_year,
                     'target_year':
@@ -599,7 +616,8 @@ if run_btn:
                     'confidence':
                     f"{avg_r2_val:.2f}",
                     'forecast_data':
-                    f_data
+                    f_data,
+                    'insights': insights
                 })
 
                 if pdf_bytes:
@@ -707,8 +725,16 @@ if run_btn:
                         'type': 'predicted'
                     })
 
-                from services.exports import generate_prediction_pdf_report
-                pdf_bytes_s = generate_prediction_pdf_report({
+                insight_stats = {
+                    'target_name': title,
+                    'current_value': current_val,
+                    'future_value': future_val,
+                    'trend_percentage': change_pct
+                }
+                insights = generate_predictive_insights(insight_stats)
+
+                from services.exports import generate_predictive_pdf_report
+                pdf_bytes_s = generate_predictive_pdf_report({
                     'current_year':
                     pd.to_datetime(hist_df['date'].max()).year,
                     'target_year':
@@ -724,7 +750,8 @@ if run_btn:
                     'confidence':
                     f"{avg_r2:.2f}",
                     'forecast_data':
-                    f_data
+                    f_data,
+                    'insights': insights
                 })
                 if pdf_bytes_s:
                     st.session_state.pred_pdf_s = pdf_bytes_s

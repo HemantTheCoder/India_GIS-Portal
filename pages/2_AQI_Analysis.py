@@ -14,9 +14,9 @@ from services.gee_aqi import (
     POLLUTANT_INFO, get_pollutant_image, get_pollutant_vis_params,
     calculate_pollutant_statistics, get_baseline_image, calculate_anomaly_map,
     get_anomaly_vis_params, create_smoothed_map, create_hotspot_mask,
-    get_hotspot_vis_params, get_pollutant_time_series, calculate_rolling_average,
     calculate_pollutant_correlations
 )
+from services.insights import generate_aqi_insights
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
     render_info_box, init_common_session_state, render_pollutant_stat_card
@@ -433,9 +433,12 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                             'date_range': f"{start_date} to {end_date}",
                             'pollutants': selected_pollutants,
                             'pollutant_stats': st.session_state.pollutant_stats,
-                            'compliance_score': compliance,
                             'time_series': ts_data
                         }
+                        
+                        # Generate Insights
+                        report_data['insights'] = generate_aqi_insights(st.session_state.pollutant_stats)
+                        
                         st.session_state.aqi_pdf = generate_aqi_pdf_report(report_data)
                     
                     if st.session_state.get("aqi_pdf"):

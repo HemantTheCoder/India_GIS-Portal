@@ -43,8 +43,10 @@ from services.gee_trends import (
     get_historical_lulc_data, get_historical_index_data,
     analyze_lulc_trends, analyze_index_trends,
     generate_forecast_lulc, generate_forecast_indices,
+    generate_forecast_lulc, generate_forecast_indices,
     get_trend_summary
 )
+from services.insights import generate_lulc_insights
 
 st.set_page_config(
     page_title="LULC & Vegetation Analysis",
@@ -772,6 +774,14 @@ if city_coords and st.session_state.gee_initialized:
                             'sustainability_score': sustainability,
                             'indices': st.session_state.get('index_means', {})
                         }
+                        
+                        # Generate Insights
+                        insight_stats = {
+                            'classes': st.session_state.lulc_stats.get('classes', {}),
+                            'ndvi': {'mean': st.session_state.index_means.get('NDVI', 0)}
+                        }
+                        report_data['insights'] = generate_lulc_insights(insight_stats)
+                        
                         st.session_state.lulc_pdf = generate_lulc_pdf_report(report_data)
                     
                     if st.session_state.get("lulc_pdf"):

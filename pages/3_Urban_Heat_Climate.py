@@ -18,6 +18,7 @@ from services.gee_lst import (
     calculate_warming_trend, get_lst_tile_url,
     LST_VIS_PARAMS, UHI_VIS_PARAMS, ANOMALY_VIS_PARAMS, HOTSPOT_VIS_PARAMS, COOLING_VIS_PARAMS
 )
+from services.insights import generate_uhi_insights
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
     render_info_box, init_common_session_state
@@ -689,9 +690,17 @@ if st.session_state.get("lst_analysis_complete"):
                         'lst_stats': st.session_state.lst_stats,
                         'uhi_stats': st.session_state.uhi_stats,
                         'vulnerability_score': vulnerability,
-                        'time_series': st.session_state.lst_time_series,
                         'warming_trend': st.session_state.warming_trend
                     }
+                    
+                    # Generate Insights
+                    insight_stats = {
+                        'mean_lst': st.session_state.lst_stats.get(f'LST_{time_of_day}_mean', 0),
+                        'max_lst': st.session_state.lst_stats.get(f'LST_{time_of_day}_max', 0),
+                        'uhi_intensity': st.session_state.uhi_stats.get('uhi_intensity', 0) if st.session_state.uhi_stats else 0
+                    }
+                    report_data['insights'] = generate_uhi_insights(insight_stats)
+                    
                     st.session_state.heat_pdf = generate_urban_heat_pdf_report(report_data)
                 
                 if st.session_state.get("heat_pdf"):
