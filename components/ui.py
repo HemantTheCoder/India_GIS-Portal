@@ -366,9 +366,53 @@ def get_enhanced_css():
         
         /* --- HEADER & FOOTER CUSTOMIZATION --- */
         
-        /* STRICT FIX: RESTORE NATIVE HEADER */
-        /* Removed all custom header/toolbar CSS to restore original Streamlit behavior */
+        /* STRICT FIX: LIGHT HEADER with BLACK ICONS */
+        /* Forces header to be white, and ALL interactions to be black */
+        
+        /* 1. Header Background */
+        header[data-testid="stHeader"] {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        /* 2. Hamburger Menu (Top Left) */
+        [data-testid="collapsedControl"] {
+            color: #000000 !important;
+        }
+        [data-testid="collapsedControl"] svg {
+            fill: #000000 !important;
+        }
 
+        /* 3. Toolbar (Top Right - 3 dots, etc) */
+        [data-testid="stToolbar"] {
+            visibility: visible !important;
+            opacity: 1 !important;
+            right: 2rem !important; /* Slight adjust to ensure it's not cut off */
+        }
+        
+        /* Force buttons in toolbar to be black */
+        [data-testid="stToolbar"] button {
+            color: #000000 !important;
+            border-color: transparent !important;
+            background: transparent !important;
+        }
+        
+        /* Force specific icons in toolbar to be black */
+        [data-testid="stToolbar"] svg,
+        [data-testid="stHeader"] svg {
+            fill: #000000 !important;
+            stroke: #000000 !important; /* Some icons use stroke */
+            color: #000000 !important;
+        }
+        
+        /* 4. Status Widget (Running Man) */
+        [data-testid="stStatusWidget"] {
+            color: #000000 !important;
+        }
+        [data-testid="stStatusWidget"] svg {
+            fill: #000000 !important;
+        }
+        
         /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
         footer {
             visibility: hidden;
