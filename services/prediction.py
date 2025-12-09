@@ -427,3 +427,151 @@ def get_trend_summary(trends, data_type="LULC"):
             summary["stable"].append(name)
 
     return summary
+
+
+def prepare_time_series_data(df, date_col, value_col):
+    """Prepare time series data for ML forecasting.
+    
+    Args:
+        df: DataFrame with date and value columns
+        date_col: Name of date column
+        value_col: Name of value column
+        
+    Returns:
+        X: Feature matrix (numpy array)
+        y: Target values (numpy array)
+        last_date: Last date in the dataset
+        features_list: List of feature names
+    """
+    import pandas as pd
+    
+    df = df.copy()
+    df[date_col] = pd.to_datetime(df[date_col])
+    df = df.dropna(subset=[value_col])
+    
+    if len(df) < 3:
+        raise ValueError("Not enough data points for forecasting")
+    
+    df = df.sort_values(date_col).reset_index(drop=True)
+    
+    df['day_of_year'] = df[date_col].dt.dayofyear
+    df['month'] = df[date_col].dt.month
+    df['year'] = df[date_col].dt.year
+    df['days_since_start'] = (df[date_col] - df[date_col].min()).dt.days
+    
+    features_list = ['days_since_start', 'day_of_year', 'month', 'year']
+    
+    X = df[features_list].values
+    y = df[value_col].values
+    last_date = df[date_col].max()
+    
+    return X, y, last_date, features_list
+
+
+def train_forecast_model(X, y, model_type='random_forest'):
+    """Train a forecasting model.
+    
+    Args:
+        X: Feature matrix
+        y: Target values
+        model_type: 'random_forest' or 'linear'
+        
+    Returns:
+        model: Trained model
+        metrics: Dictionary with model performance metrics
+    """
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import r2_score, mean_absolute_error
+    
+    if len(X) < 5:
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+        model.fit(X, y)
+        y_pred = model.predict(X)
+        r2 = r2_score(y, y_pred) if len(y) > 1 else 0
+        mae = mean_absolute_error(y, y_pred)
+        return model, {'r2': max(0, r2), 'mae': mae, 'type': 'linear (small dataset)'}
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    if model_type == 'random_forest':
+        from sklearn.ensemble import RandomForestRegressor
+        model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+    else:
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    
+    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    
+    model.fit(X, y)
+    
+    return model, {'r2': max(0, r2), 'mae': mae, 'type': model_type}
+
+
+def generate_forecast(model, last_date, features_list, periods=30):
+    """Generate future predictions.
+    
+    Args:
+        model: Trained model
+        last_date: Last date in training data
+        features_list: List of feature names used in training
+        periods: Number of periods (days) to forecast
+        
+    Returns:
+        DataFrame with date and predicted_value columns
+    """
+    import pandas as pd
+    
+    future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=periods, freq='D')
+    
+    future_df = pd.DataFrame({'date': future_dates})
+    future_df['day_of_year'] = future_df['date'].dt.dayofyear
+    future_df['month'] = future_df['date'].dt.month
+    future_df['year'] = future_df['date'].dt.year
+    
+    start_date = last_date - pd.Timedelta(days=int((last_date - pd.Timestamp('2017-01-01')).days))
+    future_df['days_since_start'] = (future_df['date'] - pd.Timestamp('2017-01-01')).dt.days
+    
+    X_future = future_df[features_list].values
+    predictions = model.predict(X_future)
+    
+    result_df = pd.DataFrame({
+        'date': future_dates,
+        'predicted_value': predictions
+    })
+    
+    return result_df
+
+
+def calculate_trend_slope(values, dates=None):
+    """Calculate trend slope from a series of values.
+    
+    Args:
+        values: List or array of values
+        dates: Optional list of dates (uses indices if not provided)
+        
+    Returns:
+        slope: Rate of change per unit time
+    """
+    if len(values) < 2:
+        return 0
+    
+    if dates is not None:
+        import pandas as pd
+        dates = pd.to_datetime(dates)
+        x = np.array([(d - dates.min()).days for d in dates])
+    else:
+        x = np.arange(len(values))
+    
+    y = np.array(values)
+    
+    mask = ~np.isnan(y)
+    if mask.sum() < 2:
+        return 0
+    
+    slope, _, _, _, _ = stats.linregress(x[mask], y[mask])
+    return slope
