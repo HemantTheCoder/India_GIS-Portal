@@ -28,6 +28,18 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
+# --- Start Background Scheduler ---
+try:
+    from services.monitoring import start_scheduler, get_unread_count
+    start_scheduler()
+    
+    # Check for unread alerts to show popup
+    unread = get_unread_count()
+    if unread > 0:
+        st.toast(f"🔔 You have {unread} unread environmental alerts!", icon="⚠️")
+except Exception as e:
+    print(f"Scheduler Init Error: {e}")
+
 # Hero Section
 st.markdown("""
 <div class="animate-fade-in" style="text-align: center; margin-bottom: 3rem;">
@@ -50,7 +62,7 @@ with st.sidebar:
         st.error("GEE Not Connected - Check secrets.toml")
 
 # Main Features Grid
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     st.markdown("""
@@ -143,6 +155,29 @@ with col4:
                  use_container_width=True,
                  type="primary"):
         st.switch_page("pages/4_Predictive_Analysis.py")
+
+with col5:
+    st.markdown("""
+    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.4s; border-color: #f43f5e;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">🔔</span> Monitoring
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Automated background surveillance with email/WhatsApp alerts.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Continuous Monitoring</li>
+            <li>Custom Thresholds</li>
+            <li>Instant Notifications</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("Configure Alerts →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/5_Monitoring_Alerts.py")
 
 st.markdown("---")
 
