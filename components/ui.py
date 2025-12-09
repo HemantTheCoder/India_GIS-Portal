@@ -364,17 +364,42 @@ def get_enhanced_css():
 
         /* --- HEADER & FOOTER CUSTOMIZATION --- */
         
-        /* Restore Header Visibility with Dark Theme */
+        /* --- HEADER & FOOTER CUSTOMIZATION --- */
+        
+        /* Restore Header Visibility with Glassmorphism & High Contrast */
         header[data-testid="stHeader"] {
-            background-color: #0f172a !important; /* Solid dark background */
+            background-color: rgba(15, 23, 42, 0.9) !important; /* Semi-transparent dark slate */
+            backdrop-filter: blur(10px);
             color: #f1f5f9 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* Ensure Toolbar (Hamburger, Options) is Visible */
+        /* Force details/icons to be white */
+        header[data-testid="stHeader"] > div,
+        header[data-testid="stHeader"] button,
+        header[data-testid="stHeader"] svg,
+        header[data-testid="stHeader"] span {
+            color: #f1f5f9 !important;
+            fill: #f1f5f9 !important;
+        }
+        
+        /* Ensure Toolbar (Hamburger, Options) is Visible and Contrasting */
         [data-testid="stToolbar"] {
              opacity: 1 !important;
              display: block !important;
              visibility: visible !important;
+             right: 1rem; /* Adjust positioning if "disoriented" */
+        }
+        
+        /* Specific fix for Toolbar Icons (like the running man or kebab menu) */
+        [data-testid="stToolbar"] button {
+             color: #f1f5f9 !important;
+             border-color: transparent !important;
+        }
+        
+        [data-testid="stToolbar"] svg {
+             fill: #f1f5f9 !important;
+             stroke: #f1f5f9 !important;
         }
         
         /* Hide ONLY the specific "Hosted with Streamlit" footer and deploy button */
