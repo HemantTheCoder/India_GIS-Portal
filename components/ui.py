@@ -368,10 +368,12 @@ def get_enhanced_css():
         
         /* Restore Header Visibility with Glassmorphism & High Contrast */
         header[data-testid="stHeader"] {
-            background-color: rgba(15, 23, 42, 0.9) !important; /* Semi-transparent dark slate */
-            backdrop-filter: blur(10px);
+            background-color: rgba(15, 23, 42, 0.85) !important; /* Slightly more transparent */
+            backdrop-filter: blur(16px); /* Stronger blur for premium glass effect */
             color: #f1f5f9 !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+            height: 3.5rem !important; /* Fixed cleaner height */
         }
         
         /* Force details/icons to be white */
@@ -383,12 +385,18 @@ def get_enhanced_css():
             fill: #f1f5f9 !important;
         }
         
+        /* Decoration/Running Man - Hide for cleaner look */
+        [data-testid="stDecoration"] {
+             display: none;
+        }
+        
         /* Ensure Toolbar (Hamburger, Options) is Visible and Contrasting */
         [data-testid="stToolbar"] {
              opacity: 1 !important;
              display: block !important;
              visibility: visible !important;
-             right: 1rem; /* Adjust positioning if "disoriented" */
+             right: 1.5rem; /* Better spacing from edge */
+             top: 0.5rem; /* Better vertical alignment */
         }
         
         /* Specific fix for Toolbar Icons (like the running man or kebab menu) */
