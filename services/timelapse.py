@@ -1,37 +1,159 @@
-import ee
-import geemap.core as geemap
-from datetime import datetime, timedelta
+import requests
+import io
+import tempfile
+import os
+from PIL import Image, ImageDraw, ImageFont
 
-def create_timelapse_collection(collection, start_date, end_date, frequency, reducer=ee.Reducer.mean()):
+def annotate_gif(gif_url, start_date, end_date, frequency):
     """
-    Creates a time-series collection based on the frequency.
+    Downloads GIF, adds date overlay, and returns local file path.
     """
+    try:
+        response = requests.get(gif_url)
+        if response.status_code != 200:
+            return None, "Failed to download GIF"
+        
+        img = Image.open(io.BytesIO(response.content))
+        
+        frames = []
+        try:
+            while True:
+                frames.append(img.copy())
+                img.seek(img.tell() + 1)
+        except EOFError:
+            pass
+            
+        # Calculate dates
+        start = datetime.strptime(str(start_date), "%Y-%m-%d")
+        end = datetime.strptime(str(end_date), "%Y-%m-%d")
+        
+        # Draw text on frames
+        annotated_frames = []
+        for i, frame in enumerate(frames):
+            # Convert to RGBA to draw
+            frame = frame.convert("RGBA")
+            draw = ImageDraw.Draw(frame)
+            
+            # Estimate date for this frame
+            # This assumes linear spacing match, which GEE might approximate
+            # Ideally we match exact counts.
+            if frequency == 'Yearly':
+                current_date = start.replace(year=start.year + i)
+                date_str = current_date.strftime("%Y")
+            elif frequency == 'Monthly':
+                 # Add month delta
+                 year = start.year + (start.month + i - 1) // 12
+                 month = (start.month + i - 1) % 12 + 1
+                 current_date = datetime(year, month, 1)
+                 date_str = current_date.strftime("%b %Y")
+            else:
+                 date_str = ""
+
+            # Position text (Top Left)
+            text = f"{date_str}"
+            
+            # Simple outline effect for visibility
+            from PIL import ImageFont
+            try:
+                # Try to load a default font, size depends on image
+                font_size = 40
+                font = ImageFont.truetype("arial.ttf", font_size)
+            except:
+                font = ImageFont.load_default()
+
+            x, y = 20, 20
+            
+            # Shadow/Outline
+            draw.text((x+2, y+2), text, font=font, fill="black")
+            draw.text((x, y), text, font=font, fill="white")
+            
+            annotated_frames.append(frame)
+            
+        # Save result
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.gif')
+        annotated_frames[0].save(
+            temp_file.name,
+            save_all=True,
+            append_images=annotated_frames[1:],
+            loop=0,
+            duration=img.info.get('duration', 500)
+        )
+        return temp_file.name, None
+
+    except Exception as e:
+        return None, str(e)
+
+
+def get_lulc_timelapse(region, start_date, end_date, frequency='Yearly'):
+    """
+    Dynamic World LULC timelapse.
+    """
+    # Dynamic World V1: GOOGLE/DYNAMICWORLD/V1
+    collection_id = "GOOGLE/DYNAMICWORLD/V1"
+    band = "label"
+    
     start = ee.Date(start_date)
     end = ee.Date(end_date)
     
-    if frequency == 'Yearly':
-        diff = end.difference(start, 'year')
-        range_func = ee.List.sequence(0, diff.subtract(1))
-        unit = 'year'
-    elif frequency == 'Monthly':
-        diff = end.difference(start, 'month')
-        range_func = ee.List.sequence(0, diff.subtract(1))
-        unit = 'month'
-    else: # Daily or default
-        diff = end.difference(start, 'day')
-        range_func = ee.List.sequence(0, diff.subtract(1), 7) # Weekly stride for performance
-        unit = 'day'
+    vis_params = {
+        'min': 0,
+        'max': 8,
+        'palette': [
+            '#419BDF', # Water
+            '#397D49', # Trees
+            '#88B053', # Grass
+            '#7A87C6', # Flooded Veg
+            '#E49635', # Crops
+            '#DFC35A', # Shrub
+            '#C4281B', # Built
+            '#A59B8F', # Bare
+            '#B39FE1'  # Snow
+        ]
+    }
 
-    def wrap_mosaic(t):
-        t = ee.Number(t)
-        d1 = start.advance(t, unit)
-        d2 = start.advance(t.add(1), unit)
-        img = collection.filterDate(d1, d2).reduce(reducer).set('system:time_start', d1.millis())
-        # Add basic visual properties or data exist check
-        return img.set('label', d1.format('YYYY-MM-dd'))
+    col = ee.ImageCollection(collection_id).filterBounds(region).select(band)
+    
+    unit = 'year'
+    if frequency == 'Monthly': unit = 'month' # LULC monthly might be noisy/incomplete
+    
+    def get_step_img(n):
+        date = start.advance(n, unit)
+        filtered = col.filterDate(date, date.advance(1, unit))
+        
+        def process_image():
+            return filtered.mode() \
+                   .clip(region) \
+                   .visualize(**vis_params) \
+                   .set('system:time_start', date.millis())
+        
+        def empty_image():
+             return ee.Image(0).byte().rename('vis-red') \
+                   .addBands(ee.Image(0).byte().rename('vis-green')) \
+                   .addBands(ee.Image(0).byte().rename('vis-blue')) \
+                   .selfMask() \
+                   .set('system:time_start', date.millis())
 
-    images = range_func.map(wrap_mosaic)
-    return ee.ImageCollection(images)
+        return ee.Algorithms.If(filtered.size().gt(0), process_image(), empty_image())
+
+    cnt = end.difference(start, unit).floor()
+    indices = ee.List.sequence(0, cnt.subtract(1))
+    
+    # Limit max frames to avoid GEE timeouts or huge GIFs
+    # 5 years * 12 months = 60 frames (Okay)
+    
+    compiled = ee.ImageCollection(indices.map(get_step_img))
+    
+    video_args = {
+        'dimensions': 600, # Smaller for UI safety
+        'region': region,
+        'framesPerSecond': 2,
+        'crs': 'EPSG:3857'
+    }
+    
+    url = compiled.getVideoThumbURL(video_args)
+    if url:
+        return annotate_gif(url, start_date, end_date, frequency)
+    return None, "Failed to get GEE URL"
 
 
 def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
