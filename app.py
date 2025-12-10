@@ -28,19 +28,11 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
-# Hero Section
-st.markdown("""
-<div class="animate-fade-in" style="text-align: center; margin-bottom: 3rem;">
-    <div class="main-header">
-        India GIS & Remote Sensing Portal
-    </div>
-    <div class="sub-header">
-        Advanced Earth Observation and Environmental Analysis platform powered by Google Earth Engine.
-        Monitor LULC changes, Air Quality, and Urban Heat trends with precision.
-    </div>
-</div>
-""",
-            unsafe_allow_html=True)
+render_page_header(
+    "🛰️ India GIS & Remote Sensing Portal",
+    "Advanced Earth Observation and Environmental Analysis platform powered by Google Earth Engine. Monitor LULC changes, Air Quality, and Urban Heat trends with precision.",
+    hero=True
+)
 
 with st.sidebar:
     st.markdown("## 🔐 GEE Status")

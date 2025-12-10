@@ -6,25 +6,46 @@ def get_enhanced_css():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
+        /* Force dark mode - override any system/browser preferences */
+        :root {
+            color-scheme: dark !important;
+        }
+
         html, body, [class*="css"] {
             font-family: 'Outfit', sans-serif;
             scroll-behavior: smooth;
+            background-color: #050911 !important;
+            color: #f1f5f9 !important;
         }
 
-        /* --- ORBITAL COMMAND THEME --- */
+        /* --- ORBITAL COMMAND THEME (FORCED DARK) --- */
+
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], 
+        .main, section[data-testid="stSidebar"], [data-testid="stToolbar"] {
+            background-color: #050911 !important;
+            color: #f1f5f9 !important;
+        }
 
         .stApp {
-            background-color: #050911;
-            color: #f1f5f9;
             background-image: 
                 radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 50%),
-                radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%);
+                radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%) !important;
+        }
+
+        /* Force header/toolbar dark */
+        header[data-testid="stHeader"] {
+            background-color: #050911 !important;
+        }
+
+        /* Sidebar dark */
+        section[data-testid="stSidebar"] > div {
+            background-color: #0f172a !important;
         }
 
         .main-header {
             font-size: 3.5rem;
             font-weight: 800;
-            color: #ffffff;
+            color: #ffffff !important;
             text-align: center;
             padding: 2.5rem 0 1rem 0;
             letter-spacing: -0.03em;
@@ -34,7 +55,7 @@ def get_enhanced_css():
 
         .sub-header {
             font-size: 1.1rem;
-            color: #f8fafc;
+            color: #f8fafc !important;
             text-align: center;
             margin-bottom: 3.5rem;
             font-weight: 400;
@@ -504,31 +525,36 @@ def render_pollutant_stat_card(name, value, unit, description=""):
                 unsafe_allow_html=True)
 
 
-def render_page_header(title, subtitle="", author_info=True):
-    st.markdown(f'<div class="main-header">{title}</div>',
-                unsafe_allow_html=True)
-    if subtitle:
-        st.markdown(f'<div class="sub-header">{subtitle}</div>',
-                    unsafe_allow_html=True)
-    if author_info:
-        st.markdown(
-            """
-            <div class="author-info" style="text-align: center; font-size: 15px; padding: 0rem 0; margin-top: -50px;">
-                <hr class="header-divider" style="border: none; border-top: 1px solid currentColor; opacity: 0.3; margin-bottom: 0px;">
-                Made with ❤️ by <strong>Hemant Kumar</strong> • 
-                <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank" style="color: #60a5fa;">LinkedIn</a>
-            </div>
-            <style>
-                .author-info { color: #94a3b8; }
-                .author-info a { color: #60a5fa; }
-                @media (prefers-color-scheme: dark) {
-                    .author-info { color: #e2e8f0; }
-                    .author-info a { color: #93c5fd; }
-                }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+def render_page_header(title, subtitle="", hero=False, show_author=True):
+    """
+    Render consistent page headers across the application.
+    
+    Args:
+        title: Main page title (can include emoji)
+        subtitle: Optional description text  
+        hero: If True, renders larger centered hero-style header (for landing page)
+        show_author: If True, shows author attribution line
+    """
+    if hero:
+        st.markdown(f"""
+        <div style="text-align: center; padding: 2rem 0 1rem 0;">
+            <h1 class="main-header" style="color: #ffffff !important;">{title}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+        if subtitle:
+            st.markdown(f'<div class="sub-header">{subtitle}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="main-header" style="font-size: 2.2rem; padding: 1rem 0;">{title}</div>', unsafe_allow_html=True)
+        if subtitle:
+            st.markdown(f'<div class="sub-header" style="font-size: 1rem; margin-bottom: 1.5rem;">{subtitle}</div>', unsafe_allow_html=True)
+    
+    if show_author:
+        st.markdown("""
+        <div style="text-align: center; font-size: 0.85rem; color: #94a3b8; padding: 0.5rem 0; margin-bottom: 1rem;">
+            Made with ❤️ by <strong style="color: #e2e8f0;">Hemant Kumar</strong> • 
+            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank" style="color: #60a5fa; text-decoration: none;">LinkedIn</a>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 def init_common_session_state():

@@ -14,7 +14,8 @@ from services.gee_aqi import (
     POLLUTANT_INFO, get_pollutant_image, get_pollutant_vis_params,
     calculate_pollutant_statistics, get_baseline_image, calculate_anomaly_map,
     get_anomaly_vis_params, create_smoothed_map, create_hotspot_mask,
-    calculate_pollutant_correlations
+    calculate_pollutant_correlations, get_hotspot_vis_params,
+    get_pollutant_time_series, calculate_rolling_average
 )
 from services.timelapse import get_aqi_timelapse
 from services.insights import generate_aqi_insights

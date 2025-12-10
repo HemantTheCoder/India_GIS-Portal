@@ -263,6 +263,7 @@ with st.sidebar:
         key="lst_analysis_types"
     )
     
+    baseline_year = 2019  # Default value
     if "LST Anomaly" in analysis_types:
         st.markdown("##### Anomaly Settings")
         baseline_year = st.selectbox(
@@ -278,6 +279,11 @@ with st.sidebar:
     show_time_series = st.checkbox("📈 Show Time Series", key="lst_show_ts")
     show_warming_trend = st.checkbox("🔥 Show Warming Trend", key="lst_show_warming")
     show_timelapse = st.checkbox("🎞️ Show Timelapse Animation", key="lst_show_timelapse")
+    
+    # Default values for time series variables
+    ts_start_year = 2020
+    ts_end_year = current_year
+    ts_aggregation = "Yearly"
     
     if show_time_series or show_warming_trend:
         st.markdown("##### Time Series Settings")
