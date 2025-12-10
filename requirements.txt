@@ -13,4 +13,3 @@ requests==2.32.3
 Pillow==10.2.0
 imageio==2.31.1
 pyvips==2.2.2
-imageio[ffmpeg]
