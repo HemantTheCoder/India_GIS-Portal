@@ -2,7 +2,7 @@ import ee
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from services.gee_lulc import get_sentinel2_image, get_lulc_statistics_with_area, LULC_CLASSES, BUILT_CLASSES
+from services.gee_lulc import get_sentinel2_image, calculate_lulc_statistics_with_area, LULC_CLASSES, BUILT_CLASSES
 from services.gee_aqi import get_pollutant_image, calculate_pollutant_statistics, POLLUTANT_INFO
 from services.gee_lst import get_mean_lst, get_lst_statistics
 from services.gee_indices import calculate_ndvi_sentinel
@@ -50,7 +50,7 @@ def calculate_vegetation_score(geometry, year):
         from services.gee_lulc import get_dynamic_world_lulc
         lulc_img = get_dynamic_world_lulc(geometry, start_date, end_date)
         if lulc_img:
-            stats = get_lulc_statistics_with_area(lulc_img, geometry)
+            stats = calculate_lulc_statistics_with_area(lulc_img, geometry)
             if stats and "classes" in stats:
                 total_area = stats.get("total_area_sqkm", 1)
                 built_area = 0
