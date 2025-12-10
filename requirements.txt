@@ -8,11 +8,11 @@ numpy
 geopandas
 matplotlib
 scipy
-scikit-learn>=1.5.0
-# Force rebuild for sklearn
+scikit-learn
 requests
 Pillow
 imageio
 imageio-ffmpeg
-# Force dependency update
-imageio
+plotly
+reportlab
+apscheduler
