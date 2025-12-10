@@ -12,8 +12,4 @@ scikit-learn
 requests
 Pillow
 imageio
-imageio-ffmpeg
-# Force dependency update
-imageio
-plotly
-reportlab
+imageio[ffmpeg]
