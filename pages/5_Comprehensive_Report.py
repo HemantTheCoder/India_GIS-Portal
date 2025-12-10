@@ -3,7 +3,7 @@ import ee
 import folium
 from streamlit_folium import st_folium
 from services.sustainability_report import generate_sustainability_report
-from india_cities import INDIA_CITIES
+from india_cities import INDIA_DATA as INDIA_CITIES
 import geopandas as gpd
 import json
 import base64
