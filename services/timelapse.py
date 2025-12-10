@@ -164,7 +164,7 @@ def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
 def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency='Monthly'):
     """
     Generates AQI timelapse.
-    Supported parameters: 'NO2', 'SO2', 'CO', 'O3', 'Aerosol'.
+    Supported parameters: 'NO2', 'SO2', 'CO', 'O3', 'Aerosol', 'UVAI'.
     Defaults to NO2 if PM2.5 (unavailable directly) or unknown is passed.
     """
     
@@ -198,6 +198,9 @@ def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency
     }
     
     # Default to NO2 if parameter not found (sane default for "AQI")
+    # Handle aliases
+    if parameter == 'UVAI': parameter = 'Aerosol'
+    
     cfg = aqi_config.get(parameter, aqi_config['NO2'])
     
     start = ee.Date(start_date)

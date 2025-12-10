@@ -489,7 +489,7 @@ if run_btn:
                 tl_url, tl_error = get_lst_timelapse(roi, tl_start, tl_end, frequency='Yearly')
             elif target_category == "Air Quality (AQI)":
                 # Use simple mapping for AQI param if available
-                tl_param = target_param if target_param in ['NO2', 'SO2', 'O3', 'CO'] else 'NO2'
+                tl_param = target_param if target_param in ['NO2', 'SO2', 'O3', 'CO', 'Aerosol'] else 'NO2'
                 tl_url, tl_error = get_aqi_timelapse(roi, tl_start, tl_end, parameter=tl_param, frequency='Monthly')
             
             if tl_url:
