@@ -161,6 +161,14 @@ if 'report_geometry' not in st.session_state:
     st.session_state.report_geometry = None
 if 'report_center' not in st.session_state:
     st.session_state.report_center = [20.5937, 78.9629]
+if 'preview_geojson' not in st.session_state:
+    st.session_state.preview_geojson = None
+if 'preview_center' not in st.session_state:
+    st.session_state.preview_center = [20.5937, 78.9629]
+if 'preview_zoom' not in st.session_state:
+    st.session_state.preview_zoom = 5
+if 'preview_region_name' not in st.session_state:
+    st.session_state.preview_region_name = None
 
 with st.sidebar:
     st.markdown("### 📍 Report Parameters")
@@ -188,6 +196,13 @@ with st.sidebar:
             geometry = ee.Geometry.Point([coords["lon"], coords["lat"]]).buffer(buffer_km * 1000)
             region_name = f"{city}, {state}"
             st.session_state.report_center = center_coords
+            
+            from shapely.geometry import Point
+            circle_geojson = Point(coords["lon"], coords["lat"]).buffer(buffer_km / 111.0).__geo_interface__
+            st.session_state.preview_geojson = circle_geojson
+            st.session_state.preview_center = center_coords
+            st.session_state.preview_zoom = max(8, 12 - buffer_km // 10)
+            st.session_state.preview_region_name = region_name
     else:
         uploaded_file = st.file_uploader(
             "Upload GeoJSON or Shapefile (.zip)",
@@ -232,6 +247,14 @@ with st.sidebar:
                         st.session_state.report_center = center_coords
                         st.success(f"Loaded {len(gdf)} features")
                         
+                        combined_geojson = combined_geom.__geo_interface__
+                        st.session_state.preview_geojson = combined_geojson
+                        st.session_state.preview_center = center_coords
+                        bounds = combined_geom.bounds
+                        extent = max(bounds[2] - bounds[0], bounds[3] - bounds[1])
+                        st.session_state.preview_zoom = max(6, min(12, int(10 - extent * 2)))
+                        st.session_state.preview_region_name = region_name
+                        
             except Exception as e:
                 st.error(f"Error reading file: {e}")
         
@@ -244,6 +267,38 @@ with st.sidebar:
     st.markdown("---")
     
     generate_btn = st.button("🚀 Generate Report", type="primary", use_container_width=True)
+
+if st.session_state.preview_geojson and not st.session_state.report_data:
+    st.markdown("### 📍 Selected Area Preview")
+    
+    preview_map = create_base_map(
+        st.session_state.preview_center[0], 
+        st.session_state.preview_center[1], 
+        zoom=st.session_state.preview_zoom
+    )
+    
+    folium.GeoJson(
+        st.session_state.preview_geojson,
+        name="Selected Area",
+        style_function=lambda x: {
+            'fillColor': '#38bdf8',
+            'color': '#f97316',
+            'weight': 3,
+            'fillOpacity': 0.15
+        }
+    ).add_to(preview_map)
+    
+    folium.Marker(
+        location=st.session_state.preview_center,
+        popup=st.session_state.preview_region_name or "Selected Location",
+        icon=folium.Icon(color='orange', icon='info-sign')
+    ).add_to(preview_map)
+    
+    add_layer_control(preview_map)
+    st_folium(preview_map, height=400, use_container_width=True, key="preview_map")
+    
+    if st.session_state.preview_region_name:
+        st.info(f"Selected region: **{st.session_state.preview_region_name}**. Click 'Generate Report' in the sidebar to analyze this area.")
 
 if generate_btn and geometry:
     with st.spinner(f"Analyzing {region_name}... This may take 1-2 minutes."):
