@@ -4,9 +4,17 @@ import tempfile
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-def annotate_gif(gif_url, start_date, end_date, frequency):
+import requests
+import io
+import tempfile
+import os
+import imageio
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+
+def annotate_video(gif_url, start_date, end_date, frequency):
     """
-    Downloads GIF, adds date overlay, and returns local file path.
+    Downloads GIF, adds date overlay, and returns local MP4 file path for Play/Pause support.
     """
     try:
         response = requests.get(gif_url)
@@ -35,13 +43,10 @@ def annotate_gif(gif_url, start_date, end_date, frequency):
             draw = ImageDraw.Draw(frame)
             
             # Estimate date for this frame
-            # This assumes linear spacing match, which GEE might approximate
-            # Ideally we match exact counts.
             if frequency == 'Yearly':
                 current_date = start.replace(year=start.year + i)
                 date_str = current_date.strftime("%Y")
             elif frequency == 'Monthly':
-                 # Add month delta
                  year = start.year + (start.month + i - 1) // 12
                  month = (start.month + i - 1) % 12 + 1
                  current_date = datetime(year, month, 1)
@@ -52,10 +57,8 @@ def annotate_gif(gif_url, start_date, end_date, frequency):
             # Position text (Top Left)
             text = f"{date_str}"
             
-            # Simple outline effect for visibility
-            from PIL import ImageFont
+            # Font handling
             try:
-                # Try to load a default font, size depends on image
                 font_size = 40
                 font = ImageFont.truetype("arial.ttf", font_size)
             except:
@@ -67,17 +70,22 @@ def annotate_gif(gif_url, start_date, end_date, frequency):
             draw.text((x+2, y+2), text, font=font, fill="black")
             draw.text((x, y), text, font=font, fill="white")
             
-            annotated_frames.append(frame)
+            # Convert back to RGB for video (MP4)
+            # Paste onto white background to handle transparency if any (GIFs often have it)
+            bg = Image.new("RGB", frame.size, (255, 255, 255))
+            bg.paste(frame, mask=frame.split()[3]) # Use alpha channel as mask
+            annotated_frames.append(np.array(bg))
             
-        # Save result
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.gif')
-        annotated_frames[0].save(
-            temp_file.name,
-            save_all=True,
-            append_images=annotated_frames[1:],
-            loop=0,
-            duration=img.info.get('duration', 500)
-        )
+        # Save result as MP4
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
+        
+        # Use imageio to write video
+        # fps=2 (matches GEE)
+        writer = imageio.get_writer(temp_file.name, fps=2, format='FFMPEG')
+        for frame in annotated_frames:
+            writer.append_data(frame)
+        writer.close()
+        
         return temp_file.name, None
 
     except Exception as e:
@@ -152,7 +160,7 @@ def get_lulc_timelapse(region, start_date, end_date, frequency='Yearly'):
     
     url = compiled.getVideoThumbURL(video_args)
     if url:
-        return annotate_gif(url, start_date, end_date, frequency)
+        return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
 
 
@@ -282,7 +290,7 @@ def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
     
     url = compiled.getVideoThumbURL(video_args)
     if url:
-        return annotate_gif(url, start_date, end_date, frequency)
+        return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
 
 
@@ -369,7 +377,7 @@ def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency
     
     url = compiled.getVideoThumbURL(video_args)
     if url:
-        return annotate_gif(url, start_date, end_date, frequency)
+        return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
 
 
@@ -434,6 +442,6 @@ def get_lst_timelapse(region, start_date, end_date, frequency='Monthly'):
     
     url = compiled.getVideoThumbURL(video_args)
     if url:
-        return annotate_gif(url, start_date, end_date, frequency)
+        return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
 

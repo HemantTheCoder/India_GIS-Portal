@@ -493,8 +493,10 @@ if run_btn:
                 tl_url, tl_error = get_aqi_timelapse(roi, tl_start, tl_end, parameter=tl_param, frequency='Monthly')
             
             if tl_url:
-                st.image(tl_url, caption=f"Historical Trend ({tl_start} - {tl_end})", use_container_width=True)
-                st.markdown(f"[📥 Download GIF]({tl_url})")
+                st.video(tl_url, autoplay=True, loop=True)
+                st.caption(f"Historical Trend ({tl_start} - {tl_end})")
+                with open(tl_url, 'rb') as v:
+                    st.download_button("📥 Download Video", data=v, file_name="trend_timelapse.mp4", mime="video/mp4", key="dl_pred_tl_video")
             elif tl_error:
                 st.warning(f"Could not generate timelapse: {tl_error}")
             else:

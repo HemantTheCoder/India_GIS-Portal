@@ -815,8 +815,10 @@ if st.session_state.get("lst_analysis_complete"):
     if st.session_state.get("lst_timelapse_url") and show_timelapse:
         st.markdown("---")
         st.markdown("### 🎞️ Temperature Timelapse")
-        st.image(st.session_state.lst_timelapse_url, caption=f"LST Variation ({start_date} to {end_date})", use_container_width=True)
-        st.markdown(f"[📥 Download GIF]({st.session_state.lst_timelapse_url})")
+        st.video(st.session_state.lst_timelapse_url, autoplay=True, loop=True)
+        st.caption(f"LST Variation ({start_date} to {end_date})")
+        with open(st.session_state.lst_timelapse_url, 'rb') as v:
+            st.download_button("📥 Download Video", data=v, file_name="lst_timelapse.mp4", mime="video/mp4", key="dl_lst_tl_video")
 
 if not center_coords:
     render_info_box("Select a city or upload a shapefile to view the map and run analysis.", "info")

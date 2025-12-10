@@ -531,8 +531,10 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
             st.markdown("---")
             st.markdown(f"### 🎞️ {primary_pollutant} Timelapse")
             st.markdown(f"**Period:** {start_date} to {end_date} | **Frequency:** Monthly")
-            st.image(st.session_state.aqi_timelapse_url, caption=f"{primary_pollutant} Variation", use_container_width=True)
-            st.markdown(f"[📥 Download GIF]({st.session_state.aqi_timelapse_url})")
+            st.video(st.session_state.aqi_timelapse_url, autoplay=True, loop=True)
+            st.caption(f"{primary_pollutant} Variation")
+            with open(st.session_state.aqi_timelapse_url, 'rb') as v:
+                st.download_button("📥 Download Video", data=v, file_name="aqi_timelapse.mp4", mime="video/mp4", key="dl_aqi_tl_video")
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")

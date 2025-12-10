@@ -392,9 +392,10 @@ if city_coords and st.session_state.gee_initialized:
             st.markdown(f"## 🎞️ {tl_type}")
             st.markdown(f"**Period:** {start_year} - {end_year} | **Frequency:** {frequency}")
             
-            st.image(st.session_state.timelapse_url, caption=f"{tl_type} Variation over time", use_container_width=True)
-            
-            st.markdown(f"[📥 Download GIF]({st.session_state.timelapse_url})")
+            st.video(st.session_state.timelapse_url, autoplay=True, loop=True)
+            st.caption(f"{tl_type} Variation over time")
+            with open(st.session_state.timelapse_url, 'rb') as v:
+                st.download_button("📥 Download Video", data=v, file_name="lulc_timelapse.mp4", mime="video/mp4", key="dl_tl_video")
             
             st.info("💡 Green areas indicate healthy vegetation. Brown/White areas indicate urban usage, clouds, or barren land.")
             st.markdown("---")
