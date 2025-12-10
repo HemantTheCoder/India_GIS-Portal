@@ -315,9 +315,9 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 
                 if show_timelapse and primary_pollutant:
                     gif_url, error = get_aqi_timelapse(
-                        geometry, start_date, end_date, 
+                        geometry, start_str, end_str, 
                         parameter=primary_pollutant,
-                        frequency='Monthly' # Default to Monthly for speed, user can perhaps change if we add control
+                        frequency='Monthly'
                     )
                     if gif_url:
                         st.session_state.aqi_timelapse_url = gif_url

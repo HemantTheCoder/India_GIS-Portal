@@ -8,6 +8,23 @@ import numpy as np
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
+def get_font(size=32):
+    """Get a font that works across different systems."""
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "arial.ttf",
+    ]
+    for path in font_paths:
+        try:
+            return ImageFont.truetype(path, size)
+        except:
+            continue
+    return ImageFont.load_default()
+
 def annotate_video(gif_url, start_date, end_date, frequency):
     """
     Downloads GIF, adds date overlay, and returns local MP4 file path for Play/Pause support.
@@ -31,6 +48,9 @@ def annotate_video(gif_url, start_date, end_date, frequency):
         start = datetime.strptime(str(start_date), "%Y-%m-%d")
         end = datetime.strptime(str(end_date), "%Y-%m-%d")
         
+        # Get font for text overlay
+        font = get_font(28)
+        
         # Draw text on frames
         annotated_frames = []
         for i, frame in enumerate(frames):
@@ -43,40 +63,43 @@ def annotate_video(gif_url, start_date, end_date, frequency):
                 current_date = start.replace(year=start.year + i)
                 date_str = current_date.strftime("%Y")
             elif frequency == 'Monthly':
-                 year = start.year + (start.month + i - 1) // 12
-                 month = (start.month + i - 1) % 12 + 1
-                 current_date = datetime(year, month, 1)
-                 date_str = current_date.strftime("%b %Y")
+                year = start.year + (start.month + i - 1) // 12
+                month = (start.month + i - 1) % 12 + 1
+                current_date = datetime(year, month, 1)
+                date_str = current_date.strftime("%b %Y")
             else:
-                 date_str = ""
+                date_str = ""
 
-            # Position text (Top Left)
-            text = f"{date_str}"
-            
-            # Font handling
-            try:
-                font_size = 40
-                font = ImageFont.truetype("arial.ttf", font_size)
-            except:
-                font = ImageFont.load_default()
-
-            x, y = 20, 20
-            
-            # Shadow/Outline
-            draw.text((x+2, y+2), text, font=font, fill="black")
-            draw.text((x, y), text, font=font, fill="white")
+            if date_str:
+                # Get text size for background box
+                bbox = draw.textbbox((0, 0), date_str, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                
+                # Position - top left with padding
+                x, y = 15, 15
+                padding = 8
+                
+                # Draw semi-transparent background box
+                box_coords = [x - padding, y - padding, x + text_width + padding, y + text_height + padding]
+                overlay = Image.new('RGBA', frame.size, (0, 0, 0, 0))
+                overlay_draw = ImageDraw.Draw(overlay)
+                overlay_draw.rectangle(box_coords, fill=(0, 0, 0, 180))
+                frame = Image.alpha_composite(frame, overlay)
+                
+                # Redraw on composited image
+                draw = ImageDraw.Draw(frame)
+                draw.text((x, y), date_str, font=font, fill=(255, 255, 255, 255))
             
             # Convert back to RGB for video (MP4)
-            # Paste onto white background to handle transparency if any (GIFs often have it)
-            bg = Image.new("RGB", frame.size, (255, 255, 255))
-            bg.paste(frame, mask=frame.split()[3]) # Use alpha channel as mask
+            bg = Image.new("RGB", frame.size, (0, 0, 0))
+            bg.paste(frame, mask=frame.split()[3])
             annotated_frames.append(np.array(bg))
             
         # Save result as MP4
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
         
         # Use imageio to write video
-        # fps=2 (matches GEE)
         writer = imageio.get_writer(temp_file.name, fps=2, format='FFMPEG')
         for frame in annotated_frames:
             writer.append_data(frame)

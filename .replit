@@ -2,7 +2,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["cairo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "libGL", "libxcrypt", "pkg-config", "qhull", "tcl", "tk", "xsimd"]
+packages = ["cairo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "libGL", "libxcrypt", "pkg-config", "qhull", "tcl", "tk", "xsimd", "ffmpeg"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -55,6 +55,10 @@ externalPort = 3000
 [[ports]]
 localPort = 41075
 externalPort = 3001
+
+[[ports]]
+localPort = 43749
+externalPort = 6000
 
 [[ports]]
 localPort = 44303
