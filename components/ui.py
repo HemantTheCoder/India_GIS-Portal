@@ -6,25 +6,46 @@ def get_enhanced_css():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
+        /* Force dark mode - override any system/browser preferences */
+        :root {
+            color-scheme: dark !important;
+        }
+
         html, body, [class*="css"] {
             font-family: 'Outfit', sans-serif;
             scroll-behavior: smooth;
+            background-color: #050911 !important;
+            color: #f1f5f9 !important;
         }
 
-        /* --- ORBITAL COMMAND THEME --- */
+        /* --- ORBITAL COMMAND THEME (FORCED DARK) --- */
+
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], 
+        .main, section[data-testid="stSidebar"], [data-testid="stToolbar"] {
+            background-color: #050911 !important;
+            color: #f1f5f9 !important;
+        }
 
         .stApp {
-            background-color: #050911;
-            color: #f1f5f9;
             background-image: 
                 radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 50%),
-                radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%);
+                radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%) !important;
+        }
+
+        /* Force header/toolbar dark */
+        header[data-testid="stHeader"] {
+            background-color: #050911 !important;
+        }
+
+        /* Sidebar dark */
+        section[data-testid="stSidebar"] > div {
+            background-color: #0f172a !important;
         }
 
         .main-header {
             font-size: 3.5rem;
             font-weight: 800;
-            color: #ffffff;
+            color: #ffffff !important;
             text-align: center;
             padding: 2.5rem 0 1rem 0;
             letter-spacing: -0.03em;
@@ -34,7 +55,7 @@ def get_enhanced_css():
 
         .sub-header {
             font-size: 1.1rem;
-            color: #f8fafc;
+            color: #f8fafc !important;
             text-align: center;
             margin-bottom: 3.5rem;
             font-weight: 400;
