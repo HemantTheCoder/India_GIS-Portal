@@ -429,58 +429,117 @@ def get_enhanced_css():
         }
 
         /* --- DATE PICKER CALENDAR FIX --- */
-        /* Fix calendar popup going out of frame in sidebar */
-        section[data-testid="stSidebar"] [data-testid="stDateInput"] {
-            position: relative;
-        }
-        
-        /* Calendar popup positioning */
+        /* Popover container - ensure it stays in viewport */
         div[data-baseweb="popover"] {
-            z-index: 9999 !important;
+            z-index: 99999 !important;
         }
         
-        /* Ensure calendar popup is visible and properly styled */
-        div[data-baseweb="calendar"] {
+        div[data-baseweb="popover"] > div {
+            background-color: #1e293b !important;
+            border: 1px solid #475569 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important;
+            overflow: hidden !important;
+        }
+        
+        /* Calendar container */
+        div[data-baseweb="calendar"],
+        div[data-baseweb="datepicker"] {
             background-color: #1e293b !important;
             color: #f1f5f9 !important;
-            border: 1px solid #475569 !important;
-            border-radius: 8px !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+            padding: 8px !important;
         }
         
-        /* Calendar header (month/year) */
-        div[data-baseweb="calendar"] div[role="presentation"] {
-            background-color: #0f172a !important;
+        /* Calendar header with month/year and navigation arrows */
+        div[data-baseweb="calendar-header"],
+        div[data-baseweb="calendar"] > div:first-child {
+            background-color: #1e293b !important;
             color: #f1f5f9 !important;
+            padding: 8px 4px !important;
         }
         
-        /* Calendar day cells */
-        div[data-baseweb="calendar"] button {
+        /* Month/Year text */
+        div[data-baseweb="calendar"] button[aria-live="polite"],
+        div[data-baseweb="calendar"] div[role="presentation"],
+        div[data-baseweb="calendar"] span {
             color: #f1f5f9 !important;
             background-color: transparent !important;
         }
         
+        /* Navigation arrows (prev/next month) */
+        div[data-baseweb="calendar"] svg {
+            fill: #f1f5f9 !important;
+            color: #f1f5f9 !important;
+        }
+        
+        /* Weekday header row (Sun, Mon, etc.) */
+        div[data-baseweb="calendar"] div[role="row"]:first-child > div,
+        div[data-baseweb="calendar"] div[role="columnheader"] {
+            color: #94a3b8 !important;
+            font-weight: 600 !important;
+            font-size: 0.75rem !important;
+            background-color: transparent !important;
+        }
+        
+        /* All day cells */
+        div[data-baseweb="calendar"] div[role="gridcell"],
+        div[data-baseweb="calendar"] button[role="option"],
+        div[data-baseweb="calendar"] button {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+            border-radius: 6px !important;
+            transition: all 0.15s ease !important;
+        }
+        
+        /* Day hover state */
+        div[data-baseweb="calendar"] div[role="gridcell"]:hover,
+        div[data-baseweb="calendar"] button[role="option"]:hover,
         div[data-baseweb="calendar"] button:hover {
             background-color: #38bdf8 !important;
-            color: #000 !important;
+            color: #0f172a !important;
         }
         
         /* Selected day */
-        div[data-baseweb="calendar"] button[aria-selected="true"] {
+        div[data-baseweb="calendar"] button[aria-selected="true"],
+        div[data-baseweb="calendar"] div[aria-selected="true"] {
             background-color: #0ea5e9 !important;
-            color: #fff !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
         }
         
-        /* Weekday headers */
-        div[data-baseweb="calendar"] div[role="row"] > div {
-            color: #94a3b8 !important;
+        /* Today indicator */
+        div[data-baseweb="calendar"] div[data-today="true"],
+        div[data-baseweb="calendar"] button[data-today="true"] {
+            border: 2px solid #38bdf8 !important;
         }
         
-        /* Force popover to stay within viewport */
+        /* Disabled/out-of-range days */
+        div[data-baseweb="calendar"] button:disabled,
+        div[data-baseweb="calendar"] div[aria-disabled="true"] {
+            color: #475569 !important;
+            opacity: 0.5 !important;
+        }
+        
+        /* Quick select buttons (if any) */
+        div[data-baseweb="calendar"] div[role="listbox"],
+        div[data-baseweb="calendar"] ul {
+            background-color: #1e293b !important;
+        }
+        
+        /* Time picker if present */
+        div[data-baseweb="timepicker"] {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+        
+        /* Sidebar-specific: ensure popover doesn't overflow */
+        section[data-testid="stSidebar"] div[data-baseweb="popover"] {
+            position: fixed !important;
+        }
+        
         section[data-testid="stSidebar"] div[data-baseweb="popover"] > div {
-            max-width: 280px !important;
-            left: auto !important;
-            right: 10px !important;
+            max-width: 300px !important;
+            min-width: 280px !important;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
