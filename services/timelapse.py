@@ -115,14 +115,26 @@ def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
         
     def get_monthly_ndvi(n):
         date = start.advance(n, unit)
-        img = col.filterDate(date, date.advance(1, unit)) \
-                 .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 30)) \
-                 .median() \
-                 .normalizedDifference(['B8', 'B4']) \
-                 .rename('NDVI') \
-                 .clip(region) \
-                 .visualize(**vis_params)
-        return img.set('system:time_start', date.millis())
+        filtered = col.filterDate(date, date.advance(1, unit)) \
+                  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 30))
+        
+        def process_image():
+            return filtered.median() \
+                   .normalizedDifference(['B8', 'B4']) \
+                   .rename('NDVI') \
+                   .clip(region) \
+                   .visualize(**vis_params) \
+                   .set('system:time_start', date.millis())
+        
+        def empty_image():
+            # Return a transparent image compatible with visualization (RGB)
+            return ee.Image(0).byte().rename('vis-red') \
+                   .addBands(ee.Image(0).byte().rename('vis-green')) \
+                   .addBands(ee.Image(0).byte().rename('vis-blue')) \
+                   .selfMask() \
+                   .set('system:time_start', date.millis()) # Masked everywhere
+
+        return ee.Algorithms.If(filtered.size().gt(0), process_image(), empty_image())
 
     if frequency == 'Yearly':
          cnt = end.difference(start, 'year').round()
@@ -151,14 +163,42 @@ def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
 
 def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency='Monthly'):
     """
-    Sentinel-5P NO2 or similar. PM2.5 is hard from satellite directly (usually estimate).
-    We will use Sentinel-5P NO2 as the primary "AQI" proxy available easily in GEE, 
-    or CAMS/MERRA if available. 
-    Let's use Sentinel-5P NO2 for this demo as it's reliable.
+    Generates AQI timelapse.
+    Supported parameters: 'NO2', 'SO2', 'CO', 'O3', 'Aerosol'.
+    Defaults to NO2 if PM2.5 (unavailable directly) or unknown is passed.
     """
-    # Sentinel-5P NRTI NO2: COPERNICUS/S5P/NRTI/L3_NO2
-    collection_id = "COPERNICUS/S5P/NRTI/L3_NO2"
-    band = "NO2_column_number_density"
+    
+    # Configuration for different pollutants
+    aqi_config = {
+        'NO2': {
+            'id': "COPERNICUS/S5P/NRTI/L3_NO2",
+            'band': "NO2_column_number_density",
+            'vis': {'min': 0, 'max': 0.0002, 'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']}
+        },
+        'SO2': {
+            'id': "COPERNICUS/S5P/NRTI/L3_SO2",
+            'band': "SO2_column_number_density",
+            'vis': {'min': 0, 'max': 0.0005, 'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']}
+        },
+        'CO': {
+            'id': "COPERNICUS/S5P/NRTI/L3_CO",
+            'band': "CO_column_number_density",
+            'vis': {'min': 0, 'max': 0.05, 'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']}
+        },
+        'O3': {
+            'id': "COPERNICUS/S5P/NRTI/L3_O3",
+            'band': "O3_column_number_density",
+            'vis': {'min': 0.12, 'max': 0.15, 'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']}
+        },
+        'Aerosol': {
+            'id': "COPERNICUS/S5P/NRTI/L3_AER_AI",
+            'band': "absorbing_aerosol_index",
+            'vis': {'min': -1, 'max': 2.0, 'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']}
+        }
+    }
+    
+    # Default to NO2 if parameter not found (sane default for "AQI")
+    cfg = aqi_config.get(parameter, aqi_config['NO2'])
     
     start = ee.Date(start_date)
     end = ee.Date(end_date)
@@ -167,21 +207,26 @@ def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency
     if frequency == 'Yearly': unit = 'year'
     if frequency == 'Weekly': unit = 'week'
     
-    vis_params = {
-        'min': 0,
-        'max': 0.0002,
-        'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']
-    }
-    
-    col = ee.ImageCollection(collection_id).filterBounds(region).select(band)
+    col = ee.ImageCollection(cfg['id']).filterBounds(region).select(cfg['band'])
 
     def get_step_img(n):
         date = start.advance(n, unit)
-        img = col.filterDate(date, date.advance(1, unit)) \
-                 .mean() \
-                 .clip(region) \
-                 .visualize(**vis_params)
-        return img
+        filtered = col.filterDate(date, date.advance(1, unit))
+
+        def process_image():
+            return filtered.mean() \
+                   .clip(region) \
+                   .visualize(**cfg['vis']) \
+                   .set('system:time_start', date.millis())
+
+        def empty_image():
+            return ee.Image(0).byte().rename('vis-red') \
+                   .addBands(ee.Image(0).byte().rename('vis-green')) \
+                   .addBands(ee.Image(0).byte().rename('vis-blue')) \
+                   .selfMask() \
+                   .set('system:time_start', date.millis())
+
+        return ee.Algorithms.If(filtered.size().gt(0), process_image(), empty_image())
 
     cnt = end.difference(start, unit).floor()
     indices = ee.List.sequence(0, cnt.subtract(1))
@@ -226,12 +271,23 @@ def get_lst_timelapse(region, start_date, end_date, frequency='Monthly'):
     
     def get_step_img(n):
         date = start.advance(n, unit)
-        img = col.filterDate(date, date.advance(1, unit)) \
-                 .mean() \
-                 .multiply(0.02).subtract(273.15) \
-                 .clip(region) \
-                 .visualize(**vis_params)
-        return img
+        filtered = col.filterDate(date, date.advance(1, unit))
+        
+        def process_image():
+            return filtered.mean() \
+                   .multiply(0.02).subtract(273.15) \
+                   .clip(region) \
+                   .visualize(**vis_params) \
+                   .set('system:time_start', date.millis())
+        
+        def empty_image():
+             return ee.Image(0).byte().rename('vis-red') \
+                   .addBands(ee.Image(0).byte().rename('vis-green')) \
+                   .addBands(ee.Image(0).byte().rename('vis-blue')) \
+                   .selfMask() \
+                   .set('system:time_start', date.millis())
+
+        return ee.Algorithms.If(filtered.size().gt(0), process_image(), empty_image())
 
     cnt = end.difference(start, unit).floor()
     indices = ee.List.sequence(0, cnt.subtract(1))
