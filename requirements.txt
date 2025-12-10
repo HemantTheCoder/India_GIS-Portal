@@ -11,5 +11,4 @@ scipy
 scikit-learn
 requests
 Pillow
-imageio
 imageio[ffmpeg]
