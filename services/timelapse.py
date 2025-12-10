@@ -2,14 +2,10 @@ import requests
 import io
 import tempfile
 import os
-from PIL import Image, ImageDraw, ImageFont
-
-import requests
-import io
-import tempfile
-import os
+import ee
 import imageio
 import numpy as np
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
 def annotate_video(gif_url, start_date, end_date, frequency):

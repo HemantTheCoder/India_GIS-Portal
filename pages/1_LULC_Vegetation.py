@@ -182,11 +182,13 @@ with st.sidebar:
         with col2:
             end_year = st.selectbox("End Year", years[::-1], index=0, key="tl_end_year")
         
+        tl_type = st.selectbox("Timelapse Type", ["NDVI (Vegetation Index)", "LULC Map (Land Cover)"], key="tl_type")
         frequency = st.selectbox("Frequency", ["Monthly", "Yearly"], key="tl_freq")
         
         start_date = f"{start_year}-01-01"
         end_date = f"{end_year}-12-31"
-        selected_year = end_year # Context for other things
+        selected_year = end_year
+        compare_year1, compare_year2 = None, None
     else:
         col1, col2 = st.columns(2)
         with col1:
