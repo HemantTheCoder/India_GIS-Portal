@@ -504,37 +504,36 @@ def render_pollutant_stat_card(name, value, unit, description=""):
                 unsafe_allow_html=True)
 
 
-def render_page_header(title, subtitle="", hero=False):
+def render_page_header(title, subtitle="", hero=False, show_author=True):
     """
     Render consistent page headers across the application.
     
     Args:
         title: Main page title (can include emoji)
-        subtitle: Optional description text
+        subtitle: Optional description text  
         hero: If True, renders larger centered hero-style header (for landing page)
+        show_author: If True, shows author attribution line
     """
     if hero:
         st.markdown(f"""
-        <div style="text-align: center; padding: 2rem 0 1.5rem 0;">
-            <h1 style="font-size: 2.8rem; font-weight: 700; margin-bottom: 0.5rem; 
-                       background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
-                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                       background-clip: text;">{title}</h1>
+        <div style="text-align: center; padding: 2rem 0 1rem 0;">
+            <h1 class="main-header" style="color: #ffffff !important;">{title}</h1>
         </div>
         """, unsafe_allow_html=True)
         if subtitle:
-            st.caption(f"<p style='text-align: center; font-size: 1.1rem; max-width: 700px; margin: 0 auto 1.5rem auto;'>{subtitle}</p>", unsafe_allow_html=True)
+            st.markdown(f'<div class="sub-header">{subtitle}</div>', unsafe_allow_html=True)
     else:
-        st.title(title)
+        st.markdown(f'<div class="main-header" style="font-size: 2.2rem; padding: 1rem 0;">{title}</div>', unsafe_allow_html=True)
         if subtitle:
-            st.caption(subtitle)
+            st.markdown(f'<div class="sub-header" style="font-size: 1rem; margin-bottom: 1.5rem;">{subtitle}</div>', unsafe_allow_html=True)
     
-    st.markdown("""
-    <div style="text-align: center; font-size: 0.85rem; color: #64748b; padding: 0.5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(100,116,139,0.2);">
-        Made with ❤️ by <strong>Hemant Kumar</strong> • 
-        <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank" style="color: #60a5fa; text-decoration: none;">LinkedIn</a>
-    </div>
-    """, unsafe_allow_html=True)
+    if show_author:
+        st.markdown("""
+        <div style="text-align: center; font-size: 0.85rem; color: #94a3b8; padding: 0.5rem 0; margin-bottom: 1rem;">
+            Made with ❤️ by <strong style="color: #e2e8f0;">Hemant Kumar</strong> • 
+            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank" style="color: #60a5fa; text-decoration: none;">LinkedIn</a>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 def init_common_session_state():
