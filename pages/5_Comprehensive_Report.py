@@ -1,7 +1,7 @@
 import streamlit as st
 import ee
 import folium
-from streamlit_folium importst_folium
+from streamlit_folium import st_folium
 from services.sustainability_report import generate_sustainability_report
 from india_cities import INDIA_CITIES
 import geopandas as gpd
