@@ -1635,5 +1635,248 @@ def generate_pdf_report(report_data, report_type="lulc"):
         return generate_urban_heat_pdf_report(report_data)
     elif report_type == "predictive":
         return generate_predictive_pdf_report(report_data)
+    elif report_type == "sustainability":
+        return generate_sustainability_pdf_report(report_data)
     else:
+        return None
+
+
+def generate_sustainability_pdf_report(report_data):
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch, cm
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm, 
+                                leftMargin=1.5*cm, rightMargin=1.5*cm)
+        styles = getSampleStyleSheet()
+        elements = []
+        
+        title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=24, 
+                                      spaceAfter=10, alignment=TA_CENTER, textColor=colors.HexColor('#1e3a5f'))
+        subtitle_style = ParagraphStyle('Subtitle', parent=styles['Heading2'], fontSize=12, 
+                                         spaceAfter=20, alignment=TA_CENTER, textColor=colors.grey)
+        heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=14, 
+                                        spaceBefore=20, spaceAfter=10, textColor=colors.HexColor('#1565c0'))
+        subheading_style = ParagraphStyle('SubHeading', parent=styles['Heading3'], fontSize=12, 
+                                           spaceBefore=10, spaceAfter=8, textColor=colors.HexColor('#2e7d32'))
+        body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, 
+                                     spaceAfter=8, alignment=TA_JUSTIFY)
+        note_style = ParagraphStyle('Note', parent=styles['Normal'], fontSize=8, 
+                                     textColor=colors.grey, alignment=TA_LEFT)
+        
+        region_name = report_data.get('region_name', 'Unknown Region')
+        year = report_data.get('year', 2024)
+        scores = report_data.get('scores', {})
+        metrics = report_data.get('metrics', {})
+        text_sections = report_data.get('text_sections', {})
+        
+        elements.append(Paragraph("URBAN SUSTAINABILITY REPORT", title_style))
+        elements.append(Paragraph("Comprehensive Environmental Assessment", subtitle_style))
+        elements.append(Spacer(1, 10))
+        
+        info_data = [
+            ['Region', region_name],
+            ['Analysis Year', str(year)],
+            ['Report Generated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            ['Data Sources', 'Sentinel-2, Dynamic World, ECMWF CAMS, MODIS']
+        ]
+        info_table = Table(info_data, colWidths=[5*cm, 12*cm])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e3f2fd')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 25))
+        
+        elements.append(Paragraph("URBAN SUSTAINABILITY SCORE (USS)", heading_style))
+        
+        total_uss = scores.get('total_uss', 0)
+        classification = scores.get('classification', 'Unknown')
+        class_color = scores.get('class_color', '#666666')
+        class_desc = scores.get('class_desc', '')
+        
+        uss_data = [[
+            Paragraph(f'<font size="36" color="{class_color}"><b>{total_uss:.0f}</b></font><font size="14">/100</font>', 
+                     ParagraphStyle('USSScore', alignment=TA_CENTER)),
+            Paragraph(f'<font size="16" color="{class_color}"><b>{classification}</b></font><br/><br/>'
+                     f'<font size="10">{class_desc}</font>',
+                     ParagraphStyle('USSClass', alignment=TA_CENTER))
+        ]]
+        uss_table = Table(uss_data, colWidths=[5*cm, 12*cm])
+        uss_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), 15),
+            ('BOX', (0, 0), (-1, -1), 2, colors.HexColor(class_color)),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
+        ]))
+        elements.append(uss_table)
+        elements.append(Spacer(1, 25))
+        
+        elements.append(Paragraph("MODULE SCORES BREAKDOWN", heading_style))
+        
+        module_header = ['Module', 'Score', 'Grade', 'Key Metric', 'Value']
+        module_rows = [module_header]
+        
+        modules_data = [
+            ('Vegetation', 'vegetation', 'NDVI', metrics.get('ndvi', 0)),
+            ('Air Quality', 'aqi', 'AQI', metrics.get('aqi', 0)),
+            ('Urban Heat', 'heat', 'LST (°C)', metrics.get('lst', 0)),
+            ('Future Risk', 'prediction', 'Risk Index', metrics.get('risk', 0))
+        ]
+        
+        for name, key, metric_name, metric_val in modules_data:
+            module_score = scores.get(key, {})
+            score_val = module_score.get('score', 0)
+            grade = module_score.get('grade', 'N/A')
+            module_rows.append([
+                name,
+                f"{score_val:.1f}/25",
+                f"Grade {grade}",
+                metric_name,
+                f"{metric_val:.2f}" if isinstance(metric_val, float) else str(metric_val)
+            ])
+        
+        module_table = Table(module_rows, colWidths=[4*cm, 2.5*cm, 2.5*cm, 3.5*cm, 3*cm])
+        module_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1565c0')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        elements.append(module_table)
+        elements.append(Spacer(1, 25))
+        
+        elements.append(Paragraph("DETAILED METRICS", heading_style))
+        
+        metrics_detail = [
+            ['Metric', 'Value', 'Unit', 'Status'],
+            ['NDVI (Vegetation Health)', f"{metrics.get('ndvi', 0):.3f}", 'index', 
+             'Good' if metrics.get('ndvi', 0) > 0.3 else 'Moderate' if metrics.get('ndvi', 0) > 0.2 else 'Poor'],
+            ['Impervious Surface', f"{metrics.get('impervious', 0)*100:.1f}", '%',
+             'Low' if metrics.get('impervious', 0) < 0.3 else 'Moderate' if metrics.get('impervious', 0) < 0.5 else 'High'],
+            ['Air Quality Index', f"{metrics.get('aqi', 0):.0f}", 'AQI',
+             'Good' if metrics.get('aqi', 0) < 50 else 'Moderate' if metrics.get('aqi', 0) < 100 else 'Unhealthy'],
+            ['PM2.5 Concentration', f"{metrics.get('pm25', 0):.1f}", 'µg/m³',
+             'Good' if metrics.get('pm25', 0) < 12 else 'Moderate' if metrics.get('pm25', 0) < 35 else 'Unhealthy'],
+            ['Land Surface Temperature', f"{metrics.get('lst', 0):.1f}", '°C',
+             'Comfortable' if metrics.get('lst', 0) < 30 else 'Warm' if metrics.get('lst', 0) < 35 else 'Hot'],
+            ['Environmental Risk Index', f"{metrics.get('risk', 0):.2f}", 'index',
+             'Low' if metrics.get('risk', 0) < 0.3 else 'Moderate' if metrics.get('risk', 0) < 0.6 else 'High'],
+        ]
+        
+        metrics_table = Table(metrics_detail, colWidths=[6*cm, 3*cm, 3*cm, 3.5*cm])
+        metrics_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4caf50')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('PADDING', (0, 0), (-1, -1), 7),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        elements.append(metrics_table)
+        elements.append(Spacer(1, 15))
+        
+        elements.append(PageBreak())
+        
+        elements.append(Paragraph("KEY FINDINGS", heading_style))
+        
+        strongest = report_data.get('strongest_sector', 'N/A')
+        weakest = report_data.get('weakest_sector', 'N/A')
+        
+        findings_text = f"""
+        <b>Strongest Sector:</b> {strongest}<br/>
+        This sector demonstrates the best performance in the sustainability assessment and can serve as a model for other areas.<br/><br/>
+        <b>Weakest Sector:</b> {weakest}<br/>
+        This sector requires immediate attention and targeted interventions to improve the overall sustainability score.
+        """
+        elements.append(Paragraph(findings_text, body_style))
+        elements.append(Spacer(1, 15))
+        
+        elements.append(Paragraph("PRIORITY RECOMMENDATIONS", heading_style))
+        
+        mitigations_full = text_sections.get('mitigations_full', {})
+        priority_mitigations = mitigations_full.get(weakest, [])
+        
+        if priority_mitigations:
+            for i, mitigation in enumerate(priority_mitigations[:5], 1):
+                elements.append(Paragraph(f"<b>{i}.</b> {mitigation}", body_style))
+        else:
+            elements.append(Paragraph("No specific recommendations available.", body_style))
+        
+        elements.append(Spacer(1, 20))
+        
+        elements.append(Paragraph("IMPLEMENTATION ROADMAP", heading_style))
+        
+        roadmap = text_sections.get('roadmap', [])
+        for phase in roadmap:
+            phase_text = f"<b>{phase.get('phase', 'Phase')}</b> (Expected Gain: +{phase.get('expected_gain', 0)} USS points)"
+            elements.append(Paragraph(phase_text, subheading_style))
+            for action in phase.get('actions', []):
+                elements.append(Paragraph(f"• {action}", body_style))
+            elements.append(Spacer(1, 10))
+        
+        elements.append(Spacer(1, 20))
+        
+        elements.append(Paragraph("METHODOLOGY", heading_style))
+        
+        methodology_text = """
+        This Urban Sustainability Score (USS) integrates satellite-derived environmental data from multiple sources:
+        <br/><br/>
+        <b>Data Sources:</b><br/>
+        • Sentinel-2 (10m resolution) - Vegetation indices and land cover<br/>
+        • Dynamic World - Land use/land cover classification (9 classes)<br/>
+        • ECMWF CAMS - Air quality data (PM2.5, PM10)<br/>
+        • MODIS Terra/Aqua - Land Surface Temperature (1km resolution)<br/>
+        <br/>
+        <b>Scoring Components:</b><br/>
+        • Vegetation Score (25 pts): Based on NDVI and impervious surface ratio<br/>
+        • Air Quality Score (25 pts): Derived from PM2.5 concentration using EPA AQI methodology<br/>
+        • Urban Heat Score (25 pts): Based on LST deviation from comfort threshold (25°C)<br/>
+        • Future Risk Score (25 pts): 5-year trend analysis for environmental risk prediction<br/>
+        <br/>
+        <b>Classification:</b><br/>
+        • 80-100: Excellent (Highly sustainable environment)<br/>
+        • 60-79: Good (Well-managed with minor improvements needed)<br/>
+        • 40-59: Moderate (Requires attention in multiple areas)<br/>
+        • 20-39: Poor (Significant environmental challenges)<br/>
+        • 0-19: Critical (Urgent intervention required)
+        """
+        elements.append(Paragraph(methodology_text, body_style))
+        
+        elements.append(Spacer(1, 30))
+        elements.append(Paragraph("—" * 50, styles['Normal']))
+        elements.append(Paragraph("Generated by India GIS & Remote Sensing Portal", note_style))
+        elements.append(Paragraph(f"Report Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", note_style))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(
+            "<b>Disclaimer:</b> This report is generated using satellite remote sensing data and automated analysis. "
+            "Results should be verified with ground-truth data for policy decisions. Data sources include "
+            "Google Earth Engine, Copernicus Climate Data Store, and NASA.", note_style))
+        
+        doc.build(elements)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        return pdf_data
+        
+    except Exception as e:
+        print(f"Error generating Sustainability PDF: {e}")
+        import traceback
+        traceback.print_exc()
         return None
