@@ -16,6 +16,7 @@ from services.gee_aqi import (
     get_anomaly_vis_params, create_smoothed_map, create_hotspot_mask,
     calculate_pollutant_correlations
 )
+from services.timelapse import get_aqi_timelapse
 from services.insights import generate_aqi_insights
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
@@ -210,6 +211,7 @@ with st.sidebar:
     
     show_time_series = st.checkbox("Time Series Analysis", value=False, key="aqi_time_series_opt")
     show_dashboard = st.checkbox("Multi-Pollutant Dashboard", value=False, key="aqi_dashboard")
+    show_timelapse = st.checkbox("Timelapse Animation", value=False, key="aqi_timelapse")
 
 if city_coords and st.session_state.gee_initialized and selected_pollutants:
     use_uploaded_aoi = uploaded_geometry is not None
@@ -309,6 +311,17 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                     st.session_state.correlations = calculate_pollutant_correlations(
                         geometry, selected_pollutants, start_str, end_str
                     )
+                
+                if show_timelapse and primary_pollutant:
+                    gif_url, error = get_aqi_timelapse(
+                        geometry, start_date, end_date, 
+                        parameter=primary_pollutant,
+                        frequency='Monthly' # Default to Monthly for speed, user can perhaps change if we add control
+                    )
+                    if gif_url:
+                        st.session_state.aqi_timelapse_url = gif_url
+                    elif error:
+                        st.warning(f"Timelapse error: {error}")
                 
                 st.session_state.aqi_analysis_complete = True
                 st.session_state.aqi_pdf = None
@@ -507,12 +520,19 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                     if avg_data:
                         render_radar_chart(avg_data, "Pollutant Levels (Normalized)")
             
-            if st.session_state.get("aqi_time_series"):
-                st.markdown("#### Multi-Pollutant Comparison")
-                render_multi_pollutant_chart(
-                    st.session_state.aqi_time_series,
-                    "Multi-Pollutant Time Series Comparison"
-                )
+                if st.session_state.get("aqi_time_series"):
+                    st.markdown("#### Multi-Pollutant Comparison")
+                    render_multi_pollutant_chart(
+                        st.session_state.aqi_time_series,
+                        "Multi-Pollutant Time Series Comparison"
+                    )
+        
+        if show_timelapse and st.session_state.get("aqi_timelapse_url"):
+            st.markdown("---")
+            st.markdown(f"### 🎞️ {primary_pollutant} Timelapse")
+            st.markdown(f"**Period:** {start_date} to {end_date} | **Frequency:** Monthly")
+            st.image(st.session_state.aqi_timelapse_url, caption=f"{primary_pollutant} Variation", use_container_width=True)
+            st.markdown(f"[📥 Download GIF]({st.session_state.aqi_timelapse_url})")
 
 elif not st.session_state.gee_initialized:
     render_info_box("Please check your GEE credentials in secrets.toml", "warning")

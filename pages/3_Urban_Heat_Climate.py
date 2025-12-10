@@ -16,8 +16,10 @@ from services.gee_lst import (
     calculate_lst_anomaly, calculate_uhi_intensity, detect_heat_hotspots,
     identify_cooling_zones, get_lst_time_series, detect_heatwaves,
     calculate_warming_trend, get_lst_tile_url,
+    calculate_warming_trend, get_lst_tile_url,
     LST_VIS_PARAMS, UHI_VIS_PARAMS, ANOMALY_VIS_PARAMS, HOTSPOT_VIS_PARAMS, COOLING_VIS_PARAMS
 )
+from services.timelapse import get_lst_timelapse
 from services.insights import generate_uhi_insights
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
@@ -275,6 +277,7 @@ with st.sidebar:
     
     show_time_series = st.checkbox("📈 Show Time Series", key="lst_show_ts")
     show_warming_trend = st.checkbox("🔥 Show Warming Trend", key="lst_show_warming")
+    show_timelapse = st.checkbox("🎞️ Show Timelapse Animation", key="lst_show_timelapse")
     
     if show_time_series or show_warming_trend:
         st.markdown("##### Time Series Settings")
@@ -429,6 +432,17 @@ if run_analysis and geometry:
                     if show_warming_trend and time_series:
                         trend = calculate_warming_trend(time_series)
                         st.session_state.warming_trend = trend
+
+            if show_timelapse:
+                 with st.spinner("Generating Timelapse..."):
+                     gif_url, error = get_lst_timelapse(
+                         geometry, start_str, end_str,
+                         frequency='Monthly'
+                     )
+                     if gif_url:
+                         st.session_state.lst_timelapse_url = gif_url
+                     elif error:
+                         st.warning(f"Timelapse error: {error}")
             
             st.session_state.lst_analysis_complete = True
             st.session_state.heat_pdf = None
@@ -797,6 +811,12 @@ if st.session_state.get("lst_analysis_complete"):
             st.warning(f"⚠️ This area shows a warming trend of approximately {trend.get('slope_per_year', 0):.3f}°C per year.")
         else:
             st.info(f"ℹ️ This area shows a cooling trend of approximately {abs(trend.get('slope_per_year', 0)):.3f}°C per year.")
+    
+    if st.session_state.get("lst_timelapse_url") and show_timelapse:
+        st.markdown("---")
+        st.markdown("### 🎞️ Temperature Timelapse")
+        st.image(st.session_state.lst_timelapse_url, caption=f"LST Variation ({start_date} to {end_date})", use_container_width=True)
+        st.markdown(f"[📥 Download GIF]({st.session_state.lst_timelapse_url})")
 
 if not center_coords:
     render_info_box("Select a city or upload a shapefile to view the map and run analysis.", "info")

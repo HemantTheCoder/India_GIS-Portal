@@ -16,6 +16,7 @@ from components.ui import apply_enhanced_css, render_page_header
 # Import prediction service
 from services.prediction import prepare_time_series_data, train_forecast_model, generate_forecast, calculate_trend_slope
 from services.insights import generate_predictive_insights
+from services.timelapse import get_ndvi_timelapse, get_aqi_timelapse, get_lst_timelapse
 
 # Import specific data extractors from other modules
 # Note: We might need to slightly adapt these or use the logic directly if imports are tricky due to streamlit page structure
@@ -474,6 +475,32 @@ if run_btn:
             pass
 
         st.success(f"Analysis Complete! Average Confidence: {avg_r2_val:.2f}")
+
+        # --- TREND TIMELAPSE ---
+        st.markdown("### 🎞️ Historical Trend Timelapse")
+        with st.spinner("Generating Trend Timelapse..."):
+            tl_url, tl_error = None, None
+            tl_start = start_date
+            tl_end = end_date
+            
+            if target_category == "Vegetation (NDVI)" or target_category == "Land Cover (LULC)":
+                tl_url, tl_error = get_ndvi_timelapse(roi, tl_start, tl_end, frequency='Yearly')
+            elif target_category == "Urban Heat (LST)":
+                tl_url, tl_error = get_lst_timelapse(roi, tl_start, tl_end, frequency='Yearly')
+            elif target_category == "Air Quality (AQI)":
+                # Use simple mapping for AQI param if available
+                tl_param = target_param if target_param in ['NO2', 'SO2', 'O3', 'CO'] else 'NO2'
+                tl_url, tl_error = get_aqi_timelapse(roi, tl_start, tl_end, parameter=tl_param, frequency='Monthly')
+            
+            if tl_url:
+                st.image(tl_url, caption=f"Historical Trend ({tl_start} - {tl_end})", use_container_width=True)
+                st.markdown(f"[📥 Download GIF]({tl_url})")
+            elif tl_error:
+                st.warning(f"Could not generate timelapse: {tl_error}")
+            else:
+                st.info("Timelapse not available for this parameter.")
+        
+        st.markdown("---")
 
         if is_multi_class:
             # --- LULC VISUALIZATION (Comparison Bar Chart) ---

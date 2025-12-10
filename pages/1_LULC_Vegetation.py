@@ -18,6 +18,7 @@ from services.gee_lulc import (
     calculate_lulc_statistics_with_area, get_lulc_change_analysis,
     calculate_change_summary, LULC_CLASSES
 )
+from services.timelapse import get_ndvi_timelapse
 from services.gee_indices import (
     get_index_functions, get_index_vis_params, INDEX_INFO
 )
@@ -152,7 +153,7 @@ with st.sidebar:
     
     analysis_mode = st.radio(
         "Analysis Mode",
-        ["Single Period", "Time Series Comparison"],
+        ["Single Period", "Time Series Comparison", "Timelapse Animation"],
         key="lulc_analysis_mode"
     )
     
@@ -174,6 +175,18 @@ with st.sidebar:
             end_date = end.strftime("%Y-%m-%d")
         
         compare_year1, compare_year2 = None, None
+    elif analysis_mode == "Timelapse Animation":
+        col1, col2 = st.columns(2)
+        with col1:
+            start_year = st.selectbox("Start Year", years[::-1], index=len(years)-1, key="tl_start_year")
+        with col2:
+            end_year = st.selectbox("End Year", years[::-1], index=0, key="tl_end_year")
+        
+        frequency = st.selectbox("Frequency", ["Monthly", "Yearly"], key="tl_freq")
+        
+        start_date = f"{start_year}-01-01"
+        end_date = f"{end_year}-12-31"
+        selected_year = end_year # Context for other things
     else:
         col1, col2 = st.columns(2)
         with col1:
@@ -302,6 +315,23 @@ if city_coords and st.session_state.gee_initialized:
             
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+            
+            if analysis_mode == "Timelapse Animation" and st.session_state.get("current_geometry"):
+                with st.spinner("Generating Timelapse Animation... This may take a moment."):
+                    try:
+                        gif_url, error = get_ndvi_timelapse(
+                            st.session_state.current_geometry, 
+                            start_date, 
+                            end_date, 
+                            frequency
+                        )
+                        if gif_url:
+                            st.session_state.timelapse_url = gif_url
+                            st.success("Timelapse Generated!")
+                        elif error:
+                            st.error(error)
+                    except Exception as e:
+                         st.error(f"Timelapse Error: {str(e)}")
     
     add_layer_control(base_map)
     
@@ -345,6 +375,18 @@ if city_coords and st.session_state.gee_initialized:
     
     if st.session_state.get("analysis_complete"):
         st.markdown("---")
+        
+        if analysis_mode == "Timelapse Animation" and st.session_state.get("timelapse_url"):
+            st.markdown("## 🎞️ NDVI Timelapse")
+            st.markdown(f"**Period:** {start_year} - {end_year} | **Frequency:** {frequency}")
+            
+            st.image(st.session_state.timelapse_url, caption="NDVI Variation over time", use_container_width=True)
+            
+            st.markdown(f"[📥 Download GIF]({st.session_state.timelapse_url})")
+            
+            st.info("💡 Green areas indicate healthy vegetation. Brown/White areas indicate urban usage, clouds, or barren land.")
+            st.markdown("---")
+
         st.markdown("## 📊 Analysis Results")
         
         if analysis_mode == "Time Series Comparison" and st.session_state.get("time_series_stats"):
