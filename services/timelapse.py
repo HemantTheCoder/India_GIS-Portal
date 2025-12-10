@@ -274,13 +274,16 @@ def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
     
     # Define video args
     video_args = {
-        'dimensions': 768,
+        'dimensions': 600,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    return compiled.getVideoThumbURL(video_args), None
+    url = compiled.getVideoThumbURL(video_args)
+    if url:
+        return annotate_gif(url, start_date, end_date, frequency)
+    return None, "Failed to get GEE URL"
 
 
 def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency='Monthly'):
@@ -358,13 +361,17 @@ def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency
     compiled = ee.ImageCollection(indices.map(get_step_img))
     
     video_args = {
-        'dimensions': 768,
+        'dimensions': 600,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    return compiled.getVideoThumbURL(video_args), None
+    url = compiled.getVideoThumbURL(video_args)
+    if url:
+        return annotate_gif(url, start_date, end_date, frequency)
+    return None, "Failed to get GEE URL"
+
 
 def get_lst_timelapse(region, start_date, end_date, frequency='Monthly'):
     """
@@ -419,11 +426,14 @@ def get_lst_timelapse(region, start_date, end_date, frequency='Monthly'):
     compiled = ee.ImageCollection(indices.map(get_step_img))
     
     video_args = {
-        'dimensions': 768,
+        'dimensions': 600,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    return compiled.getVideoThumbURL(video_args), None
+    url = compiled.getVideoThumbURL(video_args)
+    if url:
+        return annotate_gif(url, start_date, end_date, frequency)
+    return None, "Failed to get GEE URL"
 

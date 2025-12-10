@@ -317,21 +317,33 @@ if city_coords and st.session_state.gee_initialized:
                 st.error(f"Error: {str(e)}")
             
             if analysis_mode == "Timelapse Animation" and st.session_state.get("current_geometry"):
-                with st.spinner("Generating Timelapse Animation... This may take a moment."):
-                    try:
-                        gif_url, error = get_ndvi_timelapse(
-                            st.session_state.current_geometry, 
-                            start_date, 
-                            end_date, 
-                            frequency
+                geometry = st.session_state.current_geometry
+                gif_url, error = None, None
+                
+                if tl_type == "LULC Map (Land Cover)":
+                    with st.spinner("Generating LULC Timelapse..."):
+                        from services.timelapse import get_lulc_timelapse
+                        gif_url, error = get_lulc_timelapse(
+                            geometry, 
+                            f"{start_year}-01-01", 
+                            f"{end_year}-12-31",
+                            frequency=frequency
                         )
-                        if gif_url:
-                            st.session_state.timelapse_url = gif_url
-                            st.success("Timelapse Generated!")
-                        elif error:
-                            st.error(error)
-                    except Exception as e:
-                         st.error(f"Timelapse Error: {str(e)}")
+                else: # NDVI (Vegetation Index)
+                    with st.spinner("Generating NDVI Timelapse..."):
+                        from services.timelapse import get_ndvi_timelapse
+                        gif_url, error = get_ndvi_timelapse(
+                             geometry, 
+                             f"{start_year}-01-01", 
+                             f"{end_year}-12-31", 
+                             frequency=frequency
+                        )
+                
+                if gif_url:
+                    st.session_state.timelapse_url = gif_url
+                    st.success("Timelapse Generated!")
+                elif error:
+                    st.error(f"Timelapse error: {error}")
     
     add_layer_control(base_map)
     
@@ -377,10 +389,10 @@ if city_coords and st.session_state.gee_initialized:
         st.markdown("---")
         
         if analysis_mode == "Timelapse Animation" and st.session_state.get("timelapse_url"):
-            st.markdown("## 🎞️ NDVI Timelapse")
+            st.markdown(f"## 🎞️ {tl_type}")
             st.markdown(f"**Period:** {start_year} - {end_year} | **Frequency:** {frequency}")
             
-            st.image(st.session_state.timelapse_url, caption="NDVI Variation over time", use_container_width=True)
+            st.image(st.session_state.timelapse_url, caption=f"{tl_type} Variation over time", use_container_width=True)
             
             st.markdown(f"[📥 Download GIF]({st.session_state.timelapse_url})")
             
