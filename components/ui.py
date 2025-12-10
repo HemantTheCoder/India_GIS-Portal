@@ -428,6 +428,61 @@ def get_enhanced_css():
             background-color: rgba(15, 23, 42, 0.4);
         }
 
+        /* --- DATE PICKER CALENDAR FIX --- */
+        /* Fix calendar popup going out of frame in sidebar */
+        section[data-testid="stSidebar"] [data-testid="stDateInput"] {
+            position: relative;
+        }
+        
+        /* Calendar popup positioning */
+        div[data-baseweb="popover"] {
+            z-index: 9999 !important;
+        }
+        
+        /* Ensure calendar popup is visible and properly styled */
+        div[data-baseweb="calendar"] {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #475569 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        }
+        
+        /* Calendar header (month/year) */
+        div[data-baseweb="calendar"] div[role="presentation"] {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        
+        /* Calendar day cells */
+        div[data-baseweb="calendar"] button {
+            color: #f1f5f9 !important;
+            background-color: transparent !important;
+        }
+        
+        div[data-baseweb="calendar"] button:hover {
+            background-color: #38bdf8 !important;
+            color: #000 !important;
+        }
+        
+        /* Selected day */
+        div[data-baseweb="calendar"] button[aria-selected="true"] {
+            background-color: #0ea5e9 !important;
+            color: #fff !important;
+        }
+        
+        /* Weekday headers */
+        div[data-baseweb="calendar"] div[role="row"] > div {
+            color: #94a3b8 !important;
+        }
+        
+        /* Force popover to stay within viewport */
+        section[data-testid="stSidebar"] div[data-baseweb="popover"] > div {
+            max-width: 280px !important;
+            left: auto !important;
+            right: 10px !important;
+        }
+
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
             .main-header {
