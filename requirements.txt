@@ -16,3 +16,5 @@ imageio
 imageio-ffmpeg
 # Force dependency update
 imageio
+plotly
+reportlab
