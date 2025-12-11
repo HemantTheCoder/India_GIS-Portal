@@ -98,9 +98,9 @@ def generate_earthquake_pdf_report(data):
     # Score Table
     score_data = [
         ['Metric', 'Value', 'Contribution'],
-        ['Seismic Zone Factor', f"Zone {data['zone_info'].get('zone')}", f"{risk_score['components']['zone']}"],
-        ['Avg PGA (g)', f"{data['hazard_stats'].get('mean_pga', 0):.2f}g", f"{risk_score['components']['hazard']}"],
-        ['Exposure Index', "Derived", f"{risk_score['components']['exposure']}"],
+        ['Seismic Zone Factor', f"Zone {data['zone_info'].get('zone')}", f"{risk_score['breakdown']['zone']['weighted_score']}"],
+        ['Avg PGA (g)', f"{data['hazard_stats'].get('mean_pga', 0):.2f}g", f"{risk_score['breakdown']['pga']['weighted_score']}"],
+        ['Exposure Index', "Derived", f"{risk_score['breakdown']['exposure']['weighted_score']}"],
         ['Total Risk Score', '', f"{risk_score['total_score']}"]
     ]
     

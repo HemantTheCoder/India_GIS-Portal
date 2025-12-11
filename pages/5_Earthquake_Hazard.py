@@ -178,8 +178,8 @@ with st.sidebar:
                 risk_score = eq_core.calculate_seismic_risk_score(
                     pga=hazard_stats.get('mean_pga', 0.15),
                     zone=zone_info['zone'],
-                    pop_density=5000, # Mocked exposure
-                    building_density_proxy=None
+                    historical_count=len(processed_quakes),
+                    exposure_index=0.8 # Mocked high exposure for urban areas
                 )
                 
                 st.session_state.analysis_results = {

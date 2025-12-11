@@ -1930,7 +1930,8 @@ def generate_sustainability_pdf_report(report_data):
         • 60-79: Good (Well-managed with minor improvements needed)<br/>
         • 40-59: Moderate (Requires attention in multiple areas)<br/>
         • 20-39: Poor (Significant environmental challenges)<br/>
-        • 0-19: Critical (Urgent intervention required)
+        • 0-19: Critical (Urgent intervention required)<br/><br/>
+        <b>Note:</b> The total raw score (max 125) is normalized to a standard 0-100 scale for final classification.
         """
         elements.append(Paragraph(methodology_text, body_style))
         
