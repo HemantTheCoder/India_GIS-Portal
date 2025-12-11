@@ -1,3 +1,4 @@
+
 import ee
 import pandas as pd
 import numpy as np
@@ -7,6 +8,10 @@ from services.gee_aqi import get_pollutant_image, calculate_pollutant_statistics
 from services.gee_lst import get_mean_lst, get_lst_statistics
 from services.gee_indices import calculate_ndvi_sentinel, calculate_ndwi_sentinel, calculate_ndbi_sentinel
 from services.gee_core import get_tile_url
+
+# Import Earthquake Core Logic
+# Import Earthquake Core Logic
+from services.earthquake_core import analyze_seismic_hazard, calculate_seismic_risk_score, get_seismic_zone, fetch_usgs_earthquakes
 
 LULC_VIS_PARAMS = {
     'min': 0,
@@ -76,7 +81,7 @@ def calculate_vegetation_score(geometry, year):
                     if data["class_id"] in BUILT_CLASSES:
                         built_area += data["area_sqkm"]
                 impervious_ratio = built_area / total_area if total_area > 0 else 0
-
+                
         score = 25 * ((ndvi_normalized + (1 - impervious_ratio)) / 2)
         return max(0, min(25, score)), mean_ndvi, impervious_ratio, ndvi_image, lulc_image, lulc_stats
 
@@ -205,6 +210,61 @@ def calculate_prediction_score(geometry, year):
         return 12.5, 0.5, None, []
 
 
+def calculate_earthquake_score(geometry, region_name, imp_ratio=0.5):
+    """
+    Computes Earthquake Resilience Score (0-25).
+    Score = 25 * (1 - (RiskScore / 100))
+    """
+    try:
+        center = geometry.centroid().coordinates().getInfo()
+        zone_info = get_seismic_zone(center[1], center[0], region_name)
+        
+        # Hazard from GEE
+        hazard_stats = analyze_seismic_hazard(geometry)
+        
+        # Historical Seismicity (5-year fetch)
+        try:
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=365*5)
+            
+            # Create a bounding box 100km around center for regional context
+            lat, lon = center[1], center[0]
+            deg_off = 100 / 111.0
+            
+            eq_data = fetch_usgs_earthquakes(
+                min_lat=lat-deg_off, min_lon=lon-deg_off, 
+                max_lat=lat+deg_off, max_lon=lon+deg_off,
+                min_mag=3.0, # Significant events
+                start_date=start_date.strftime('%Y-%m-%d'),
+                end_date=end_date.strftime('%Y-%m-%d'),
+                limit=100
+            )
+            hist_count = len(eq_data['features']) if eq_data and 'features' in eq_data else 0
+        except Exception as e:
+            print(f"Error fetching history: {e}")
+            hist_count = 0
+            
+        # Comprehensive Risk Calculation
+        risk_data = calculate_seismic_risk_score(
+            pga=hazard_stats.get('mean_pga', 0.15),
+            zone=zone_info['zone'],
+            historical_count=hist_count,
+            fault_dist_km=None, # Not available yet
+            exposure_index=imp_ratio
+        )
+        
+        risk_score = risk_data['total_score']
+        
+        # Invert Risk to get Safety/Resilience Score (0-25)
+        eq_score = 25 * (1 - (risk_score / 100))
+        
+        return max(0, min(25, eq_score)), risk_score, zone_info, hazard_stats, risk_data
+        
+    except Exception as e:
+        print(f"Error in Earthquake score: {e}")
+        return 12.5, 50, {'zone': 'Unknown', 'risk': 'Unknown'}, {}, {}
+
+
 def get_uss_classification(uss):
     """Returns classification and color based on USS score."""
     if uss >= 80:
@@ -238,15 +298,21 @@ def generate_comprehensive_report(geometry, region_name="Selected Region", year=
     aqi_score, aqi_val, pm25_val, pm25_img, pollutant_stats = calculate_aqi_score(geometry, year)
     heat_score, lst_val, lst_img, lst_stats = calculate_heat_score(geometry, year)
     pred_score, risk_val, trends, trend_insights = calculate_prediction_score(geometry, year)
+    eq_score, eq_risk_score, zone_info, hazard_stats, eq_risk_data = calculate_earthquake_score(geometry, region_name, imp_ratio)
     
-    total_uss = veg_score + aqi_score + heat_score + pred_score
+    # Normalizing 5 modules (max 25 each = 125 total) to 0-100 scale
+    # Total = Sum / 1.25
+    sum_scores = veg_score + aqi_score + heat_score + pred_score + eq_score
+    total_uss = sum_scores / 1.25
+    
     classification, class_color, class_desc = get_uss_classification(total_uss)
     
     scores_dict = {
         "Vegetation": veg_score,
         "Air Quality": aqi_score,
         "Urban Heat": heat_score,
-        "Future Risk": pred_score
+        "Future Risk": pred_score,
+        "Earthquake Safety": eq_score
     }
     weakest_sector = min(scores_dict.keys(), key=lambda k: scores_dict[k])
     strongest_sector = max(scores_dict.keys(), key=lambda k: scores_dict[k])
@@ -276,25 +342,32 @@ def generate_comprehensive_report(geometry, region_name="Selected Region", year=
             tile_urls['lst'] = get_tile_url(lst_img.clip(geometry), LST_VIS_PARAMS)
         except:
             pass
+            
+    if 'tile_url' in hazard_stats:
+        tile_urls['earthquake'] = hazard_stats['tile_url']
 
+            
+            
+    # Grades
     veg_grade, veg_color = get_score_grade(veg_score)
     aqi_grade, aqi_color = get_score_grade(aqi_score)
     heat_grade, heat_color = get_score_grade(heat_score)
     pred_grade, pred_color = get_score_grade(pred_score)
+    eq_grade, eq_color = get_score_grade(eq_score)
 
     overview_text = f"""
 The **Urban Sustainability Score (USS)** for **{region_name}** is **{total_uss:.1f}/100**, classified as **{classification}**. 
 {class_desc}
 
-This comprehensive assessment integrates satellite-derived data across four critical environmental dimensions:
-vegetation health and land use, air quality, thermal comfort, and predictive climate risks.
+This comprehensive assessment integrates satellite-derived data across five critical dimensions:
+vegetation health, air quality, thermal comfort, climate risks, and seismic safety.
 
 **Key Findings:**
 - The region's strongest performance is in **{strongest_sector}** (Score: {scores_dict[strongest_sector]:.1f}/25)
 - The primary area of concern is **{weakest_sector}** (Score: {scores_dict[weakest_sector]:.1f}/25)
 - Average NDVI: **{ndvi_val:.3f}** | Impervious Surface: **{imp_ratio*100:.1f}%**
 - Air Quality Index: **{aqi_val:.0f}** | PM2.5: **{pm25_val:.1f} µg/m³**
-- Land Surface Temperature: **{lst_val:.1f}°C**
+- Land Surface Temperature: **{lst_val:.1f}°C** | Seismic Zone: **{zone_info['zone']}**
 - Future Risk Index: **{risk_val:.2f}**
 """
 
@@ -338,6 +411,19 @@ Based on 5-year historical trend analysis, the future environmental risk index i
 
 **Observed Trends:**
 {chr(10).join([f"- {insight}" for insight in trend_insights]) if trend_insights else "- Trend data insufficient for detailed analysis"}
+""",
+        "earthquake": f"""
+**Earthquake Hazard & Safety (Score: {eq_score:.1f}/25 - Grade {eq_grade})**
+
+The region falls under **Seismic Zone {zone_info['zone']}** ({zone_info['risk']} Risk) with a computed Comprehensive Risk Score of **{eq_risk_score:.1f}/100**.
+
+**Risk Component Breakdown:**
+- **PGA Hazard ({eq_risk_data['breakdown']['pga']['weight']*100:.0f}%):** Score **{eq_risk_data['breakdown']['pga']['score']}** (Mean PGA: {hazard_stats.get('mean_pga', 0):.2f}g)
+- **Zone Factor ({eq_risk_data['breakdown']['zone']['weight']*100:.0f}%):** Score **{eq_risk_data['breakdown']['zone']['score']}** (Zone {zone_info['zone']})
+- **Historical Seismicity ({eq_risk_data['breakdown']['history']['weight']*100:.0f}%):** Score **{eq_risk_data['breakdown']['history']['score']}** (Based on regional event frequency)
+- **Urban Exposure ({eq_risk_data['breakdown']['exposure']['weight']*100:.0f}%):** Score **{eq_risk_data['breakdown']['exposure']['score']}** (Impervious: {imp_ratio*100:.1f}%)
+
+{"⚠️ **Seismic Vulnerability:** The region is in a high-risk zone. Strict adherence to IS 1893:2025 building codes is mandatory." if eq_risk_score > 60 else "✅ Seismic risk is moderate, but standard safety protocols should be maintained."}
 """
     }
 
@@ -369,6 +455,13 @@ Based on 5-year historical trend analysis, the future environmental risk index i
             "Invest in sustainable public transportation infrastructure",
             "Implement early warning systems for environmental hazards",
             "Establish community-based environmental monitoring networks"
+        ],
+        "Earthquake Safety": [
+            "Retrofit critical infrastructure (hospitals, schools) for seismic resistance",
+            "Enforce IS 1893:2025 standards for all new construction",
+            "Conduct community evacuation drills and safety training",
+            "Establish seismic monitoring and early warning network",
+            "Develop rapid response protocols for emergency services"
         ]
     }
     
@@ -427,6 +520,7 @@ Based on 5-year historical trend analysis, the future environmental risk index i
             "aqi": {"score": aqi_score, "grade": aqi_grade, "color": aqi_color, "value": aqi_val, "metric": "AQI"},
             "heat": {"score": heat_score, "grade": heat_grade, "color": heat_color, "value": lst_val, "metric": "LST (°C)"},
             "prediction": {"score": pred_score, "grade": pred_grade, "color": pred_color, "value": risk_val, "metric": "Risk Index"},
+            "earthquake": {"score": eq_score, "grade": eq_grade, "color": eq_color, "value": eq_risk_score, "metric": "Risk Score"},
             "total_uss": total_uss,
             "classification": classification,
             "class_color": class_color,
@@ -441,13 +535,17 @@ Based on 5-year historical trend analysis, the future environmental risk index i
             "aqi": aqi_val,
             "pm25": pm25_val,
             "lst": lst_val,
-            "risk": risk_val
+            "risk": risk_val,
+            "eq_risk": eq_risk_score
         },
         "lulc_stats": lulc_stats,
         "lst_stats": lst_stats,
         "pollutant_stats": pollutant_stats,
         "trends": trends,
         "trend_insights": trend_insights,
+        "hazard_stats": hazard_stats, 
+        "zone_info": zone_info,
+        "eq_risk_data": eq_risk_data, # Detailed breakdown for export
         "text_sections": {
             "overview": overview_text,
             "analysis": analysis_sections,
@@ -469,6 +567,7 @@ def generate_sustainability_report(geometry, region_name="Selected Region", year
             "Air Quality": {"score": report["scores"]["aqi"]["score"], "value": report["raw_metrics"]["aqi"], "metric": "AQI"},
             "Urban Heat": {"score": report["scores"]["heat"]["score"], "value": report["raw_metrics"]["lst"], "metric": "LST (°C)"},
             "Prediction": {"score": report["scores"]["prediction"]["score"], "value": report["raw_metrics"]["risk"], "metric": "Risk Index"},
+            "Earthquake": {"score": report["scores"]["earthquake"]["score"], "value": report["raw_metrics"]["eq_risk"], "metric": "Rel. Risk"},
             "Total USS": report["scores"]["total_uss"],
             "Classification": report["scores"]["classification"]
         },

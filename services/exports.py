@@ -1675,6 +1675,9 @@ def generate_sustainability_pdf_report(report_data):
         metrics = report_data.get('metrics', {})
         text_sections = report_data.get('text_sections', {})
         
+        # Use raw_metrics as fall back if metrics is empty, or just use raw_metrics as primary
+        metrics = report_data.get('raw_metrics', report_data.get('metrics', {}))
+        
         elements.append(Paragraph("URBAN SUSTAINABILITY REPORT", title_style))
         elements.append(Paragraph("Comprehensive Environmental Assessment", subtitle_style))
         elements.append(Spacer(1, 10))
@@ -1716,7 +1719,10 @@ def generate_sustainability_pdf_report(report_data):
         uss_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('PADDING', (0, 0), (-1, -1), 15),
+            ('TOPPADDING', (0, 0), (-1, -1), 20),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
             ('BOX', (0, 0), (-1, -1), 2, colors.HexColor(class_color)),
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
         ]))
@@ -1732,7 +1738,8 @@ def generate_sustainability_pdf_report(report_data):
             ('Vegetation', 'vegetation', 'NDVI', metrics.get('ndvi', 0)),
             ('Air Quality', 'aqi', 'AQI', metrics.get('aqi', 0)),
             ('Urban Heat', 'heat', 'LST (°C)', metrics.get('lst', 0)),
-            ('Future Risk', 'prediction', 'Risk Index', metrics.get('risk', 0))
+            ('Future Risk', 'prediction', 'Risk Index', metrics.get('risk', 0)),
+            ('Earthquake Safety', 'earthquake', 'Risk Score', metrics.get('eq_risk', 0))
         ]
         
         for name, key, metric_name, metric_val in modules_data:
@@ -1777,6 +1784,8 @@ def generate_sustainability_pdf_report(report_data):
              'Comfortable' if metrics.get('lst', 0) < 30 else 'Warm' if metrics.get('lst', 0) < 35 else 'Hot'],
             ['Environmental Risk Index', f"{metrics.get('risk', 0):.2f}", 'index',
              'Low' if metrics.get('risk', 0) < 0.3 else 'Moderate' if metrics.get('risk', 0) < 0.6 else 'High'],
+            ['Seismic Risk Score', f"{metrics.get('eq_risk', 0):.1f}", 'Index',
+             'Low' if metrics.get('eq_risk', 0) < 40 else 'Moderate' if metrics.get('eq_risk', 0) < 70 else 'High'],
         ]
         
         metrics_table = Table(metrics_detail, colWidths=[6*cm, 3*cm, 3*cm, 3.5*cm])
@@ -1794,6 +1803,70 @@ def generate_sustainability_pdf_report(report_data):
         elements.append(Spacer(1, 15))
         
         elements.append(PageBreak())
+        
+        # --- Seismic Breakdown Section ---
+        eq_risk_data = report_data.get('eq_risk_data', {})
+        if eq_risk_data and 'breakdown' in eq_risk_data:
+            elements.append(Paragraph("SEISMIC SAFETY ANALYSIS", heading_style))
+            
+            bd = eq_risk_data.get('breakdown', {})
+            total_risk = eq_risk_data.get('total_score', 0)
+            risk_class = eq_risk_data.get('risk_class', 'Unknown')
+            
+            # Intro text
+            zone = report_data.get('zone_info', {}).get('zone', 'Unknown')
+            pga = report_data.get('hazard_stats', {}).get('mean_pga', 0)
+            
+            eq_intro = f"""
+            <b>Seismic Zone:</b> {zone} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Est. PGA:</b> {pga:.2f}g &nbsp;&nbsp;|&nbsp;&nbsp; <b>Risk Class:</b> {risk_class}<br/><br/>
+            The Earthquake Safety Score is derived from a detailed risk assessment model considering multiple weighted factors. 
+            A lower Risk Score indicates higher Safety.
+            """
+            elements.append(Paragraph(eq_intro, body_style))
+            elements.append(Spacer(1, 10))
+            
+            # Breakdown Table
+            eq_header = ['Risk Component', 'Weight', 'Component Score', 'Weighted Score']
+            eq_rows = [eq_header]
+            
+            # Map keys to display names
+            key_map = {
+                'pga': 'PGA Hazard (Ground Shaking)',
+                'zone': 'Seismic Zone Factor (IS 1893)',
+                'history': 'Historical Seismicity (Frequency)',
+                'fault': 'Fault Proximity',
+                'exposure': 'Urban Exposure (Built-up Density)'
+            }
+            
+            for k, v in bd.items():
+                name = key_map.get(k, k.title())
+                weight = f"{v['weight']*100:.0f}%"
+                c_score = f"{v['score']:.0f}"
+                w_score = f"{v['weighted_score']:.1f}"
+                eq_rows.append([name, weight, c_score, w_score])
+                
+            # Total Row
+            eq_rows.append(['Total Seismic Risk Score', '', '', f"<b>{total_risk:.1f} / 100</b>"])
+            
+            eq_table = Table(eq_rows, colWidths=[8*cm, 3*cm, 3.5*cm, 3.5*cm])
+            eq_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#607d8b')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('PADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#eceff1')),
+            ]))
+            elements.append(eq_table)
+            
+            # Explanation of conversion
+            elements.append(Spacer(1, 10))
+            conv_text = f"<b>Safety Score Contribution:</b> The Risk Score ({total_risk:.1f}) is inverted to calculate the Safety Score for the USS: <br/>" \
+                        f"Safety Score = 25 * (1 - ({total_risk:.1f} / 100)) = <b>{report_data['scores']['earthquake']['score']:.1f} / 25</b>"
+            elements.append(Paragraph(conv_text, body_style))
+            elements.append(Spacer(1, 25))
         
         elements.append(Paragraph("KEY FINDINGS", heading_style))
         
@@ -1850,6 +1923,7 @@ def generate_sustainability_pdf_report(report_data):
         • Air Quality Score (25 pts): Derived from PM2.5 concentration using EPA AQI methodology<br/>
         • Urban Heat Score (25 pts): Based on LST deviation from comfort threshold (25°C)<br/>
         • Future Risk Score (25 pts): 5-year trend analysis for environmental risk prediction<br/>
+        • Seismic Safety Score (25 pts): Based on Zone Factor, PGA, and Exposure indices<br/>
         <br/>
         <b>Classification:</b><br/>
         • 80-100: Excellent (Highly sustainable environment)<br/>

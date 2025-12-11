@@ -1,3 +1,4 @@
+
 import streamlit as st
 import ee
 import folium
@@ -81,11 +82,12 @@ st.markdown("""
         margin-top: 0.5rem;
     }
     .module-label {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         color: #94a3b8;
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-top: 0.5rem;
+        min-height: 2em;
     }
     .section-title {
         font-size: 1.5rem;
@@ -152,7 +154,7 @@ auto_initialize_gee()
 
 render_page_header(
     "📊 Comprehensive Sustainability Report",
-    "Multi-dimensional environmental assessment combining vegetation, air quality, urban heat, and predictive analytics"
+    "Multi-dimensional environmental assessment combining vegetation, air quality, urban heat, seismic risk, and predictive analytics"
 )
 
 if 'report_data' not in st.session_state:
@@ -301,7 +303,7 @@ if st.session_state.preview_geojson and not st.session_state.report_data:
         st.info(f"Selected region: **{st.session_state.preview_region_name}**. Click 'Generate Report' in the sidebar to analyze this area.")
 
 if generate_btn and geometry:
-    with st.spinner(f"Analyzing {region_name}... This may take 1-2 minutes."):
+    with st.spinner(f"Analyzing {region_name}... fetching data for Soil, Air, Heat, and Seismic Risk..."):
         try:
             report_data = generate_comprehensive_report(
                 geometry, 
@@ -325,7 +327,7 @@ if st.session_state.report_data:
     
     st.markdown(f"<h2 style='text-align: center; color: #94a3b8; margin-bottom: 2rem;'>📍 {report['region_name']} | {report['year']}</h2>", unsafe_allow_html=True)
     
-    col_uss, col_modules = st.columns([1, 2])
+    col_uss, col_modules = st.columns([1, 2.5])
     
     with col_uss:
         st.markdown(f"""
@@ -340,13 +342,14 @@ if st.session_state.report_data:
         """, unsafe_allow_html=True)
     
     with col_modules:
-        m_cols = st.columns(4)
+        m_cols = st.columns(5)
         
         modules = [
             ("🌿 Vegetation", scores['vegetation']),
             ("💨 Air Quality", scores['aqi']),
             ("🌡️ Urban Heat", scores['heat']),
-            ("🔮 Future Risk", scores['prediction'])
+            ("🔮 Future Risk", scores['prediction']),
+            ("🌋 Earthquake", scores['earthquake'])
         ]
         
         for i, (name, data) in enumerate(modules):
@@ -369,19 +372,19 @@ if st.session_state.report_data:
     
     st.markdown('<div class="section-title">🗺️ Environmental Maps</div>', unsafe_allow_html=True)
     
-    map_cols = st.columns(2)
+    map_cols = st.columns(3)
     
     tile_urls = report.get('tile_urls', {})
     
     center = st.session_state.report_center
     
     with map_cols[0]:
-        st.markdown("**NDVI - Vegetation Health**")
+        st.markdown("**NDVI - Vegetation**")
         m1 = create_base_map(center[0], center[1], zoom=10)
         if 'ndvi' in tile_urls and tile_urls['ndvi']:
             add_tile_layer(m1, tile_urls['ndvi'], "NDVI", opacity=0.8)
         add_layer_control(m1)
-        st_folium(m1, height=300, use_container_width=True, key="map_ndvi")
+        st_folium(m1, height=250, use_container_width=True, key="map_ndvi")
         
     with map_cols[1]:
         st.markdown("**Land Use/Land Cover**")
@@ -389,17 +392,28 @@ if st.session_state.report_data:
         if 'lulc' in tile_urls and tile_urls['lulc']:
             add_tile_layer(m2, tile_urls['lulc'], "LULC", opacity=0.8)
         add_layer_control(m2)
-        st_folium(m2, height=300, use_container_width=True, key="map_lulc")
-    
+        st_folium(m2, height=250, use_container_width=True, key="map_lulc")
+        
+    with map_cols[2]:
+        st.markdown("**Seismic Hazard (Relative)**")
+        m5 = create_base_map(center[0], center[1], zoom=10)
+        # Assuming earthquake map tile available
+        if 'earthquake' in tile_urls and tile_urls['earthquake']:
+             add_tile_layer(m5, tile_urls['earthquake'], "Seismic Risk", opacity=0.7)
+        else:
+             # Just show base map with a marker or circle
+             folium.Circle(center, radius=5000, color='red', fill=True, fill_opacity=0.2).add_to(m5)
+        add_layer_control(m5)
+        st_folium(m5, height=250, use_container_width=True, key="map_eq")
+
     map_cols2 = st.columns(2)
-    
     with map_cols2[0]:
         st.markdown("**PM2.5 Concentration**")
         m3 = create_base_map(center[0], center[1], zoom=10)
         if 'pm25' in tile_urls and tile_urls['pm25']:
             add_tile_layer(m3, tile_urls['pm25'], "PM2.5", opacity=0.8)
         add_layer_control(m3)
-        st_folium(m3, height=300, use_container_width=True, key="map_pm25")
+        st_folium(m3, height=250, use_container_width=True, key="map_pm25")
         
     with map_cols2[1]:
         st.markdown("**Land Surface Temperature**")
@@ -407,7 +421,7 @@ if st.session_state.report_data:
         if 'lst' in tile_urls and tile_urls['lst']:
             add_tile_layer(m4, tile_urls['lst'], "LST", opacity=0.8)
         add_layer_control(m4)
-        st_folium(m4, height=300, use_container_width=True, key="map_lst")
+        st_folium(m4, height=250, use_container_width=True, key="map_lst")
     
     st.markdown("---")
     
@@ -417,17 +431,16 @@ if st.session_state.report_data:
     
     with chart_cols[0]:
         score_data = {
-            'Module': ['Vegetation', 'Air Quality', 'Urban Heat', 'Future Risk'],
+            'Module': ['Vegetation', 'Air Quality', 'Urban Heat', 'Future Risk', 'Earthquake'],
             'Score': [scores['vegetation']['score'], scores['aqi']['score'], 
-                     scores['heat']['score'], scores['prediction']['score']],
-            'Max': [25, 25, 25, 25]
+                     scores['heat']['score'], scores['prediction']['score'], scores['earthquake']['score']],
         }
         
         fig, ax = plt.subplots(figsize=(8, 5), facecolor='#0f172a')
         ax.set_facecolor('#0f172a')
         
         colors = [scores['vegetation']['color'], scores['aqi']['color'], 
-                  scores['heat']['color'], scores['prediction']['color']]
+                  scores['heat']['color'], scores['prediction']['color'], scores['earthquake']['color']]
         
         bars = ax.barh(score_data['Module'], score_data['Score'], color=colors, height=0.6)
         ax.barh(score_data['Module'], [25-s for s in score_data['Score']], 
@@ -497,6 +510,9 @@ if st.session_state.report_data:
         
     with st.expander("🔮 Predictive Risk Analysis"):
         st.markdown(report['text_sections']['analysis']['prediction'])
+        
+    with st.expander("🌋 Earthquake Hazard & Safety"):
+        st.markdown(report['text_sections']['analysis']['earthquake'])
     
     st.markdown("---")
     
@@ -511,7 +527,8 @@ if st.session_state.report_data:
             'aqi': [(50, 'good'), (100, 'moderate'), (150, 'poor'), (500, 'critical')],
             'pm25': [(15, 'good'), (35, 'moderate'), (55, 'poor'), (500, 'critical')],
             'lst': [(30, 'good'), (35, 'moderate'), (40, 'poor'), (60, 'critical')],
-            'risk': [(0.3, 'good'), (0.5, 'moderate'), (0.7, 'poor'), (1, 'critical')]
+            'risk': [(0.3, 'good'), (0.5, 'moderate'), (0.7, 'poor'), (1, 'critical')],
+            'eq_risk': [(40, 'good'), (60, 'moderate'), (80, 'poor'), (100, 'critical')]
         }
         for threshold, status in thresholds.get(metric, []):
             if value <= threshold:
@@ -562,6 +579,12 @@ if st.session_state.report_data:
             <td>< 0.3 (Low Risk)</td>
             <td class="status-{get_status_class('risk', metrics['risk'])}">{'Low Risk' if metrics['risk'] < 0.3 else 'Moderate' if metrics['risk'] < 0.6 else 'High Risk'}</td>
         </tr>
+        <tr>
+            <td>Seismic Risk Score</td>
+            <td>{metrics['eq_risk']:.1f}</td>
+            <td>< 40 (Safe)</td>
+            <td class="status-{get_status_class('eq_risk', metrics['eq_risk'])}">{'Low' if metrics['eq_risk'] < 40 else 'Moderate' if metrics['eq_risk'] < 70 else 'High'}</td>
+        </tr>
     </table>
     """, unsafe_allow_html=True)
     
@@ -569,10 +592,13 @@ if st.session_state.report_data:
     
     st.markdown(f'<div class="section-title">⚠️ Priority Focus: {report["weakest_sector"]}</div>', unsafe_allow_html=True)
     
+    # Calculate weakest sector score handling the new module key if needed
+    weakest_key = report['weakest_sector'].lower().replace(' ', '_').replace('future_risk', 'prediction').replace('earthquake_safety', 'earthquake')
+    
     st.markdown(f"""
     <div class="warning-box">
         <strong>Critical Finding:</strong> The <strong>{report['weakest_sector']}</strong> sector has the lowest score 
-        ({scores[report['weakest_sector'].lower().replace(' ', '_').replace('future_risk', 'prediction')]['score'] if report['weakest_sector'] != 'Future Risk' else scores['prediction']['score']:.1f}/25) 
+        ({scores[weakest_key]['score']:.1f}/25) 
         and requires immediate attention.
     </div>
     """, unsafe_allow_html=True)
@@ -631,6 +657,7 @@ if st.session_state.report_data:
         writer.writerow(['PM2.5', f"{metrics['pm25']:.1f}", 'µg/m³', '', ''])
         writer.writerow(['LST', f"{metrics['lst']:.1f}", '°C', f"{scores['heat']['score']:.1f}", scores['heat']['grade']])
         writer.writerow(['Risk Index', f"{metrics['risk']:.2f}", 'index', f"{scores['prediction']['score']:.1f}", scores['prediction']['grade']])
+        writer.writerow(['Seismic Risk', f"{metrics['eq_risk']:.1f}", 'index', f"{scores['earthquake']['score']:.1f}", scores['earthquake']['grade']])
         writer.writerow(['Total USS', f"{scores['total_uss']:.1f}", '/100', '', scores['classification']])
         
         st.download_button(
@@ -646,13 +673,14 @@ else:
     
     st.markdown("### What This Report Includes")
     
-    feature_cols = st.columns(4)
+    feature_cols = st.columns(5)
     
     features = [
         ("🌿", "Vegetation Analysis", "NDVI, land cover, impervious surfaces"),
         ("💨", "Air Quality", "PM2.5, AQI, pollution mapping"),
         ("🌡️", "Urban Heat", "LST, thermal comfort analysis"),
-        ("🔮", "Risk Prediction", "5-year trend analysis, future projections")
+        ("🔮", "Risk Prediction", "5-year trend analysis, future projections"),
+        ("🌋", "Seismic Safety", "Zone classification, earthquake risk")
     ]
     
     for i, (icon, title, desc) in enumerate(features):
@@ -660,8 +688,8 @@ else:
             st.markdown(f"""
             <div class="module-card">
                 <div style="font-size: 2.5rem;">{icon}</div>
-                <div style="font-weight: 600; margin: 0.5rem 0; color: #f1f5f9;">{title}</div>
-                <div style="font-size: 0.85rem; color: #94a3b8;">{desc}</div>
+                <div style="font-weight: 600; margin: 0.5rem 0; color: #f1f5f9; font-size: 0.9rem;">{title}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
 
