@@ -42,7 +42,8 @@ with st.sidebar:
         st.error("GEE Not Connected - Check secrets.toml")
 
 # Main Features Grid
-col1, col2, col3, col4 = st.columns(4)
+# Main Features Grid - Row 1
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("""
@@ -113,6 +114,11 @@ with col3:
                  type="primary"):
         st.switch_page("pages/3_Urban_Heat_Climate.py")
 
+st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
+
+# Main Features Grid - Row 2
+col4, col5, col6 = st.columns(3)
+
 with col4:
     st.markdown("""
     <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.3s; border-color: #8b5cf6;">
@@ -136,8 +142,52 @@ with col4:
                  type="primary"):
         st.switch_page("pages/4_Predictive_Analysis.py")
 
-# Main Features Grid
-col1, col2, col3, col4 = st.columns(4)
+with col5:
+    st.markdown("""
+    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.4s; border-color: #f59e0b;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">🏔️</span> Earthquake Hazard
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Real-time seismic activity tracking, Probabilistic Hazard Mapping, and Risk Reporting.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Real-time USGS Feed</li>
+            <li>Seismic Hazard Zones</li>
+            <li>Risk Scores</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("Explore Hazards →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/5_Earthquake_Hazard.py")
+
+with col6:
+    st.markdown("""
+    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.5s; border-color: #10b981;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">📊</span> Comprehensive Report
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Generate holistic sustainability reports combining all environmental data points.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Sustainability Score</li>
+            <li>Actionable Roadmap</li>
+            <li>PDF Export</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("Generate Report →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/6_Comprehensive_Report.py")
+
 
 st.markdown("---")
 
