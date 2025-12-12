@@ -2,7 +2,8 @@ import streamlit as st
 
 
 def get_enhanced_css():
-    return """
+    from components.map_asset import INDIA_MAP_BASE64
+    css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
@@ -47,10 +48,44 @@ def get_enhanced_css():
             font-weight: 800;
             color: #ffffff !important;
             text-align: center;
-            padding: 2.5rem 0 1rem 0;
+            padding: 4rem 0 2rem 0;
             letter-spacing: -0.03em;
             text-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
             text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-container {
+            position: relative;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            background-image: url('data:image/png;base64,INDIA_MAP_PLACEHOLDER');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+            opacity: 1; /* Container opacity */
+        }
+        
+        /* Pseudo-element for the background image to handle opacity independently if needed, 
+           but putting it on a container and adjusting image colors in generation is often cleaner.
+           Given the prompt asked for "low opacity", we can do it via a mask or just opacity on a pseudo.
+        */
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            background-image: url('data:image/png;base64,INDIA_MAP_PLACEHOLDER');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+            opacity: 0.15; /* Low opacity as requested */
+            z-index: 0;
+            pointer-events: none;
         }
 
         .sub-header {
@@ -514,6 +549,7 @@ def get_enhanced_css():
         }
     </style>
     """
+    return css.replace("INDIA_MAP_PLACEHOLDER", INDIA_MAP_BASE64)
 
 
 def apply_enhanced_css():
@@ -592,8 +628,11 @@ def render_page_header(title, subtitle="", hero=False, show_author=True):
     """
     if hero:
         st.markdown(f"""
-        <div style="text-align: center; padding: 2rem 0 1rem 0;">
-            <h1 class="main-header" style="color: #ffffff !important;">{title}</h1>
+        <div style="position: relative;">
+            <div class="hero-background"></div>
+            <div style="text-align: center; padding: 2rem 0 1rem 0; position: relative; z-index: 2;">
+                <h1 class="main-header" style="color: #ffffff !important; padding: 0 !important;">{title}</h1>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         if subtitle:
