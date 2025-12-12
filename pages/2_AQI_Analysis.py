@@ -233,8 +233,9 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                    popup="Custom Area Center", tooltip="Custom Area")
     
     if run_analysis:
-        with st.spinner("Fetching Sentinel-5P data..."):
+        with st.status("Analyzing Air Quality (Sentinel-5P)...", expanded=True) as status:
             try:
+                st.write("📍 Processing geometry...")
                 if use_uploaded_aoi and uploaded_geometry:
                     geometry = uploaded_geometry
                     st.info("Using uploaded shapefile/GeoJSON geometry")
@@ -250,14 +251,19 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 st.session_state.aqi_tile_urls = {}
                 st.session_state.aqi_primary_pollutant = primary_pollutant
                 
-                for pollutant in selected_pollutants:
+                st.write(f"🛰️ Fetching data for {len(selected_pollutants)} pollutants...")
+                progress_bar = st.progress(0)
+                for i, pollutant in enumerate(selected_pollutants):
                     image = get_pollutant_image(geometry, pollutant, start_str, end_str)
                     if image:
                         st.session_state.pollutant_images[pollutant] = image
                         stats = calculate_pollutant_statistics(image, geometry, pollutant)
                         st.session_state.pollutant_stats[pollutant] = stats
+                    progress_bar.progress((i + 1) / len(selected_pollutants))
+                progress_bar.empty()
                 
                 if primary_pollutant and primary_pollutant in st.session_state.pollutant_images:
+                    st.write(f"🗺️ Generating map layers for {primary_pollutant}...")
                     primary_image = st.session_state.pollutant_images[primary_pollutant]
                     
                     if show_base_layer:
@@ -269,6 +275,7 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                         }
                     
                     if show_anomaly:
+                        st.write("🔍 Calculating anomalies against baseline...")
                         baseline = get_baseline_image(geometry, primary_pollutant)
                         if baseline:
                             anomaly = calculate_anomaly_map(primary_image, baseline)
@@ -286,7 +293,7 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                             vis_params = get_pollutant_vis_params(primary_pollutant)
                             smoothed_url = get_tile_url(smoothed, vis_params)
                             st.session_state.aqi_tile_urls["smoothed"] = {
-                                "url": smoothed_url,
+                                    "url": smoothed_url,
                                 "name": f"{primary_pollutant} Smoothed"
                             }
                     
@@ -301,6 +308,7 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                             }
                 
                 if show_time_series:
+                    st.write("📈 Computing time series analysis...")
                     st.session_state.aqi_time_series = {}
                     for pollutant in selected_pollutants:
                         ts = get_pollutant_time_series(geometry, pollutant, start_str, end_str, interval_days=7)
@@ -309,11 +317,13 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                             st.session_state.aqi_time_series[pollutant] = ts_with_rolling
                 
                 if show_dashboard and len(selected_pollutants) > 1:
+                    st.write("📊 Calculating multi-pollutant correlations...")
                     st.session_state.correlations = calculate_pollutant_correlations(
                         geometry, selected_pollutants, start_str, end_str
                     )
                 
                 if show_timelapse and primary_pollutant:
+                    st.write("🎞️ Generating timelapse animation...")
                     gif_url, error = get_aqi_timelapse(
                         geometry, start_str, end_str, 
                         parameter=primary_pollutant,
@@ -326,9 +336,11 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
                 
                 st.session_state.aqi_analysis_complete = True
                 st.session_state.aqi_pdf = None
+                status.update(label="Analysis Complete!", state="complete", expanded=False)
                 st.success("Analysis complete!")
             
             except Exception as e:
+                status.update(label="Analysis Failed", state="error", expanded=True)
                 st.error(f"Error: {str(e)}")
     
     if st.session_state.get("aqi_tile_urls"):

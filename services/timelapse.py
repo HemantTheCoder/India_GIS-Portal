@@ -171,13 +171,19 @@ def get_lulc_timelapse(region, start_date, end_date, frequency='Yearly'):
     compiled = ee.ImageCollection(indices.map(get_step_img))
     
     video_args = {
-        'dimensions': 600, # Smaller for UI safety
+        'dimensions': 500,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    url = compiled.getVideoThumbURL(video_args)
+    try:
+        url = compiled.getVideoThumbURL(video_args)
+    except ee.EEException as e:
+        # Fallback for large/complex regions
+        video_args['region'] = region.bounds()
+        video_args['dimensions'] = 300
+        url = compiled.getVideoThumbURL(video_args)
     if url:
         return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
@@ -300,14 +306,20 @@ def get_ndvi_timelapse(region, start_date, end_date, frequency='Monthly'):
     compiled = ee.ImageCollection(indices.map(get_monthly_ndvi))
     
     # Define video args
+    # Define video args
     video_args = {
-        'dimensions': 600,
+        'dimensions': 500,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    url = compiled.getVideoThumbURL(video_args)
+    try:
+        url = compiled.getVideoThumbURL(video_args)
+    except ee.EEException as e:
+        video_args['region'] = region.bounds()
+        video_args['dimensions'] = 300
+        url = compiled.getVideoThumbURL(video_args)
     if url:
         return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
@@ -388,13 +400,18 @@ def get_aqi_timelapse(region, start_date, end_date, parameter='PM2.5', frequency
     compiled = ee.ImageCollection(indices.map(get_step_img))
     
     video_args = {
-        'dimensions': 600,
+        'dimensions': 500,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    url = compiled.getVideoThumbURL(video_args)
+    try:
+        url = compiled.getVideoThumbURL(video_args)
+    except ee.EEException as e:
+        video_args['region'] = region.bounds()
+        video_args['dimensions'] = 300
+        url = compiled.getVideoThumbURL(video_args)
     if url:
         return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"
@@ -453,13 +470,18 @@ def get_lst_timelapse(region, start_date, end_date, frequency='Monthly'):
     compiled = ee.ImageCollection(indices.map(get_step_img))
     
     video_args = {
-        'dimensions': 600,
+        'dimensions': 500,
         'region': region,
         'framesPerSecond': 2,
         'crs': 'EPSG:3857'
     }
     
-    url = compiled.getVideoThumbURL(video_args)
+    try:
+        url = compiled.getVideoThumbURL(video_args)
+    except ee.EEException as e:
+        video_args['region'] = region.bounds()
+        video_args['dimensions'] = 300
+        url = compiled.getVideoThumbURL(video_args)
     if url:
         return annotate_video(url, start_date, end_date, frequency)
     return None, "Failed to get GEE URL"

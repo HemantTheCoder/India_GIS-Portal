@@ -148,54 +148,64 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
         if geometry:
-            with st.spinner("Fetching USGS Data & Computing GEE Hazard..."):
-                # 1. Fetch USGS
-                # Get bounds from geometry
-                bounds = geometry.bounds().getInfo() 
-                # bounds is {'type': 'Polygon', 'coordinates': [[...]]}
-                # Simplify: just use lat/lon box for API, clip later
-                coords_list = bounds['coordinates'][0]
-                lons = [c[0] for c in coords_list]
-                lats = [c[1] for c in coords_list]
-                
-                usgs_data = eq_core.fetch_usgs_earthquakes(
-                    min_lat=min(lats), max_lat=max(lats),
-                    min_lon=min(lons), max_lon=max(lons),
-                    min_mag=min_mag,
-                    start_date=start_date,
-                    end_date=end_date
-                )
-                processed_quakes = eq_core.process_earthquake_data(usgs_data)
-                
-                # 2. Zone & Risk
-                zone_info = eq_core.get_seismic_zone(center_coords[0], center_coords[1], region_name)
-                
-                # 3. GEE Hazard
-                hazard_stats = eq_core.analyze_seismic_hazard(geometry) if show_hazard else {}
-                
-                # 4. Risk Score
-                # Proxy density: avg 5000/km2 for urban, using a static for now or derived
-                risk_score = eq_core.calculate_seismic_risk_score(
-                    pga=hazard_stats.get('mean_pga', 0.15),
-                    zone=zone_info['zone'],
-                    historical_count=len(processed_quakes),
-                    exposure_index=0.8 # Mocked high exposure for urban areas
-                )
-                
-                st.session_state.analysis_results = {
-                    'region_name': region_name,
-                    'time_range': f"{start_date} to {end_date}",
-                    'quakes': processed_quakes,
-                    'zone_info': zone_info,
-                    'hazard_stats': hazard_stats,
-                    'risk_score': risk_score,
-                    'stats': {
-                        'total_events': len(processed_quakes),
-                        'max_mag': max([q['magnitude'] for q in processed_quakes]) if processed_quakes else 0,
-                        'avg_depth': sum([q['depth'] for q in processed_quakes])/len(processed_quakes) if processed_quakes else 0
+            with st.status("Analysing Seismic Hazard Risk...", expanded=True) as status:
+                try:
+                    # 1. Fetch USGS
+                    st.write("🌍 Querying USGS Earthquake Catalog...")
+                    # Get bounds from geometry
+                    bounds = geometry.bounds().getInfo() 
+                    # bounds is {'type': 'Polygon', 'coordinates': [[...]]}
+                    # Simplify: just use lat/lon box for API, clip later
+                    coords_list = bounds['coordinates'][0]
+                    lons = [c[0] for c in coords_list]
+                    lats = [c[1] for c in coords_list]
+                    
+                    usgs_data = eq_core.fetch_usgs_earthquakes(
+                        min_lat=min(lats), max_lat=max(lats),
+                        min_lon=min(lons), max_lon=max(lons),
+                        min_mag=min_mag,
+                        start_date=start_date,
+                        end_date=end_date
+                    )
+                    processed_quakes = eq_core.process_earthquake_data(usgs_data)
+                    
+                    # 2. Zone & Risk
+                    st.write("⚠️ Assessing Regional Seismic Zone Risk...")
+                    zone_info = eq_core.get_seismic_zone(center_coords[0], center_coords[1], region_name)
+                    
+                    # 3. GEE Hazard
+                    if show_hazard:
+                        st.write("🗺️ Computing GEE Hazard Layer...")
+                    hazard_stats = eq_core.analyze_seismic_hazard(geometry) if show_hazard else {}
+                    
+                    # 4. Risk Score
+                    st.write("📊 Calculating Final Risk Score...")
+                    # Proxy density: avg 5000/km2 for urban, using a static for now or derived
+                    risk_score = eq_core.calculate_seismic_risk_score(
+                        pga=hazard_stats.get('mean_pga', 0.15),
+                        zone=zone_info['zone'],
+                        historical_count=len(processed_quakes),
+                        exposure_index=0.8 # Mocked high exposure for urban areas
+                    )
+                    
+                    st.session_state.analysis_results = {
+                        'region_name': region_name,
+                        'time_range': f"{start_date} to {end_date}",
+                        'quakes': processed_quakes,
+                        'zone_info': zone_info,
+                        'hazard_stats': hazard_stats,
+                        'risk_score': risk_score,
+                        'stats': {
+                            'total_events': len(processed_quakes),
+                            'max_mag': max([q['magnitude'] for q in processed_quakes]) if processed_quakes else 0,
+                            'avg_depth': sum([q['depth'] for q in processed_quakes])/len(processed_quakes) if processed_quakes else 0
+                        }
                     }
-                }
-                st.success("Analysis Complete!")
+                    status.update(label="Analysis Complete!", state="complete", expanded=False)
+                    st.success("Analysis Complete!")
+                except Exception as e:
+                    status.update(label="Analysis Failed", state="error", expanded=True)
+                    st.error(f"Error: {str(e)}")
         else:
             st.error("Please select a valid region.")
 

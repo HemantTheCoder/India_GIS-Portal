@@ -243,8 +243,9 @@ if city_coords and st.session_state.gee_initialized:
                    popup="Custom Area Center", tooltip="Custom Area")
     
     if run_analysis:
-        with st.spinner("Fetching satellite data and running analysis..."):
+        with st.status("Processing LULC Analysis...", expanded=True) as status:
             try:
+                st.write("📍 Preparing geometry and study area...")
                 if use_uploaded_aoi and uploaded_geometry:
                     geometry = uploaded_geometry
                     st.info("Using uploaded shapefile/GeoJSON geometry")
@@ -259,6 +260,7 @@ if city_coords and st.session_state.gee_initialized:
                 
                 st.session_state.current_geometry = geometry
                 
+                st.write(f"🛰️ Fetching {satellite} imagery ({start_date} to {end_date})...")
                 if satellite == "Sentinel-2":
                     image = get_sentinel2_image(geometry, start_date, end_date)
                     rgb_params_func = get_sentinel_rgb_params
@@ -267,6 +269,7 @@ if city_coords and st.session_state.gee_initialized:
                     rgb_params_func = get_landsat_rgb_params
                 
                 if image is None:
+                    status.update(label="Analysis Failed", state="error", expanded=True)
                     st.error(f"No cloud-free {satellite} images found. Try a different date range.")
                 else:
                     st.session_state.current_image = image
@@ -280,6 +283,7 @@ if city_coords and st.session_state.gee_initialized:
                             st.warning(f"Could not load RGB layer: {str(e)}")
                     
                     if show_lulc:
+                        st.write("🏘️ Classifying Land Use/Land Cover (Dynamic World)...")
                         lulc = get_dynamic_world_lulc(geometry, start_date, end_date)
                         if lulc:
                             lulc_params = get_lulc_vis_params()
@@ -288,9 +292,11 @@ if city_coords and st.session_state.gee_initialized:
                             st.session_state.lulc_stats = calculate_lulc_statistics_with_area(lulc, geometry)
                             
                             if analysis_mode == "Time Series Comparison" and compare_year1 and compare_year2:
+                                st.write("📅 Analyzing time series changes...")
                                 stats1, stats2, _ = get_lulc_change_analysis(geometry, compare_year1, compare_year2)
                                 st.session_state.time_series_stats = (stats1, stats2, compare_year1, compare_year2)
                     
+                    st.write("🌿 Calculating spectral indices...")
                     index_funcs = get_index_functions(satellite)
                     st.session_state.index_images = {}
                     st.session_state.index_means = {}
@@ -313,9 +319,11 @@ if city_coords and st.session_state.gee_initialized:
                     
                     st.session_state.analysis_complete = True
                     st.session_state.lulc_pdf = None
+                    status.update(label="Analysis Complete! Visualization Ready.", state="complete", expanded=False)
                     st.success("Analysis complete!")
             
             except Exception as e:
+                status.update(label="Analysis Failed", state="error", expanded=True)
                 st.error(f"Error: {str(e)}")
             
             if analysis_mode == "Timelapse Animation" and st.session_state.get("current_geometry"):

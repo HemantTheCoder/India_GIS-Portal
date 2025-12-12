@@ -162,6 +162,42 @@ def get_enhanced_css():
             letter-spacing: 0.02em;
         }
 
+        /* Coming Soon Card */
+        .coming-soon-card {
+            background: rgba(15, 23, 42, 0.4); /* Darker/dimmed background */
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin: 1rem 0;
+            border: 1px solid rgba(148, 163, 184, 0.1); /* Greyer border */
+            box-shadow: none;
+            position: relative;
+            overflow: hidden;
+            color: #94a3b8; /* Dimmed text */
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .coming-soon-card:hover {
+            opacity: 1;
+            border-color: rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .coming-soon-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(51, 65, 85, 0.5);
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
         /* Stat Cards */
         .stat-card {
             background: rgba(15, 23, 42, 0.8);

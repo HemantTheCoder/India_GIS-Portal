@@ -57,7 +57,8 @@ def get_ndvi_series(roi, start_date, end_date):
         mean = image.reduceRegion(reducer=ee.Reducer.mean(),
                                   geometry=roi,
                                   scale=100,
-                                  maxPixels=1e9)
+                                  maxPixels=1e9,
+                                  bestEffort=True)
         return ee.Feature(None, {
             'date': image.date().format('YYYY-MM-dd'),
             'value': mean.get('NDVI')
@@ -114,7 +115,8 @@ def get_aqi_series(roi, start_date, end_date, pollutant):
             reducer=ee.Reducer.mean(),
             geometry=roi,
             scale=3000,  # S5P is coarse
-            maxPixels=1e9)
+            maxPixels=1e9,
+            bestEffort=True)
         # Safely handle nulls (clouds/masked pixels)
         val_raw = mean.get(cfg['band'])
         val = ee.Algorithms.If(val_raw,
@@ -150,7 +152,8 @@ def get_lst_series(roi, start_date, end_date):
         mean = image.reduceRegion(reducer=ee.Reducer.mean(),
                                   geometry=roi,
                                   scale=1000,
-                                  maxPixels=1e9)
+                                  maxPixels=1e9,
+                                  bestEffort=True)
         return ee.Feature(
             None, {
                 'date': image.date().format('YYYY-MM-dd'),
@@ -205,7 +208,8 @@ def get_lulc_area_series(roi, start_year, end_year):
             ),
             geometry=roi,
             scale=100,  # 100m scale for performance
-            maxPixels=1e9)
+            maxPixels=1e9,
+            bestEffort=True)
 
         # Client side processing of the group list
         groups = stats.get('groups').getInfo()
@@ -378,103 +382,101 @@ if run_btn:
         st.error("Target year must be in the future!")
         st.stop()
 
-    status_container = st.container()
-
-    with status_container:
-        st.info(
-            f"Fetching data for {selected_city}... Estimated time: ~30 seconds"
-        )
-
-    try:
-        df = pd.DataFrame()
-        title = ""
-        is_multi_class = False
-
-        # --- DATA FETCHING ---
-        if target_category == "Urban Heat (LST)":
-            df = get_lst_series(roi, start_date, end_date)
-            title = "Land Surface Temperature"
-
-        elif target_category == "Vegetation (NDVI)":
-            df = get_ndvi_series(roi, start_date, end_date)
-            title = "Vegetation Health (NDVI)"
-
-        elif target_category == "Air Quality (AQI)":
-            df = get_aqi_series(roi, start_date, end_date, target_param)
-            title = f"Air Quality: {target_param}"
-
-        elif target_category == "Land Cover (LULC)":
-            st.info("Calculating annual class areas (multi-class)...")
-            df = get_lulc_area_series(roi, train_start_year,
-                                      datetime.now().year)
-            title = "Land Cover Composition"
-            is_multi_class = True
-
-        if df.empty:
-            st.error("No data found. Try a different parameter or location.")
-            st.stop()
-
-        # --- PREDICTION LOOP ---
-        with status_container:
-            st.info(f"Training {model_choice} models...")
-
-        final_forecast_df = pd.DataFrame()
-        model_metrics = {}
-
-        # Identify columns to predict
-        if is_multi_class:
-            value_cols = [c for c in df.columns if c != 'date']
-        else:
-            value_cols = ['value']
-
-        for col in value_cols:
-            # Prepare data for this specific column
-            sub_df = df[['date', col]].rename(columns={col: 'value'})
-
-            # Simple prep
-            X, y, last_date, features_list = prepare_time_series_data(
-                sub_df, 'date', 'value')
-
-            # Train
-            model_type_code = 'random_forest' if model_choice == "Random Forest" else 'linear'
-            model, metrics = train_forecast_model(X,
-                                                  y,
-                                                  model_type=model_type_code)
-
-            # Store Metrics
-            if 'type' in metrics:
-                model_metrics[col] = f"{metrics['r2']:.2f} ({metrics['type']})"
-            else:
-                model_metrics[col] = f"{metrics['r2']:.2f}"
-
-            # Forecast
-            f_df = generate_forecast(model,
-                                     last_date,
-                                     features_list,
-                                     periods=forecast_days)
-            f_df = f_df.rename(columns={'predicted_value': col})
-
-            if final_forecast_df.empty:
-                final_forecast_df = f_df[['date']]
-
-            final_forecast_df[col] = f_df[col]
-
-        status_container.empty()
-
-        # --- VISUALIZATION ---
-
-        # Parse metrics for display
-        avg_r2_val = 0
+    with st.status("Training Predictive Models...", expanded=True) as status:
+        st.write(f"fetching data for {selected_city}...")
         try:
-            # Extract just the float part for average
-            r2_floats = [
-                float(v.split(' ')[0]) for v in model_metrics.values()
-            ]
-            avg_r2_val = sum(r2_floats) / len(r2_floats)
-        except:
-            pass
+            df = pd.DataFrame()
+            title = ""
+            is_multi_class = False
 
-        st.success(f"Analysis Complete! Average Confidence: {avg_r2_val:.2f}")
+            # --- DATA FETCHING ---
+            if target_category == "Urban Heat (LST)":
+                df = get_lst_series(roi, start_date, end_date)
+                title = "Land Surface Temperature"
+
+            elif target_category == "Vegetation (NDVI)":
+                df = get_ndvi_series(roi, start_date, end_date)
+                title = "Vegetation Health (NDVI)"
+
+            elif target_category == "Air Quality (AQI)":
+                df = get_aqi_series(roi, start_date, end_date, target_param)
+                title = f"Air Quality: {target_param}"
+
+            elif target_category == "Land Cover (LULC)":
+                st.write("Calculating annual class areas (multi-class)...")
+                df = get_lulc_area_series(roi, train_start_year,
+                                          datetime.now().year)
+                title = "Land Cover Composition"
+                is_multi_class = True
+
+            if df.empty:
+                status.update(label="Analysis Failed: No Data", state="error")
+                st.error("No data found. Try a different parameter or location.")
+                st.stop()
+
+            # --- PREDICTION LOOP ---
+            st.write(f"🧠 Training {model_choice} models...")
+
+            final_forecast_df = pd.DataFrame()
+            model_metrics = {}
+
+            # Identify columns to predict
+            if is_multi_class:
+                value_cols = [c for c in df.columns if c != 'date']
+            else:
+                value_cols = ['value']
+
+            for col in value_cols:
+                # Prepare data for this specific column
+                sub_df = df[['date', col]].rename(columns={col: 'value'})
+
+                # Simple prep
+                X, y, last_date, features_list = prepare_time_series_data(
+                    sub_df, 'date', 'value')
+
+                # Train
+                model_type_code = 'random_forest' if model_choice == "Random Forest" else 'linear'
+                model, metrics = train_forecast_model(X,
+                                                      y,
+                                                      model_type=model_type_code)
+
+                # Store Metrics
+                if 'type' in metrics:
+                    model_metrics[col] = f"{metrics['r2']:.2f} ({metrics['type']})"
+                else:
+                    model_metrics[col] = f"{metrics['r2']:.2f}"
+
+                # Forecast
+                f_df = generate_forecast(model,
+                                         last_date,
+                                         features_list,
+                                         periods=forecast_days)
+                f_df = f_df.rename(columns={'predicted_value': col})
+
+                if final_forecast_df.empty:
+                    final_forecast_df = f_df[['date']]
+
+                final_forecast_df[col] = f_df[col]
+
+            # --- VISUALIZATION ---
+
+            # Parse metrics for display
+            avg_r2_val = 0
+            try:
+                # Extract just the float part for average
+                r2_floats = [
+                    float(v.split(' ')[0]) for v in model_metrics.values()
+                ]
+                avg_r2_val = sum(r2_floats) / len(r2_floats)
+            except:
+                pass
+            
+            status.update(label=f"Prediction Complete! (Confidence: {avg_r2_val:.2f})", state="complete", expanded=False)
+            st.success(f"Analysis Complete! Average Confidence: {avg_r2_val:.2f}")
+
+        except Exception as e:
+            status.update(label="Analysis Failed", state="error", expanded=True)
+            st.error(f"Error: {str(e)}")
 
         # --- TREND TIMELAPSE ---
         st.markdown("### 🎞️ Historical Trend Timelapse")
@@ -810,10 +812,7 @@ if run_btn:
                 else:
                     st.caption("PDF generating...")
 
-    except Exception as e:
-        import traceback
-        st.error(f"Analysis Error: {str(e)}")
-        st.code(traceback.format_exc())
+
 
 else:
     # Landing State

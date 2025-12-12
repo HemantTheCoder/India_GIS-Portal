@@ -351,110 +351,113 @@ if run_analysis and geometry:
     st.session_state.warming_trend = None
     
     try:
-        with st.spinner("Analyzing Land Surface Temperature..."):
+        with st.status("Performing Thermal Analysis...", expanded=True) as status:
             start_str = start_date.strftime("%Y-%m-%d")
             end_str = end_date.strftime("%Y-%m-%d")
             
             if "LST Map" in analysis_types:
-                with st.spinner("Generating LST map..."):
-                    lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
-                    if lst_image:
-                        lst_stats = get_lst_statistics(lst_image, geometry)
-                        st.session_state.lst_stats = lst_stats
-                        tile_url = get_lst_tile_url(lst_image, LST_VIS_PARAMS)
-                        if tile_url:
-                            st.session_state.lst_tile_urls['LST'] = {
-                                "url": tile_url,
-                                "name": "Land Surface Temperature"
-                            }
+                st.write("🌡️ Calculating Land Surface Temperature (LST)...")
+                lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
+                if lst_image:
+                    lst_stats = get_lst_statistics(lst_image, geometry)
+                    st.session_state.lst_stats = lst_stats
+                    tile_url = get_lst_tile_url(lst_image, LST_VIS_PARAMS)
+                    if tile_url:
+                        st.session_state.lst_tile_urls['LST'] = {
+                            "url": tile_url,
+                            "name": "Land Surface Temperature"
+                        }
             
             if "UHI Intensity" in analysis_types:
-                with st.spinner("Calculating Urban Heat Island intensity..."):
-                    uhi_image, uhi_stats = calculate_uhi_intensity(
-                        geometry, start_str, end_str, buffer_radius, time_of_day, satellite
-                    )
-                    if uhi_image:
-                        st.session_state.uhi_stats = uhi_stats
-                        tile_url = get_lst_tile_url(uhi_image, UHI_VIS_PARAMS)
-                        if tile_url:
-                            st.session_state.lst_tile_urls['UHI'] = {
-                                "url": tile_url,
-                                "name": "UHI Intensity"
-                            }
+                st.write("🏙️ Assessing Urban Heat Island (UHI) intensity...")
+                uhi_image, uhi_stats = calculate_uhi_intensity(
+                    geometry, start_str, end_str, buffer_radius, time_of_day, satellite
+                )
+                if uhi_image:
+                    st.session_state.uhi_stats = uhi_stats
+                    tile_url = get_lst_tile_url(uhi_image, UHI_VIS_PARAMS)
+                    if tile_url:
+                        st.session_state.lst_tile_urls['UHI'] = {
+                            "url": tile_url,
+                            "name": "UHI Intensity"
+                        }
             
             if "Heat Hotspots" in analysis_types:
-                with st.spinner("Detecting heat hotspots..."):
-                    lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
-                    if lst_image:
-                        hotspots, hotspot_stats = detect_heat_hotspots(lst_image, geometry)
-                        if hotspots:
-                            st.session_state.hotspot_stats = hotspot_stats
-                            tile_url = get_lst_tile_url(hotspots, HOTSPOT_VIS_PARAMS)
-                            if tile_url:
-                                st.session_state.lst_tile_urls['Hotspots'] = {
-                                    "url": tile_url,
-                                    "name": "Heat Hotspots"
-                                }
+                st.write("🔥 Locating thermal hotspots (>90th percentile)...")
+                lst_image = get_mean_lst(geometry, start_str, end_str, time_of_day, satellite)
+                if lst_image:
+                    hotspots, hotspot_stats = detect_heat_hotspots(lst_image, geometry)
+                    if hotspots:
+                        st.session_state.hotspot_stats = hotspot_stats
+                        tile_url = get_lst_tile_url(hotspots, HOTSPOT_VIS_PARAMS)
+                        if tile_url:
+                            st.session_state.lst_tile_urls['Hotspots'] = {
+                                "url": tile_url,
+                                "name": "Heat Hotspots"
+                            }
             
             if "Cooling Zones" in analysis_types:
-                with st.spinner("Identifying cooling zones..."):
-                    cooling, cooling_stats = identify_cooling_zones(
-                        geometry, start_str, end_str, None, time_of_day, satellite
-                    )
-                    if cooling:
-                        st.session_state.cooling_stats = cooling_stats
-                        tile_url = get_lst_tile_url(cooling, COOLING_VIS_PARAMS)
-                        if tile_url:
-                            st.session_state.lst_tile_urls['Cooling'] = {
-                                "url": tile_url,
-                                "name": "Cooling Zones"
-                            }
+                st.write("🌳 Identifying cooling zones (<25th percentile)...")
+                cooling, cooling_stats = identify_cooling_zones(
+                    geometry, start_str, end_str, None, time_of_day, satellite
+                )
+                if cooling:
+                    st.session_state.cooling_stats = cooling_stats
+                    tile_url = get_lst_tile_url(cooling, COOLING_VIS_PARAMS)
+                    if tile_url:
+                        st.session_state.lst_tile_urls['Cooling'] = {
+                            "url": tile_url,
+                            "name": "Cooling Zones"
+                        }
             
             if "LST Anomaly" in analysis_types:
-                with st.spinner("Calculating LST anomaly..."):
-                    baseline_start = f"{baseline_year}-{start_date.month:02d}-{start_date.day:02d}"
-                    baseline_end = f"{baseline_year}-{end_date.month:02d}-{end_date.day:02d}"
-                    
-                    anomaly, anomaly_stats, _ = calculate_lst_anomaly(
-                        geometry, start_str, end_str, baseline_start, baseline_end, time_of_day, satellite
-                    )
-                    if anomaly:
-                        st.session_state.anomaly_stats = anomaly_stats
-                        tile_url = get_lst_tile_url(anomaly, ANOMALY_VIS_PARAMS)
-                        if tile_url:
-                            st.session_state.lst_tile_urls['Anomaly'] = {
-                                "url": tile_url,
-                                "name": "LST Anomaly"
-                            }
+                st.write(f"📈 Computing thermal anomalies vs {baseline_year} baseline...")
+                baseline_start = f"{baseline_year}-{start_date.month:02d}-{start_date.day:02d}"
+                baseline_end = f"{baseline_year}-{end_date.month:02d}-{end_date.day:02d}"
+                
+                anomaly, anomaly_stats, _ = calculate_lst_anomaly(
+                    geometry, start_str, end_str, baseline_start, baseline_end, time_of_day, satellite
+                )
+                if anomaly:
+                    st.session_state.anomaly_stats = anomaly_stats
+                    tile_url = get_lst_tile_url(anomaly, ANOMALY_VIS_PARAMS)
+                    if tile_url:
+                        st.session_state.lst_tile_urls['Anomaly'] = {
+                            "url": tile_url,
+                            "name": "LST Anomaly"
+                        }
             
             if show_time_series or show_warming_trend:
-                with st.spinner("Generating time series data..."):
-                    time_series = get_lst_time_series(
-                        geometry, ts_start_year, ts_end_year, 
-                        time_of_day, satellite, ts_aggregation.lower()
-                    )
-                    st.session_state.lst_time_series = time_series
-                    
-                    if show_warming_trend and time_series:
-                        trend = calculate_warming_trend(time_series)
-                        st.session_state.warming_trend = trend
+                st.write("📅 Generating temperature time series...")
+                time_series = get_lst_time_series(
+                    geometry, ts_start_year, ts_end_year, 
+                    time_of_day, satellite, ts_aggregation.lower()
+                )
+                st.session_state.lst_time_series = time_series
+                
+                if show_warming_trend and time_series:
+                    st.write("🔥 Calculating warming trend...")
+                    trend = calculate_warming_trend(time_series)
+                    st.session_state.warming_trend = trend
 
             if show_timelapse:
-                 with st.spinner("Generating Timelapse..."):
-                     gif_url, error = get_lst_timelapse(
-                         geometry, start_str, end_str,
-                         frequency='Monthly'
-                     )
-                     if gif_url:
-                         st.session_state.lst_timelapse_url = gif_url
-                     elif error:
-                         st.warning(f"Timelapse error: {error}")
+                 st.write("🎞️ Generating thermal timelapse...")
+                 gif_url, error = get_lst_timelapse(
+                     geometry, start_str, end_str,
+                     frequency='Monthly'
+                 )
+                 if gif_url:
+                     st.session_state.lst_timelapse_url = gif_url
+                 elif error:
+                     st.warning(f"Timelapse error: {error}")
             
             st.session_state.lst_analysis_complete = True
             st.session_state.heat_pdf = None
+            status.update(label="Analysis Complete!", state="complete", expanded=False)
             st.success("Analysis complete!")
         
     except Exception as e:
+        status.update(label="Analysis Failed", state="error", expanded=True)
         st.error(f"Error: {str(e)}")
 
 if st.session_state.get("lst_tile_urls"):

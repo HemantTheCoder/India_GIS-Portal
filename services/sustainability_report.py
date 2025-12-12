@@ -289,15 +289,24 @@ def get_score_grade(score, max_score=25):
     else: return "F", "#ef4444"
 
 
-def generate_comprehensive_report(geometry, region_name="Selected Region", year=2023, buffer_km=10):
+def generate_comprehensive_report(geometry, region_name="Selected Region", year=2023, buffer_km=10, status_callback=None):
     """
     Generates comprehensive sustainability report with all data, images, and analysis.
     """
     
+    if status_callback: status_callback("Analyzing Vegetation & Land Use...")
     veg_score, ndvi_val, imp_ratio, ndvi_img, lulc_img, lulc_stats = calculate_vegetation_score(geometry, year)
+    
+    if status_callback: status_callback("Analyzing Air Quality (PM2.5/NO2)...")
     aqi_score, aqi_val, pm25_val, pm25_img, pollutant_stats = calculate_aqi_score(geometry, year)
+    
+    if status_callback: status_callback("Analyzing Urban Heat Islands...")
     heat_score, lst_val, lst_img, lst_stats = calculate_heat_score(geometry, year)
+    
+    if status_callback: status_callback("Projecting Future Risks...")
     pred_score, risk_val, trends, trend_insights = calculate_prediction_score(geometry, year)
+    
+    if status_callback: status_callback("Assessing Seismic Hazard...")
     eq_score, eq_risk_score, zone_info, hazard_stats, eq_risk_data = calculate_earthquake_score(geometry, region_name, imp_ratio)
     
     # Normalizing 5 modules (max 25 each = 125 total) to 0-100 scale

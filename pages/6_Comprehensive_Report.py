@@ -270,6 +270,31 @@ with st.sidebar:
     
     generate_btn = st.button("🚀 Generate Report", type="primary", use_container_width=True)
 
+if generate_btn and geometry:
+    with st.status(f"Analyzing {region_name}...", expanded=True) as status:
+        st.write("🚀 Initializing Comprehensive Sustainability Assessment...")
+        
+        # Callback wrapper to update UI
+        def update_progress(msg):
+            st.write(f"⚙️ {msg}")
+
+        try:
+            report_data = generate_comprehensive_report(
+                geometry, 
+                region_name=region_name, 
+                year=year,
+                buffer_km=buffer_km,
+                status_callback=update_progress
+            )
+            st.session_state.report_data = report_data
+            st.session_state.report_geometry = geometry
+            status.update(label="Report Generation Complete!", state="complete", expanded=False)
+            st.success("Report generated successfully!")
+        except Exception as e:
+            status.update(label="Analysis Failed", state="error", expanded=True)
+            st.error(f"Error generating report: {str(e)}")
+            st.session_state.report_data = None
+
 if st.session_state.preview_geojson and not st.session_state.report_data:
     st.markdown("### 📍 Selected Area Preview")
     
@@ -301,22 +326,6 @@ if st.session_state.preview_geojson and not st.session_state.report_data:
     
     if st.session_state.preview_region_name:
         st.info(f"Selected region: **{st.session_state.preview_region_name}**. Click 'Generate Report' in the sidebar to analyze this area.")
-
-if generate_btn and geometry:
-    with st.spinner(f"Analyzing {region_name}... fetching data for Soil, Air, Heat, and Seismic Risk..."):
-        try:
-            report_data = generate_comprehensive_report(
-                geometry, 
-                region_name=region_name, 
-                year=year,
-                buffer_km=buffer_km
-            )
-            st.session_state.report_data = report_data
-            st.session_state.report_geometry = geometry
-            st.success("Report generated successfully!")
-        except Exception as e:
-            st.error(f"Error generating report: {str(e)}")
-            st.session_state.report_data = None
 
 elif generate_btn and not geometry:
     st.warning("Please select a valid region first.")
