@@ -42,12 +42,15 @@ with st.sidebar:
         st.error("GEE Not Connected - Check secrets.toml")
 
 # Main Features Grid
+# Main Features Grid
+# Main Features Grid
+# Main Features Grid
 # Main Features Grid - Row 1
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown("""
-    <div class="feature-card animate-fade-in" style="height: 100%;">
+    <div class="feature-card animate-fade-in" style="height: 340px; border-color: #84cc16;">
         <div class="card-header">
             <span style="font-size: 1.5rem;">🌍</span> LULC & Vegetation
         </div>
@@ -70,7 +73,7 @@ with col1:
 
 with col2:
     st.markdown("""
-    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.1s;">
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.1s; border-color: #94a3b8;">
         <div class="card-header">
             <span style="font-size: 1.5rem;">🌫️</span> Air Quality
         </div>
@@ -93,7 +96,7 @@ with col2:
 
 with col3:
     st.markdown("""
-    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.2s;">
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.2s; border-color: #ef4444;">
         <div class="card-header">
             <span style="font-size: 1.5rem;">🌡️</span> Urban Heat
         </div>
@@ -114,14 +117,9 @@ with col3:
                  type="primary"):
         st.switch_page("pages/3_Urban_Heat_Climate.py")
 
-st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
-
-# Main Features Grid - Row 2
-col4, col5, col6 = st.columns(3)
-
 with col4:
     st.markdown("""
-    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.3s; border-color: #8b5cf6;">
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.3s; border-color: #8b5cf6;">
         <div class="card-header">
             <span style="font-size: 1.5rem;">🔮</span> AI Prediction
         </div>
@@ -142,9 +140,14 @@ with col4:
                  type="primary"):
         st.switch_page("pages/4_Predictive_Analysis.py")
 
+st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
+
+# Main Features Grid - Row 2
+col5, col6, col7, col8 = st.columns(4)
+
 with col5:
     st.markdown("""
-    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.4s; border-color: #f59e0b;">
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.4s; border-color: #f59e0b;">
         <div class="card-header">
             <span style="font-size: 1.5rem;">🏔️</span> Earthquake Hazard
         </div>
@@ -167,7 +170,7 @@ with col5:
 
 with col6:
     st.markdown("""
-    <div class="feature-card animate-fade-in" style="height: 100%; animation-delay: 0.5s; border-color: #10b981;">
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.5s; border-color: #10b981;">
         <div class="card-header">
             <span style="font-size: 1.5rem;">📊</span> Comprehensive Report
         </div>
@@ -187,6 +190,52 @@ with col6:
                  use_container_width=True,
                  type="primary"):
         st.switch_page("pages/6_Comprehensive_Report.py")
+
+with col7:
+    st.markdown("""
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.6s; border-color: #38bdf8;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">⚖️</span> Comparison Module
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Compare environmental metrics side-by-side between two different regions.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Side-by-side Maps</li>
+            <li>Diff Calculation</li>
+            <li>Radar Chart Overlay</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("Explore Comparison →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/7_Comparison_Module.py")
+
+with col8:
+    st.markdown("""
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.7s; border-color: #f472b6;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">🚀</span> Future Roadmap
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Explore upcoming features, development timelines, and project milestones.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Development Goals</li>
+            <li>Completed Milestones</li>
+            <li>Upcoming Features</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("View Roadmap →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/8_Future_Roadmap.py")
 
 
 st.markdown("---")
