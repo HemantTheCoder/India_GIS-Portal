@@ -232,10 +232,39 @@ with col8:
     """,
                 unsafe_allow_html=True)
 
+
     if st.button("View Roadmap →",
                  use_container_width=True,
                  type="primary"):
         st.switch_page("pages/8_Future_Roadmap.py")
+
+st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
+
+# Main Features Grid - Row 3
+col9, col10, col11, col12 = st.columns(4)
+
+with col9:
+    st.markdown("""
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.8s; border-color: #6366f1;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">📚</span> Methodology & Limitations
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Understand the technical details, data sources, and scoring logic behind the platform.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Data Sources</li>
+            <li>Scoring Algorithms</li>
+            <li>Limitations & Disclaimer</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("Read Methodology →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/9_Methodology_Limitations.py")
 
 
 st.markdown("---")
