@@ -15,6 +15,32 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+st.markdown("""
+<style>
+/* Remove Streamlit default padding */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+/* Hide header & footer */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Remove "Built with Streamlit" space */
+.viewerBadge_container__1QSob {
+    display: none !important;
+}
+
+/* Prevent double scrollbars */
+html, body {
+    overflow: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Fix for module reloading
 if 'components' in sys.modules:
     import importlib
