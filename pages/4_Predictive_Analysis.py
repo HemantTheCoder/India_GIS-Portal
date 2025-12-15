@@ -24,7 +24,31 @@ from services.timelapse import get_ndvi_timelapse, get_aqi_timelapse, get_lst_ti
 # to avoid circular dependencies or complex import paths if those pages aren't designed as modules.
 
 st.set_page_config(layout="wide", page_title="AI Predictive Analysis")
+st.markdown("""
+<style>
+/* Remove Streamlit default padding */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
 
+/* Hide header & footer */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Remove "Built with Streamlit" space */
+.viewerBadge_container__1QSob {
+    display: none !important;
+}
+
+/* Prevent double scrollbars */
+html, body {
+    overflow: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
 auto_initialize_gee()
 apply_enhanced_css()
 
