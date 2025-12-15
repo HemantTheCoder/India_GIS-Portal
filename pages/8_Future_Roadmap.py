@@ -5,7 +5,31 @@ from components.ui import apply_enhanced_css, render_page_header
 st.set_page_config(layout="wide", page_title="Future Roadmap")
 
 apply_enhanced_css()
+st.markdown("""
+<style>
+/* Remove Streamlit default padding */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
 
+/* Hide header & footer */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Remove "Built with Streamlit" space */
+.viewerBadge_container__1QSob {
+    display: none !important;
+}
+
+/* Prevent double scrollbars */
+html, body {
+    overflow: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
 render_page_header("🚀 Feature Roadmap",
                    "Upcoming modules and advanced analytics under development")
 
