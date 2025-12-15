@@ -9,7 +9,31 @@ apply_enhanced_css()
 # Header
 render_page_header("📚 Methodology & Limitations", 
                    "Technical details, data sources, scoring logic, and platform disclaimers")
+st.markdown("""
+<style>
+/* Remove Streamlit default padding */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
 
+/* Hide header & footer */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Remove "Built with Streamlit" space */
+.viewerBadge_container__1QSob {
+    display: none !important;
+}
+
+/* Prevent double scrollbars */
+html, body {
+    overflow: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
 # --- Section 1: Overview ---
 with st.expander("ℹ️ Overview of the GIS Portal", expanded=True):
     st.markdown("""
