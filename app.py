@@ -25,11 +25,6 @@ st.markdown("""
 button[title="View fullscreen"] {
     display: none !important;
 }
-
-/* Extra safety: hide any badge iframe */
-iframe[title="streamlit app"] + div {
-    display: none !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
