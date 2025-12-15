@@ -14,19 +14,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.markdown("""
-<style>
-/* Hide Streamlit footer bar */
-[data-testid="stToolbar"] {
-    display: none !important;
-}
-
-/* Hide bottom-right fullscreen button */
-button[title="View fullscreen"] {
-    display: none !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
