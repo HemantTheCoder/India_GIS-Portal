@@ -1,26 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>India GIS & Remote Sensing Portal</title>
+  <meta charset="UTF-8" />
+  <title>Streamlit App</title>
+
+  <!-- Prevent mobile scaling issues -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;   /* 🔥 critical */
       background: #0e1117;
     }
+
     iframe {
-      width: 100%;
+      position: fixed;   /* 🔥 key */
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
       border: none;
     }
   </style>
 </head>
+
 <body>
-
-<iframe 
-  src="https://india-gis.streamlit.app/?embed=true"
-  allow="fullscreen">
-</iframe>
-
+  <iframe
+    src="https://india-gis.streamlit.app/?embed=true"
+    allowfullscreen
+    loading="eager">
+  </iframe>
 </body>
 </html>
