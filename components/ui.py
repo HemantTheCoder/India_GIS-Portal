@@ -1,4 +1,5 @@
 import streamlit as st
+import contextlib
 
 
 def get_enhanced_css():
@@ -271,6 +272,66 @@ def get_enhanced_css():
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+
+        /* Custom Radar Loader */
+        .custom-loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 9, 17, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-spinner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            border-top-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            animation: radar-spin 1.5s linear infinite;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .radar-spinner::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            background: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #38bdf8;
+        }
+
+        @keyframes radar-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
 
         /* Form Elements Override */
         [data-testid="stSelectbox"] label, [data-testid="stSlider"] label, [data-testid="stDateInput"] label, 
@@ -590,6 +651,27 @@ def get_enhanced_css():
 
 def apply_enhanced_css():
     st.markdown(get_enhanced_css(), unsafe_allow_html=True)
+
+
+@contextlib.contextmanager
+def custom_spinner(text="Processing Earth Data..."):
+    """
+    context manager compatible with st.spinner but uses our custom styled loader.
+    """
+    placeholder = st.empty()
+    placeholder.markdown(f"""
+        <div class="custom-loader-container">
+            <div class="radar-spinner"></div>
+            <div class="loader-text">{text}</div>
+        </div>
+    """, unsafe_allow_html=True)
+    try:
+        yield
+    finally:
+        placeholder.empty()
+
+
+
 
 
 def render_stat_card(value, label, icon="", color_class=""):

@@ -21,7 +21,8 @@ from services.timelapse import get_aqi_timelapse
 from services.insights import generate_aqi_insights
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
-    render_info_box, init_common_session_state, render_pollutant_stat_card
+    render_info_box, init_common_session_state, render_pollutant_stat_card,
+    custom_spinner
 )
 from components.maps import (
     create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
@@ -419,7 +420,7 @@ if city_coords and st.session_state.gee_initialized and selected_pollutants:
             with exp_col1:
                 if st.button("📦 Generate GeoTIFF", use_container_width=True, key="aqi_export"):
                     if primary_pollutant and primary_pollutant in st.session_state.get("pollutant_images", {}):
-                        with st.spinner("Generating..."):
+                        with custom_spinner("Generating GeoTIFF..."):
                             url, error = get_safe_download_url(
                                 st.session_state.pollutant_images[primary_pollutant],
                                 st.session_state.current_geometry,

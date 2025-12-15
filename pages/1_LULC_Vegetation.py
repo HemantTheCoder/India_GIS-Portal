@@ -24,7 +24,7 @@ from services.gee_indices import (
 )
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
-    render_info_box, init_common_session_state
+    render_info_box, init_common_session_state, custom_spinner
 )
 from components.maps import (
     create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
@@ -331,7 +331,7 @@ if city_coords and st.session_state.gee_initialized:
                 gif_url, error = None, None
                 
                 if tl_type == "LULC Map (Land Cover)":
-                    with st.spinner("Generating LULC Timelapse..."):
+                    with custom_spinner("Generating LULC Timelapse..."):
                         from services.timelapse import get_lulc_timelapse
                         gif_url, error = get_lulc_timelapse(
                             geometry, 
@@ -340,7 +340,7 @@ if city_coords and st.session_state.gee_initialized:
                             frequency=frequency
                         )
                 else: # NDVI (Vegetation Index)
-                    with st.spinner("Generating NDVI Timelapse..."):
+                    with custom_spinner("Generating NDVI Timelapse..."):
                         from services.timelapse import get_ndvi_timelapse
                         gif_url, error = get_ndvi_timelapse(
                              geometry, 
@@ -642,7 +642,7 @@ if city_coords and st.session_state.gee_initialized:
             if st.button("🔍 Run Trend Analysis", use_container_width=True, key="run_trends"):
                 geometry = st.session_state.current_geometry
                 
-                with st.spinner("Fetching historical data and calculating trends..."):
+                with custom_spinner("Fetching historical data and calculating trends..."):
                     try:
                         if "LULC Classes" in trend_type:
                             lulc_data = get_historical_lulc_data(geometry, history_start, history_end)
@@ -795,7 +795,7 @@ if city_coords and st.session_state.gee_initialized:
                 )
                 
                 if st.button("📦 Generate GeoTIFF", use_container_width=True):
-                    with st.spinner("Generating..."):
+                    with custom_spinner("Generating GeoTIFF..."):
                         url, error = get_safe_download_url(
                             st.session_state.current_image,
                             st.session_state.current_geometry,

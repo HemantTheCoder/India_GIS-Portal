@@ -11,7 +11,7 @@ from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (auto_initialize_gee, get_city_geometry,
                                process_shapefile_upload,
                                geojson_file_to_ee_geometry)
-from components.ui import apply_enhanced_css, render_page_header
+from components.ui import apply_enhanced_css, render_page_header, custom_spinner
 
 # Import prediction service
 from services.prediction import prepare_time_series_data, train_forecast_model, generate_forecast, calculate_trend_slope
@@ -273,7 +273,7 @@ with st.sidebar:
             shp_files = [f for f in uploaded_files if f.name.endswith('.shp')]
 
             if geojson_files:
-                geom, center, error = geojson_file_to_ee_geometry(
+                geom, center, _, error = geojson_file_to_ee_geometry(
                     geojson_files[0])
                 if error: st.error(error)
                 else:
@@ -283,7 +283,7 @@ with st.sidebar:
                     selected_city = "Custom Area"
 
             elif zip_files or shp_files:
-                geom, center, error = process_shapefile_upload(uploaded_files)
+                geom, center, _, error = process_shapefile_upload(uploaded_files)
                 if error: st.error(error)
                 else:
                     uploaded_geometry = geom
@@ -480,7 +480,7 @@ if run_btn:
 
         # --- TREND TIMELAPSE ---
         st.markdown("### 🎞️ Historical Trend Timelapse")
-        with st.spinner("Generating Trend Timelapse..."):
+        with custom_spinner("Generating Trend Timelapse..."):
             tl_url, tl_error = None, None
             tl_start = start_date
             tl_end = end_date

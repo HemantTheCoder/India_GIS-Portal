@@ -7,6 +7,22 @@ import os
 import zipfile
 
 
+def format_gee_error(e):
+    """Returns a user-friendly error message for common GEE exceptions."""
+    error_msg = str(e)
+    if "Quota exceeded" in error_msg:
+        return "GEE Quota Exceeded. Please wait a moment and try again."
+    if "Too many pixels" in error_msg:
+        return "Region too large. Please reduce the area or increase scale."
+    if "Computation timed out" in error_msg:
+        return "Computation timed out. The analysis is too complex for this region."
+    if "User memory limit exceeded" in error_msg:
+        return "Memory limit exceeded. Try a smaller area."
+    if "Invalid JSON" in error_msg:
+        return "Invalid Service Account Credentials."
+    return f"GEE Error: {error_msg}"
+
+
 def initialize_gee(service_account_key=None):
     try:
         if service_account_key:
@@ -19,6 +35,7 @@ def initialize_gee(service_account_key=None):
         return True
     except Exception as e:
         print(f"GEE initialization error: {e}")
+        st.session_state.gee_error = format_gee_error(e)
         return False
 
 
@@ -96,12 +113,31 @@ def get_safe_download_url(image, geometry, scale=30, max_pixels=5e8):
         })
         return url, None
     except Exception as e:
-        error_msg = str(e)
-        if "Too many pixels" in error_msg:
-            return None, "Too many pixels. Try increasing the scale (resolution) value."
-        if "must be less than or equal to" in error_msg:
-            return None, "File too large (>50MB). Please increase the scale value to reduce file size."
-        return None, f"Export error: {error_msg}"
+        return None, format_gee_error(e)
+
+
+def optimize_geometry(geometry, max_vertices=5000):
+    """
+    Simplifies geometry if it exceeds the vertex threshold.
+    Preserves topology while reducing payload size for GEE.
+    """
+    try:
+        # Calculate total vertices
+        if hasattr(geometry, "geoms"):  # MultiPolygon/GeometryCollection
+            total_coords = sum(len(g.exterior.coords) + sum(len(i.coords) for i in g.interiors) for g in geometry.geoms)
+        else:  # Polygon/Point/LineString
+            total_coords = len(geometry.exterior.coords) + sum(len(i.coords) for i in geometry.interiors)
+
+        if total_coords > max_vertices:
+            print(f"Geometry has {total_coords} vertices. Simplifying...")
+            # Tolerance in degrees. 0.0001 is approx 11 meters at equator.
+            # Start subtle.
+            simplified = geometry.simplify(tolerance=0.001, preserve_topology=True)
+            return simplified
+        return geometry
+    except Exception as e:
+        print(f"Error optimizing geometry: {e}")
+        return geometry
 
 
 def _geometry_to_ee(geometry):
@@ -109,6 +145,9 @@ def _geometry_to_ee(geometry):
     Helper to reliably convert shapely geometry to ee.Geometry
     """
     try:
+        # Optimize geometry first to avoid payload errors
+        geometry = optimize_geometry(geometry)
+
         # Convert to GeoJSON dict/feature
         if hasattr(geometry, "__geo_interface__"):
             geojson = geometry.__geo_interface__
@@ -148,7 +187,7 @@ def process_shapefile_upload(uploaded_files):
             shp_files = [f for f in os.listdir(tmpdir) if f.endswith('.shp')]
 
             if not shp_files:
-                return None, None, "No .shp file found. Please upload a valid shapefile."
+                return None, None, None, "No .shp file found. Please upload a valid shapefile."
 
             shp_path = os.path.join(tmpdir, shp_files[0])
             gdf = gpd.read_file(shp_path)
@@ -164,6 +203,9 @@ def process_shapefile_upload(uploaded_files):
             centroid = geometry.centroid
             center = {"lat": centroid.y, "lon": centroid.x}
 
+            # Get plain GeoJSON for frontend display if needed
+            geojson_data = json.loads(gpd.GeoSeries([geometry]).to_json())
+
             # Convert to Earth Engine Geometry
             ee_geometry, error = _geometry_to_ee(geometry)
 
@@ -173,10 +215,10 @@ def process_shapefile_upload(uploaded_files):
                 ee_geometry = ee.Geometry.Rectangle(
                     [bounds[0], bounds[1], bounds[2], bounds[3]])
 
-            return ee_geometry, center, None
+            return ee_geometry, center, geojson_data, None
 
     except Exception as e:
-        return None, None, f"Error processing shapefile: {str(e)}"
+        return None, None, None, f"Error processing shapefile: {str(e)}"
 
 
 def geojson_file_to_ee_geometry(uploaded_file):
@@ -188,7 +230,7 @@ def geojson_file_to_ee_geometry(uploaded_file):
         if geojson.get("type") == "FeatureCollection":
             features = geojson.get("features", [])
             if not features:
-                return None, None, "No features found in GeoJSON"
+                return None, None, None, "No features found in GeoJSON"
 
             # Simple approach: Load into GeoDataFrame to handle merging easily
             # This is robust because GPD handles CRS and topology
@@ -227,12 +269,12 @@ def geojson_file_to_ee_geometry(uploaded_file):
         ee_geometry, error = _geometry_to_ee(geometry)
 
         if error:
-            return None, None, f"Geometry Conversion Error: {error}"
+            return None, None, None, f"Geometry Conversion Error: {error}"
 
-        return ee_geometry, center, None
+        return ee_geometry, center, geojson, None
 
     except Exception as e:
-        return None, None, f"Error processing GeoJSON: {str(e)}"
+        return None, None, None, f"Error processing GeoJSON: {str(e)}"
 
 
 def sample_pixel_value(image, lat, lon, scale=10):
