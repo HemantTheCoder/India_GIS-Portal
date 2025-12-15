@@ -18,7 +18,31 @@ from components.ui import apply_enhanced_css, render_page_header
 from components.maps import create_base_map, add_tile_layer, add_layer_control
 
 st.set_page_config(layout="wide", page_title="Regional Comparison", page_icon="⚖️")
+st.markdown("""
+<style>
+/* Remove Streamlit default padding */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
 
+/* Hide header & footer */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Remove "Built with Streamlit" space */
+.viewerBadge_container__1QSob {
+    display: none !important;
+}
+
+/* Prevent double scrollbars */
+html, body {
+    overflow: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
 apply_enhanced_css()
 
 # Custom CSS for Comparison
