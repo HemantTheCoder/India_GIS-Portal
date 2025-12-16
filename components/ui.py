@@ -520,8 +520,21 @@ def get_enhanced_css():
         /* Keep default Streamlit header with visible buttons */
 
         /* Hide ONLY the Streamlit branding footer */
-        footer[class*="css"] {
-            visibility: hidden;
+        /* Hide Streamlit Footer & Viewer Badge */
+        footer, footer:after {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0px !important;
+        }
+        
+        div[data-testid="stStatusWidget"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        #MainMenu { 
+            visibility: hidden !important; 
+            display: none !important; 
         }
 
         .stDeployButton {
