@@ -82,7 +82,7 @@ Assesses heat risk based on multiple factors:
 
 ### File Structure
 ```
-├── app.py                      # Main homepage/landing page
+├── Home.py                     # Main homepage/landing page
 ├── pages/
 │   ├── 1_LULC_Vegetation.py   # LULC & vegetation analysis page
 │   ├── 2_AQI_Analysis.py      # Air quality analysis page

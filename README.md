@@ -129,7 +129,7 @@ GeoTIFF export links (Satellite imagery downloads)
 
 🏗️ Project Architecture
 📁 File Structure
-├── app.py              # Main Streamlit application
+├── Home.py             # Main Streamlit application
 ├── india_cities.py     # State-city database with coordinates
 ├── gee_utils.py        # Google Earth Engine helper functions
 ├── pyproject.toml      # Project dependencies
