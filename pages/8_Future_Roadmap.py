@@ -147,23 +147,51 @@ roadmap_phases = {
     ]
 }
 
-def render_roadmap_card(item):
+# Phase Color Mapping
+phase_colors = {
+    "Advanced Hazard Modules": "#ef4444",      # Red
+    "Environmental & Sustainability Analytics": "#22c55e", # Green
+    "Spatial Intelligence & GIS Enhancements": "#3b82f6",  # Blue
+    "Decision Support & Scenario Analysis": "#a855f7",     # Purple
+    "Platform & Research Extensions": "#eab308"            # Yellow/Gold
+}
+
+def render_roadmap_card(item, color):
     """
     Renders a consistent roadmap card with status badge and description.
     """
+    # Dynamic styles using the passed color
+    border_style = f"1px solid {color}50" # 50 = ~30% opacity
+    shadow_style = f"0 0 25px {color}15"  # 15 = ~10% opacity
+    badge_bg = f"{color}20"               # Very transparent background for badge
+    badge_color = f"{color}"              # Text color for badge matches theme
+
     st.markdown(f"""
-<div class="coming-soon-card animate-fade-in" style="height: 100%; min-height: 280px; display: flex; flex-direction: column;">
+<div class="coming-soon-card animate-fade-in" style="
+    height: 100%; 
+    min-height: 280px; 
+    display: flex; 
+    flex-direction: column;
+    border: {border_style};
+    box-shadow: {shadow_style};
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%);
+">
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-<div class="coming-soon-badge" style="margin-bottom: 0;">{item['status']}</div>
+<div class="coming-soon-badge" style="
+    margin-bottom: 0; 
+    background: {badge_bg}; 
+    color: {badge_color}; 
+    border: 1px solid {color}40;
+">{item['status']}</div>
 </div>
 <div class="card-header" style="color: #cbd5e1; font-size: 1.15rem; margin-bottom: 1rem;">
-<span style="font-size: 1.5rem; filter: grayscale(100%); margin-right: 10px;">{item['icon']}</span> {item['title']}
+<span style="font-size: 1.5rem; filter: grayscale(0%); margin-right: 10px; text-shadow: 0 0 10px {color}60;">{item['icon']}</span> {item['title']}
 </div>
 <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; flex-grow: 1;">
 {item['desc']}
 </p>
-<div style="margin-top: auto; opacity: 0.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
-<div style="font-size: 0.75rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+<div style="margin-top: auto; opacity: 0.6; border-top: 1px solid {color}30; padding-top: 0.75rem;">
+<div style="font-size: 0.75rem; color: {color}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; text-shadow: 0 0 10px {color}40;">
 Future Capability
 </div>
 </div>
@@ -173,10 +201,13 @@ Future Capability
 # Main Render Loop
 # Iterate through each phase and render a section
 for phase, items in roadmap_phases.items():
+    # Get color for phase, default to white/grey if missing
+    phase_color = phase_colors.get(phase, "#94a3b8")
+    
     st.markdown(f"""
 <div style="display: flex; align-items: center; margin-top: 2.5rem; margin-bottom: 1.5rem;">
-<h3 style="color: #f1f5f9; margin: 0; font-size: 1.4rem; font-weight: 600;">{phase}</h3>
-<div style="flex-grow: 1; height: 1px; background: rgba(51, 65, 85, 0.5); margin-left: 1.5rem;"></div>
+<h3 style="color: {phase_color}; margin: 0; font-size: 1.4rem; font-weight: 600; text-shadow: 0 0 20px {phase_color}40;">{phase}</h3>
+<div style="flex-grow: 1; height: 1px; background: linear-gradient(90deg, {phase_color}80, transparent); margin-left: 1.5rem;"></div>
 </div>
 """, unsafe_allow_html=True)
     
@@ -185,7 +216,7 @@ for phase, items in roadmap_phases.items():
     cols = st.columns(3)
     for i, item in enumerate(items):
         with cols[i % 3]:
-            render_roadmap_card(item)
+            render_roadmap_card(item, phase_color)
 
 # Footer Note
 st.markdown("---")
