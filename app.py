@@ -7,6 +7,7 @@ sys.path.append(
 
 from services.gee_core import auto_initialize_gee
 from components.ui import apply_enhanced_css, render_page_header, init_common_session_state
+from components.theme_manager import ThemeManager
 
 st.set_page_config(
     page_title="India GIS & Remote Sensing Portal",
@@ -54,9 +55,17 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
+# Initialize Theme Manager
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+theme_manager.render_theme_controls()
+
 render_page_header(
-    "🛰️ India GIS & Remote Sensing Portal",
-    "Advanced Earth Observation and Environmental Analysis platform powered by Google Earth Engine. Monitor LULC changes, Air Quality, and Urban Heat trends with precision.",
+    theme_manager.get_text("🛰️ India GIS & Remote Sensing Portal"),
+    theme_manager.get_text(
+        "Advanced Earth Observation and Environmental Analysis platform powered by Google Earth Engine. Monitor LULC changes, Air Quality, and Urban Heat trends with precision.",
+        "⚠️ WARNING: dimensional breach detected. Environmental sensors are picking up anomalous readings from the Upside Down. Proceed with extreme caution."
+    ),
     hero=True
 )
 
@@ -75,10 +84,10 @@ with st.sidebar:
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; border-color: #84cc16;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">🌍</span> LULC & Vegetation
+            <span style="font-size: 1.5rem;">🌍</span> {theme_manager.get_text("LULC & Vegetation")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Analyze Land Use, Land Cover, and Vegetation Indices using Sentinel-2 and Dynamic World data.
@@ -98,10 +107,10 @@ with col1:
         st.switch_page("pages/1_LULC_Vegetation.py")
 
 with col2:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.1s; border-color: #94a3b8;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">🌫️</span> Air Quality
+            <span style="font-size: 1.5rem;">🌫️</span> {theme_manager.get_text("Air Quality")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Monitor atmospheric pollutants and visualize trends using high-resolution Sentinel-5P imagery.
@@ -121,10 +130,10 @@ with col2:
         st.switch_page("pages/2_AQI_Analysis.py")
 
 with col3:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.2s; border-color: #ef4444;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">🌡️</span> Urban Heat
+            <span style="font-size: 1.5rem;">🌡️</span> {theme_manager.get_text("Urban Heat")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Investigate Land Surface Temperature patterns and Urban Heat Island effects using MODIS data.
@@ -144,10 +153,10 @@ with col3:
         st.switch_page("pages/3_Urban_Heat_Climate.py")
 
 with col4:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.3s; border-color: #8b5cf6;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">🔮</span> AI Prediction
+            <span style="font-size: 1.5rem;">🔮</span> {theme_manager.get_text("AI Prediction", "Prophecy Module")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Forecast future environmental trends using Machine Learning and historical data.
@@ -172,10 +181,10 @@ st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 col5, col6, col7, col8 = st.columns(4)
 
 with col5:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.4s; border-color: #f59e0b;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">🏔️</span> Earthquake Hazard
+            <span style="font-size: 1.5rem;">🏔️</span> {theme_manager.get_text("Earthquake Hazard", "Seismic Rift Events")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Real-time seismic activity tracking, Probabilistic Hazard Mapping, and Risk Reporting.
@@ -195,10 +204,10 @@ with col5:
         st.switch_page("pages/5_Earthquake_Hazard.py")
 
 with col6:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.5s; border-color: #10b981;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">📊</span> Comprehensive Report
+            <span style="font-size: 1.5rem;">📊</span> {theme_manager.get_text("Comprehensive Report")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Generate holistic sustainability reports combining all environmental data points.
@@ -218,10 +227,10 @@ with col6:
         st.switch_page("pages/6_Comprehensive_Report.py")
 
 with col7:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.6s; border-color: #38bdf8;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">⚖️</span> Comparison Module
+            <span style="font-size: 1.5rem;">⚖️</span> {theme_manager.get_text("Comparison Module", "Dimensional Rift Compare")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Compare environmental metrics side-by-side between two different regions.
@@ -241,10 +250,10 @@ with col7:
         st.switch_page("pages/7_Comparison_Module.py")
 
 with col8:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.7s; border-color: #f472b6;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">🚀</span> Future Roadmap
+            <span style="font-size: 1.5rem;">🚀</span> {theme_manager.get_text("Future Roadmap", "Expansion Protocol")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Explore upcoming features, development timelines, and project milestones.
@@ -270,10 +279,10 @@ st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 col9, col10, col11, col12 = st.columns(4)
 
 with col9:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.8s; border-color: #6366f1;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">📚</span> Methodology & Limitations
+            <span style="font-size: 1.5rem;">📚</span> {theme_manager.get_text("Methodology & Limitations", "Classified Archives")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Understand the technical details, data sources, and scoring logic behind the platform.

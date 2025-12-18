@@ -1,10 +1,15 @@
 import streamlit as st
 import sys
 from components.ui import apply_enhanced_css, render_page_header
+from components.theme_manager import ThemeManager
 
 st.set_page_config(layout="wide", page_title="Future Roadmap")
 
 apply_enhanced_css()
+
+# Initialize Theme Manager
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
 
 # Custom CSS for this page to handle layout specifics
 st.markdown("""
@@ -29,8 +34,13 @@ html, body {
 </style>
 """, unsafe_allow_html=True)
 
-render_page_header("🚀 Feature Roadmap",
-                   "Strategic vision for platform evolution and advanced capabilities")
+render_page_header(
+    theme_manager.get_text("🚀 Project Roadmap & Future Modules"),
+    theme_manager.get_text(
+        "Upcoming features, planned expansions, and development milestones.",
+        "🚧 EXPANSION PROTOCOL: The gate is opening. Future anomalies incoming."
+    )
+)
 
 # Introductory Note
 st.markdown("""

@@ -1,14 +1,22 @@
 import streamlit as st
 from components.ui import apply_enhanced_css, render_page_header, render_info_box
+from components.theme_manager import ThemeManager
 
-st.set_page_config(layout="wide", page_title="Methodology & Limitations")
-
-# Apply Theme
+st.set_page_config(page_title="Methodology & Limitations", page_icon="📚", layout="wide")
 apply_enhanced_css()
 
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+
 # Header
-render_page_header("📚 Methodology & Limitations", 
-                   "Technical details, data sources, scoring logic, and platform disclaimers")
+render_page_header(
+    theme_manager.get_text("📚 Methodology & Limitations"),
+    theme_manager.get_text(
+        "Technical details, data sources, scoring algorithms, and known limitations.",
+        "📁 CLASSIFIED ARCHIVES: The truth behind the observations. Handle with clearance."
+    )
+)
 st.markdown("""
 <style>
 /* Remove Streamlit default padding */

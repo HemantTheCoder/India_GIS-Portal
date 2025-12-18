@@ -23,8 +23,9 @@ from services.timelapse import get_lst_timelapse
 from services.insights import generate_uhi_insights
 from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
-    render_info_box, init_common_session_state
+    render_info_box, init_common_session_state, custom_spinner
 )
+from components.theme_manager import ThemeManager
 from components.maps import (
     create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
     add_geojson_boundary
@@ -75,9 +76,17 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+theme_manager.render_hazard_overlay("heat")
+
 render_page_header(
-    "🌡️ Urban Heat & Climate Analysis",
-    "Land Surface Temperature, Urban Heat Islands, and Climate Trends"
+    theme_manager.get_text("🌡️ Urban Heat & Climate"),
+    theme_manager.get_text(
+        "Analyze Land Surface Temperature (LST) and Urban Heat Island (UHI) effects using MODIS data.",
+        "🔥 THERMAL ANOMALY: Surface temperatures fluctuating wildly. Identifying dimensional heat signatures."
+    )
 )
 
 if "lst_analysis_complete" not in st.session_state:

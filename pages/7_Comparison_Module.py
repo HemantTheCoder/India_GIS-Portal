@@ -14,7 +14,8 @@ from services.comparison_service import perform_comparison
 from services.comparison_export import generate_comparison_pdf
 from services.gee_core import auto_initialize_gee
 from india_cities import INDIA_DATA as INDIA_CITIES
-from components.ui import apply_enhanced_css, render_page_header
+from components.ui import apply_enhanced_css, render_page_header, init_common_session_state, custom_spinner
+from components.theme_manager import ThemeManager
 from components.maps import create_base_map, add_tile_layer, add_layer_control
 
 st.set_page_config(layout="wide", page_title="Regional Comparison", page_icon="⚖️")
@@ -83,10 +84,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 auto_initialize_gee()
+init_common_session_state()
+apply_enhanced_css()
+
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
 
 render_page_header(
-    "⚖️ Regional Comparison Module",
-    "Compare environmental sustainability metrics side-by-side between two regions"
+    theme_manager.get_text("⚖️ Regional Comparison Module"),
+    theme_manager.get_text(
+        "Compare environmental metrics side-by-side between two regions.",
+        "⚙️ DIMENSIONAL RIFT COMPARE: Assessing divergence between two reality zones."
+    )
 )
 
 # --- Sidebar Inputs ---

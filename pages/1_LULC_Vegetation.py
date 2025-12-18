@@ -26,6 +26,7 @@ from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
     render_info_box, init_common_session_state, custom_spinner
 )
+from components.theme_manager import ThemeManager
 from components.maps import (
     create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
     add_geojson_boundary
@@ -84,14 +85,21 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+
 render_page_header(
-    "🌍 LULC & Vegetation Analysis",
-    "Analyze Land Use, Land Cover, and Vegetation Indices for Indian Cities"
+    theme_manager.get_text("🌍 LULC & Vegetation Analysis"),
+    theme_manager.get_text(
+        "Analyze Land Use/Land Cover changes and Vegetation Health (NDVI) using Sentinel-2 and Dynamic World data.",
+        "⚠️ ANALYSIS LOG: Scanning biological overgrowth and anomalous terrain shifts in the Upside Down."
+    )
 )
 
 with st.sidebar:
     st.markdown("## 🔐 GEE Status")
-    if st.session_state.gee_initialized:
+    if st.session_state.get('gee_initialized', False):
         st.success("GEE Connected")
     else:
         st.error("GEE Not Connected")

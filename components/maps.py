@@ -4,10 +4,21 @@ from streamlit_folium import st_folium
 from folium.plugins import Draw
 
 def create_base_map(lat, lon, zoom=11, enable_drawing=False):
+    # Check for Upside Down Mode
+    theme_mode = st.session_state.get('theme_mode', 'standard')
+    
+    if theme_mode == 'upside_down':
+        tiles = "CartoDB dark_matter"
+        attr = "CartoDB Dark Matter"
+    else:
+        tiles = "OpenStreetMap"
+        attr = "OpenStreetMap"
+
     m = folium.Map(
         location=[lat, lon],
         zoom_start=zoom,
-        tiles="OpenStreetMap",
+        tiles=tiles,
+        attr=attr if tiles != "OpenStreetMap" else None
     )
     
     if enable_drawing:

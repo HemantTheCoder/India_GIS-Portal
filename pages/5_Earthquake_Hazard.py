@@ -14,7 +14,8 @@ from services.gee_core import auto_initialize_gee
 from services import earthquake_core as eq_core
 from services import earthquake_export as eq_export
 from india_cities import INDIA_DATA as INDIA_CITIES
-from components.ui import apply_enhanced_css, render_page_header
+from components.ui import apply_enhanced_css, render_page_header, init_common_session_state, custom_spinner
+from components.theme_manager import ThemeManager
 from components.maps import create_base_map, add_tile_layer, add_layer_control
 
 st.set_page_config(layout="wide", page_title="Earthquake Hazard & Monitoring", page_icon=" भूकंप ")
@@ -45,7 +46,13 @@ html, body {
 """, unsafe_allow_html=True)
 # Initialize
 auto_initialize_gee()
+init_common_session_state()
 apply_enhanced_css()
+
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+theme_manager.render_hazard_overlay("earthquake")
 
 # Session State
 if 'eq_data' not in st.session_state: st.session_state.eq_data = []
@@ -89,8 +96,8 @@ st.markdown("""
 
 # Header
 render_page_header(
-    "🏔️ Earthquake Hazard & Real-Time Monitoring",
-    "Real-time seismic activity tracking, Probabilistic Hazard Mapping (GEE), and Automated Risk Reporting."
+    theme_manager.get_text("🏔️ Earthquake Hazard Analysis"),
+    theme_manager.get_text("Real-time USGS Seismic Data & Hazard Zone Mapping")
 )
 
 # --- Sidebar: AOI & Params ---

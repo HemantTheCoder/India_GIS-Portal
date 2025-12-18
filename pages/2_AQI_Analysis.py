@@ -24,6 +24,7 @@ from components.ui import (
     render_info_box, init_common_session_state, render_pollutant_stat_card,
     custom_spinner
 )
+from components.theme_manager import ThemeManager
 from components.maps import (
     create_base_map, add_tile_layer, add_marker, add_buffer_circle, add_layer_control,
     add_geojson_boundary
@@ -95,9 +96,17 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+theme_manager.render_hazard_overlay("aqi")
+
 render_page_header(
-    "🌫️ Air Quality Analysis",
-    "Analyze Air Pollutants using Sentinel-5P Data"
+    theme_manager.get_text("🌫️ Air Quality Analysis"),
+    theme_manager.get_text(
+        "Monitor atmospheric pollutants (NO2, CO, Ozone, SO2) using Sentinel-5P TROPOMI data.",
+        "☣️ TOXICITY ALERT: Atmospheric composition compromised. High levels of dimensional particulates detected."
+    )
 )
 
 if "aqi_analysis_complete" not in st.session_state:

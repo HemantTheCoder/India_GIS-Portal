@@ -11,7 +11,8 @@ from india_cities import get_states, get_cities, get_city_coordinates
 from services.gee_core import (auto_initialize_gee, get_city_geometry,
                                process_shapefile_upload,
                                geojson_file_to_ee_geometry)
-from components.ui import apply_enhanced_css, render_page_header, custom_spinner
+from components.ui import apply_enhanced_css, render_page_header, init_common_session_state, custom_spinner
+from components.theme_manager import ThemeManager
 
 # Import prediction service
 from services.prediction import prepare_time_series_data, train_forecast_model, generate_forecast, calculate_trend_slope
@@ -49,11 +50,20 @@ html, body {
 }
 </style>
 """, unsafe_allow_html=True)
-auto_initialize_gee()
+init_common_session_state()
 apply_enhanced_css()
 
-render_page_header("🔮 AI Predictive Analysis",
-                   "Forecast environmental trends using Machine Learning")
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+
+render_page_header(
+    theme_manager.get_text("🔮 Predictive Analysis"),
+    theme_manager.get_text(
+        "Forecast future environmental trends (NDVI, LST, AQI) using Machine Learning on GEE.",
+        "👁️ FUTURE VISION: Calculating propagation of the Rift. Estimating time until total dimensional overlap."
+    )
+)
 
 # --- Helper Functions for Data Extraction ---
 

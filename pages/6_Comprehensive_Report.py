@@ -12,7 +12,8 @@ import os
 from services.sustainability_report import generate_comprehensive_report
 from services.gee_core import auto_initialize_gee
 from india_cities import INDIA_DATA as INDIA_CITIES
-from components.ui import apply_enhanced_css, render_page_header, render_stat_card
+from components.ui import apply_enhanced_css, render_page_header, init_common_session_state, custom_spinner
+from components.theme_manager import ThemeManager
 from components.maps import create_base_map, add_tile_layer, add_layer_control
 
 import geopandas as gpd
@@ -174,11 +175,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+init_common_session_state()
+apply_enhanced_css()
+
+# Theme Integration
+theme_manager = ThemeManager()
+theme_manager.apply_theme()
+
 auto_initialize_gee()
 
 render_page_header(
-    "📊 Comprehensive Sustainability Report",
-    "Multi-dimensional environmental assessment combining vegetation, air quality, urban heat, seismic risk, and predictive analytics"
+    theme_manager.get_text("📊 Comprehensive Sustainability Report"),
+    theme_manager.get_text(
+        "Generate holistic environmental insights and actionable roadmaps.",
+        "📜 MISSION LOG: Compiling all known anomalies. Sustainability of current dimension is in question."
+    )
 )
 
 if 'report_data' not in st.session_state:
