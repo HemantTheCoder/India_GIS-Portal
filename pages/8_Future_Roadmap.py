@@ -152,7 +152,7 @@ def render_roadmap_card(item):
     Renders a consistent roadmap card with status badge and description.
     """
     st.markdown(f"""
-<div class="coming-soon-card animate-fade-in" style="height: 100%; min-height: 220px; display: flex; flex-direction: column;">
+<div class="coming-soon-card animate-fade-in" style="height: 100%; min-height: 280px; display: flex; flex-direction: column;">
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
 <div class="coming-soon-badge" style="margin-bottom: 0;">{item['status']}</div>
 </div>
