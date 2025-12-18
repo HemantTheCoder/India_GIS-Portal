@@ -70,12 +70,18 @@ with col1:
     render_coming_soon_card("💧", "Hydrological Flood Mapping",
                              "Integrated flood simulation models for river basins using high-resolution terrain data.")
 
+    render_coming_soon_card("🌳", "Carbon Sequestration Tracker",
+                            "Quantifying biomass carbon stocks and potential sequestration zones using multispectral satellite indices.")
+
 with col2:
     render_coming_soon_card("☔", "Rainfall Trend Analysis",
                             "Long-term precipitation pattern recognition and deviation detection for agricultural insights.")
     
     render_coming_soon_card("🏜️", "Drought Monitoring",
                             "Satellite-based drought indices (VCI, TCI) to assess agricultural stress and water scarcity.")
+
+    render_coming_soon_card("📉", "Soil Moisture & Land Degradation",
+                            "Assessment of soil moisture variability and identification of land degradation hotspots employing remote sensing data.")
 
 st.markdown("---")
 st.markdown("""

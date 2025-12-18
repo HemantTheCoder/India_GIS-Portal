@@ -250,9 +250,9 @@ with col8:
             Explore upcoming features, development timelines, and project milestones.
         </p>
         <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Carbon Sequestration</li>
+            <li>Soil Moisture & Degradation</li>
             <li>Cyclone Tracking</li>
-            <li>Flood Mapping</li>
-            <li>Drought Alerts</li>
         </ul>
     </div>
     """,
