@@ -153,23 +153,20 @@ def render_roadmap_card(item):
     """
     st.markdown(f"""
 <div class="coming-soon-card animate-fade-in" style="height: 100%; min-height: 220px; display: flex; flex-direction: column;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-            <div class="coming-soon-badge" style="margin-bottom: 0;">{item['status']}</div>
-    </div>
-    
-    <div class="card-header" style="color: #cbd5e1; font-size: 1.15rem; margin-bottom: 1rem;">
-        <span style="font-size: 1.5rem; filter: grayscale(100%); margin-right: 10px;">{item['icon']}</span> {item['title']}
-    </div>
-    
-    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; flex-grow: 1;">
-        {item['desc']}
-    </p>
-    
-    <div style="margin-top: auto; opacity: 0.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
-        <div style="font-size: 0.75rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
-            Future Capability
-        </div>
-    </div>
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+<div class="coming-soon-badge" style="margin-bottom: 0;">{item['status']}</div>
+</div>
+<div class="card-header" style="color: #cbd5e1; font-size: 1.15rem; margin-bottom: 1rem;">
+<span style="font-size: 1.5rem; filter: grayscale(100%); margin-right: 10px;">{item['icon']}</span> {item['title']}
+</div>
+<p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; flex-grow: 1;">
+{item['desc']}
+</p>
+<div style="margin-top: auto; opacity: 0.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+<div style="font-size: 0.75rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+Future Capability
+</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -178,8 +175,8 @@ def render_roadmap_card(item):
 for phase, items in roadmap_phases.items():
     st.markdown(f"""
 <div style="display: flex; align-items: center; margin-top: 2.5rem; margin-bottom: 1.5rem;">
-    <h3 style="color: #f1f5f9; margin: 0; font-size: 1.4rem; font-weight: 600;">{phase}</h3>
-    <div style="flex-grow: 1; height: 1px; background: rgba(51, 65, 85, 0.5); margin-left: 1.5rem;"></div>
+<h3 style="color: #f1f5f9; margin: 0; font-size: 1.4rem; font-weight: 600;">{phase}</h3>
+<div style="flex-grow: 1; height: 1px; background: rgba(51, 65, 85, 0.5); margin-left: 1.5rem;"></div>
 </div>
 """, unsafe_allow_html=True)
     
