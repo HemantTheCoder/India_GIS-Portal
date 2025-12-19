@@ -735,10 +735,10 @@ class ThemeManager:
         
         # V4: Cinematic Map Effects - Anomaly Ping (Generic for all hazards)
         overlay_html += """
-        <div class="anomaly-ping" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:0px; height:0px; border-radius:50%; border: 2px solid rgba(255,0,0,0.5); z-index:9001; animation: pingRipple 4s infinite;"></div>
+        <div class="anomaly-ping" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:0px; height:0px; border-radius:50%; border: 2px solid rgba(255,0,0,0.5); z-index:9001; pointer-events: none; animation: pingRipple 12s infinite;"></div>
         <style>
         @keyframes pingRipple { 
-            0% { width: 0; height: 0; opacity: 1; border-width: 5px; } 
+            0% { width: 0; height: 0; opacity: 0.4; border-width: 5px; } 
             100% { width: 100vw; height: 100vw; opacity: 0; border-width: 0px; } 
         }
         </style>
