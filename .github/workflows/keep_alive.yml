@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "*/5 * * * *"  # Run every 5 minutes (approx)
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   ping_app:
