@@ -167,19 +167,33 @@ class ThemeManager:
 
             /* --- MOBILE RESPONSIVENESS (Upside Down) --- */
             @media (max-width: 768px) {
-                h1 {
-                    font-size: 1.8rem !important; 
-                    letter-spacing: 1px;
+                html, body {
+                    overflow-x: hidden !important;
+                    width: 100vw !important;
                 }
-                h2 { font-size: 1.5rem !important; }
-                h3 { font-size: 1.2rem !important; }
+                
+                h1 {
+                    font-size: 1.4rem !important; 
+                    letter-spacing: 0px !important;
+                    border-bottom-width: 1px !important;
+                }
+                h2 { font-size: 1.2rem !important; }
+                h3 { font-size: 1.0rem !important; }
                 
                 .stApp {
                     background-image: radial-gradient(circle at 50% 50%, #1a0505 0%, #000000 120%);
+                    background-position: center !important;
+                    background-size: cover !important;
                 }
                 
                 div[data-testid="column"] > div, div[data-testid="stExpander"] {
-                    margin-bottom: 1rem;
+                    margin-bottom: 0.5rem;
+                    padding: 0.75rem !important;
+                }
+
+                /* Disable or contain large background effects on mobile to prevent overflow */
+                .stApp::before, .stApp::after, .fog-container, .scanlines {
+                    display: none !important; /* Hide heavy effects on mobile to fix layout */
                 }
             }
         """
