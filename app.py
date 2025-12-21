@@ -278,6 +278,7 @@ st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 # Main Features Grid - Row 3
 col9, col10, col11, col12 = st.columns(4)
 
+
 with col9:
     st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.8s; border-color: #6366f1;">
@@ -300,6 +301,7 @@ with col9:
                  use_container_width=True,
                  type="primary"):
         st.switch_page("pages/9_Methodology_Limitations.py")
+
 
 
 st.markdown("---")

@@ -1955,3 +1955,5 @@ def generate_sustainability_pdf_report(report_data):
         import traceback
         traceback.print_exc()
         return None
+
+

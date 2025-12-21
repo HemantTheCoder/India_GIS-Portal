@@ -279,7 +279,7 @@ def get_enhanced_css():
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh;
             background: rgba(5, 9, 17, 0.85);
             backdrop-filter: blur(8px);
             z-index: 999999;
@@ -651,6 +651,8 @@ def get_enhanced_css():
             .feature-card, .card, .stat-card {
                 padding: 1.25rem !important;
                 margin: 0.75rem 0;
+                height: auto !important; /* Allow content to dictate height on mobile */
+                min-height: 250px; /* Optional consistency */
             }
             .stApp {
                 background-image: none !important; /* Performance on mobile */

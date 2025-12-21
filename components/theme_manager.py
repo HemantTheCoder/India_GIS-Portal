@@ -164,6 +164,24 @@ class ThemeManager:
                 color: #ff9999 !important;
                 border: 1px solid #500 !important;
             }
+
+            /* --- MOBILE RESPONSIVENESS (Upside Down) --- */
+            @media (max-width: 768px) {
+                h1 {
+                    font-size: 1.8rem !important; 
+                    letter-spacing: 1px;
+                }
+                h2 { font-size: 1.5rem !important; }
+                h3 { font-size: 1.2rem !important; }
+                
+                .stApp {
+                    background-image: radial-gradient(circle at 50% 50%, #1a0505 0%, #000000 120%);
+                }
+                
+                div[data-testid="column"] > div, div[data-testid="stExpander"] {
+                    margin-bottom: 1rem;
+                }
+            }
         """
 
         # Append Effects based on toggles
@@ -200,14 +218,14 @@ class ThemeManager:
         if st.session_state['theme_effects']['fog']:
             css += """
             .scanlines {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
                 background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.05));
                 background-size: 100% 4px; animation: scanlineMove 10s linear infinite; pointer-events: none; z-index: 9991; opacity: 0.15;
             }
             @keyframes scanlineMove { from { background-position: 0 0; } to { background-position: 0 100%; } }
 
             .vignette-glow {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
                 background: radial-gradient(circle, transparent 60%, rgba(50,0,0,0.3) 90%, rgba(20,0,0,0.8) 100%);
                 pointer-events: none; z-index: 9990; animation: vignettePulse 8s ease-in-out infinite;
             }
@@ -500,7 +518,7 @@ class ThemeManager:
             }
 
             .cinematic-overlay {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
                 background: radial-gradient(circle, transparent 40%, rgba(50,0,0,0.8) 100%);
                 z-index: 10000; pointer-events: none;
                 animation: overlayFade 2s ease-in-out forwards !important;
