@@ -230,7 +230,7 @@ with col7:
     st.markdown(f"""
     <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.6s; border-color: #38bdf8;">
         <div class="card-header">
-            <span style="font-size: 1.5rem;">⚖️</span> {theme_manager.get_text("Comparison Module", "Dimensional Rift Compare")}
+            <span style="font-size: 1.5rem;">⚖️</span> {theme_manager.get_text("Comparison Module", "Rift Comparison")}
         </div>
         <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
             Compare environmental metrics side-by-side between two different regions.

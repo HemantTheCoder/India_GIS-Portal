@@ -161,6 +161,8 @@ def get_enhanced_css():
             font-size: 1.2rem;
             color: #f1f5f9;
             letter-spacing: 0.02em;
+            white-space: normal; /* Allow wrapping */
+            line-height: 1.2;
         }
 
         /* Coming Soon Card */
