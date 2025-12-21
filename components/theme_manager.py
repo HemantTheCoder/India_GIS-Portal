@@ -232,14 +232,14 @@ class ThemeManager:
         if st.session_state['theme_effects']['fog']:
             css += """
             .scanlines {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
                 background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.05));
                 background-size: 100% 4px; animation: scanlineMove 10s linear infinite; pointer-events: none; z-index: 9991; opacity: 0.15;
             }
             @keyframes scanlineMove { from { background-position: 0 0; } to { background-position: 0 100%; } }
 
             .vignette-glow {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
                 background: radial-gradient(circle, transparent 60%, rgba(50,0,0,0.3) 90%, rgba(20,0,0,0.8) 100%);
                 pointer-events: none; z-index: 9990; animation: vignettePulse 8s ease-in-out infinite;
             }

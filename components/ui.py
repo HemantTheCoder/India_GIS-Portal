@@ -629,7 +629,13 @@ def get_enhanced_css():
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
+        /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
+            html, body {
+                overflow-x: hidden !important;
+                width: 100% !important;
+            }
+
             .main-header {
                 font-size: 2.2rem !important;
                 padding-top: 1.5rem;
