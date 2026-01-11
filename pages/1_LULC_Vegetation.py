@@ -322,6 +322,7 @@ if city_coords and st.session_state.gee_initialized:
                             lulc_url = get_tile_url(lulc, lulc_params)
                             add_tile_layer(base_map, lulc_url, "LULC", 0.8)
                             st.session_state.lulc_stats = calculate_lulc_statistics_with_area(lulc, geometry)
+                            st.session_state.lulc_image = lulc
                             
                             if analysis_mode == "Time Series Comparison" and compare_year1 and compare_year2:
                                 st.write("📅 Analyzing time series changes...")
@@ -407,26 +408,43 @@ if city_coords and st.session_state.gee_initialized:
             click_lng = map_data["last_clicked"]["lng"]
             st.info(f"📍 Clicked: {click_lat:.4f}, {click_lng:.4f}")
             
+            pixel_vals = {}
+            
+            # Sample LULC Class
+            if st.session_state.get("lulc_image"):
+                try:
+                    lulc_val = sample_pixel_value(st.session_state.lulc_image, click_lat, click_lng)
+                    if lulc_val and "label" in lulc_val:
+                        label_id = int(lulc_val["label"])
+                        class_name = LULC_CLASSES.get(label_id, {}).get("name", f"Unknown ({label_id})")
+                        pixel_vals["Land Cover"] = class_name
+                except Exception as e:
+                    pass
+
+            # Sample Indices
             if st.session_state.get("index_images"):
                 try:
-                    pixel_vals = {}
                     for idx_name, idx_image in st.session_state.index_images.items():
                         if idx_image is not None:
                             val = sample_pixel_value(idx_image, click_lat, click_lng)
                             if val:
-                                pixel_vals[idx_name] = val.get(idx_name, "N/A")
-                    
-                    if pixel_vals:
-                        cols = st.columns(min(len(pixel_vals), 5))
-                        for i, (name, val) in enumerate(pixel_vals.items()):
-                            with cols[i % len(cols)]:
-                                if isinstance(val, (int, float)):
-                                    st.metric(name, f"{val:.3f}")
-                                else:
-                                    st.metric(name, str(val))
+                                val_item = val.get(idx_name)
+                                if val_item is not None:
+                                    pixel_vals[idx_name] = val_item
                 except Exception as e:
                     st.warning(f"Could not sample pixel values: {str(e)}")
-    
+            
+            if pixel_vals:
+                cols = st.columns(min(len(pixel_vals), 5))
+                for i, (name, val) in enumerate(pixel_vals.items()):
+                    with cols[i % len(cols)]:
+                        if isinstance(val, (int, float)):
+                            st.metric(name, f"{val:.3f}")
+                        else:
+                            st.metric(name, str(val))
+            elif not st.session_state.get("index_images") and not st.session_state.get("lulc_image"):
+                 st.info("Run analysis to see pixel values.")
+
     if st.session_state.get("analysis_complete"):
         st.markdown("---")
         
