@@ -7,6 +7,7 @@ from services.gee_lulc import get_sentinel2_image, calculate_lulc_statistics_wit
 from services.gee_aqi import get_pollutant_image, calculate_pollutant_statistics, POLLUTANT_INFO
 from services.gee_lst import get_mean_lst, get_lst_statistics
 from services.gee_indices import calculate_ndvi_sentinel, calculate_ndwi_sentinel, calculate_ndbi_sentinel
+from services.gee_water import get_ndwi_image, calculate_water_statistics, get_precipitation_map
 from services.gee_core import get_tile_url
 
 # Import Earthquake Core Logic
@@ -265,6 +266,47 @@ def calculate_earthquake_score(geometry, region_name, imp_ratio=0.5):
         return 12.5, 50, {'zone': 'Unknown', 'risk': 'Unknown'}, {}, {}
 
 
+def calculate_water_score(geometry, year):
+    """
+    Computes Water Resilience Score (0-25) using NDWI and Rainfall context.
+    Score = 25 * (SurfaceWaterStability + RainfallBuffer)
+    """
+    try:
+        start_date = f"{year}-01-01"
+        end_date = f"{year}-12-31"
+        
+        ndwi_img = get_ndwi_image(geometry, start_date, end_date)
+        water_stats = None
+        if ndwi_img:
+            water_stats = calculate_water_statistics(ndwi_img, geometry)
+            water_area = water_stats.get('area_sq_km', 0) if water_stats else 0
+        else:
+            water_area = 0
+            
+        # Rainfall context
+        rain_img = get_precipitation_map(geometry, start_date, end_date)
+        rain_val = 0
+        if rain_img:
+            rain_stats = rain_img.reduceRegion(
+                reducer=ee.Reducer.mean(),
+                geometry=geometry,
+                scale=1000
+            ).getInfo()
+            rain_val = rain_stats.get('Rainfall', 0) if rain_stats else 0
+
+        # Heuristic score: Higher water area (up to a point) and manageable rainfall = Better Score
+        # For simplicity, we use normalized values
+        water_factor = min(1.0, water_area / 5.0) # Assume 5sqkm is healthy for buffer
+        rain_factor = min(1.0, rain_val / 2000.0)
+        
+        score = 25 * (water_factor * 0.6 + (1 - rain_factor) * 0.4)
+        return max(0, min(25, score)), water_area, rain_val, water_stats
+        
+    except Exception as e:
+        print(f"Error in water score: {e}")
+        return 15, 0, 0, None
+
+
 def get_uss_classification(uss):
     """Returns classification and color based on USS score."""
     if uss >= 80:
@@ -306,13 +348,13 @@ def generate_comprehensive_report(geometry, region_name="Selected Region", year=
     if status_callback: status_callback("Projecting Future Risks...")
     pred_score, risk_val, trends, trend_insights = calculate_prediction_score(geometry, year)
     
-    if status_callback: status_callback("Assessing Seismic Hazard...")
-    eq_score, eq_risk_score, zone_info, hazard_stats, eq_risk_data = calculate_earthquake_score(geometry, region_name, imp_ratio)
+    if status_callback: status_callback("Analyzing Water Resilience (Jala-AI)...")
+    water_score, water_area, rain_val, water_stats = calculate_water_score(geometry, year)
     
-    # Normalizing 5 modules (max 25 each = 125 total) to 0-100 scale
-    # Total = Sum / 1.25
-    sum_scores = veg_score + aqi_score + heat_score + pred_score + eq_score
-    total_uss = sum_scores / 1.25
+    # Normalizing 6 modules (max 25 each = 150 total) to 0-100 scale
+    # Total = Sum / (6 * 0.25) = Sum / 1.5
+    sum_scores = veg_score + aqi_score + heat_score + pred_score + eq_score + water_score
+    total_uss = sum_scores / 1.5
     
     classification, class_color, class_desc = get_uss_classification(total_uss)
     
@@ -321,7 +363,8 @@ def generate_comprehensive_report(geometry, region_name="Selected Region", year=
         "Air Quality": aqi_score,
         "Urban Heat": heat_score,
         "Future Risk": pred_score,
-        "Earthquake Safety": eq_score
+        "Earthquake Safety": eq_score,
+        "Water Resilience": water_score
     }
     weakest_sector = min(scores_dict.keys(), key=lambda k: scores_dict[k])
     strongest_sector = max(scores_dict.keys(), key=lambda k: scores_dict[k])
@@ -363,13 +406,14 @@ def generate_comprehensive_report(geometry, region_name="Selected Region", year=
     heat_grade, heat_color = get_score_grade(heat_score)
     pred_grade, pred_color = get_score_grade(pred_score)
     eq_grade, eq_color = get_score_grade(eq_score)
+    water_grade, water_color = get_score_grade(water_score)
 
     overview_text = f"""
 The **Urban Sustainability Score (USS)** for **{region_name}** is **{total_uss:.1f}/100**, classified as **{classification}**. 
 {class_desc}
 
-This comprehensive assessment integrates satellite-derived data across five critical dimensions:
-vegetation health, air quality, thermal comfort, climate risks, and seismic safety.
+This comprehensive assessment integrates satellite-derived data across six critical dimensions:
+vegetation health, air quality, thermal comfort, climate risks, seismic safety, and water resilience.
 
 **Key Findings:**
 - The region's strongest performance is in **{strongest_sector}** (Score: {scores_dict[strongest_sector]:.1f}/25)
@@ -377,7 +421,7 @@ vegetation health, air quality, thermal comfort, climate risks, and seismic safe
 - Average NDVI: **{ndvi_val:.3f}** | Impervious Surface: **{imp_ratio*100:.1f}%**
 - Air Quality Index: **{aqi_val:.0f}** | PM2.5: **{pm25_val:.1f} µg/m³**
 - Land Surface Temperature: **{lst_val:.1f}°C** | Seismic Zone: **{zone_info['zone']}**
-- Future Risk Index: **{risk_val:.2f}**
+- Future Risk Index: **{risk_val:.2f}** | Water Area: **{water_area:.2f} km²**
 """
 
     veg_status = "healthy and dense" if ndvi_val > 0.5 else "moderate" if ndvi_val > 0.3 else "sparse and concerning"
@@ -433,6 +477,14 @@ The region falls under **Seismic Zone {zone_info['zone']}** ({zone_info['risk']}
 - **Urban Exposure ({eq_risk_data['breakdown']['exposure']['weight']*100:.0f}%):** Score **{eq_risk_data['breakdown']['exposure']['score']}** (Impervious: {imp_ratio*100:.1f}%)
 
 {"⚠️ **Seismic Vulnerability:** The region is in a high-risk zone. Strict adherence to IS 1893:2025 building codes is mandatory." if eq_risk_score > 60 else "✅ Seismic risk is moderate, but standard safety protocols should be maintained."}
+""",
+        "water": f"""
+**Water Resilience Analysis (Score: {water_score:.1f}/25 - Grade {water_grade})**
+
+The hydrological assessment shows a surface water area of **{water_area:.2f} km²** and annual mean rainfall of **{rain_val:.1f} mm**.
+{"⚠️ **Water Stress:** Low surface water availability detected. Consider wetland restoration." if water_area < 0.5 else "The region maintains stable surface water buffers."}
+
+{"🌊 **Flood Preparedness:** High annual rainfall levels require robust urban drainage systems." if rain_val > 1500 else "Rainfall patterns are within manageable historical ranges."}
 """
     }
 
@@ -471,6 +523,13 @@ The region falls under **Seismic Zone {zone_info['zone']}** ({zone_info['risk']}
             "Conduct community evacuation drills and safety training",
             "Establish seismic monitoring and early warning network",
             "Develop rapid response protocols for emergency services"
+        ],
+        "Water Resilience": [
+            "Implement community-based rainwater harvesting systems",
+            "Restore local wetlands and seasonal ponds for natural drainage",
+            "Upgrade urban storm-water infrastructure to prevent flooding",
+            "Map and protect critical groundwater recharge zones",
+            "Deploy AI early-warning sensors for real-time flood monitoring"
         ]
     }
     
@@ -577,6 +636,7 @@ def generate_sustainability_report(geometry, region_name="Selected Region", year
             "Urban Heat": {"score": report["scores"]["heat"]["score"], "value": report["raw_metrics"]["lst"], "metric": "LST (°C)"},
             "Prediction": {"score": report["scores"]["prediction"]["score"], "value": report["raw_metrics"]["risk"], "metric": "Risk Index"},
             "Earthquake": {"score": report["scores"]["earthquake"]["score"], "value": report["raw_metrics"]["eq_risk"], "metric": "Rel. Risk"},
+            "Water Resilience": {"score": report["scores"]["water"]["score"], "value": report["raw_metrics"]["water_area"], "metric": "Area (km²)"},
             "Total USS": report["scores"]["total_uss"],
             "Classification": report["scores"]["classification"]
         },

@@ -1,9 +1,9 @@
 import streamlit as st
 import sys
 
-sys.path.append(
-    r"C:\Users\heman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages"
-)
+# sys.path.append(
+#     r"C:\Users\heman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages"
+# )
 
 from services.gee_core import auto_initialize_gee
 from components.ui import apply_enhanced_css, render_page_header, init_common_session_state
@@ -27,7 +27,7 @@ st.markdown("""
 }
 
 /* Hide header & footer */
-header {visibility: hidden;}
+/* header {visibility: hidden;} */
 footer {visibility: hidden;}
 
 /* Remove "Built with Streamlit" space */
@@ -301,6 +301,30 @@ with col9:
                  use_container_width=True,
                  type="primary"):
         st.switch_page("pages/9_Methodology_Limitations.py")
+
+
+with col10:
+    st.markdown(f"""
+    <div class="feature-card animate-fade-in" style="height: 340px; animation-delay: 0.9s; border-color: #0ea5e9;">
+        <div class="card-header">
+            <span style="font-size: 1.5rem;">💧</span> {theme_manager.get_text("Jala-AI: Water Resilience", "Hydro-Resilience HUD")}
+        </div>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">
+            Advanced hydrological monitoring for floods, droughts, and real-time surface water dynamics. Developed for Water Hackathon 2026.
+        </p>
+        <ul style="color: #f1f5f9; font-size: 0.9rem; margin-bottom: 1.5rem; padding-left: 1.2rem;">
+            <li>Flood Watch (SAR Radar)</li>
+            <li>Surface Water Area (NDWI)</li>
+            <li>Gender-Socio Resilience</li>
+        </ul>
+    </div>
+    """,
+                unsafe_allow_html=True)
+
+    if st.button("Explore Jala-AI →",
+                 use_container_width=True,
+                 type="primary"):
+        st.switch_page("pages/10_Jala_AI_Water_Resilience.py")
 
 
 

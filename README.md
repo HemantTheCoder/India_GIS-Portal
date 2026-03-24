@@ -1,249 +1,174 @@
 📌 India GIS & Remote Sensing Portal
+====================================
 
-A modern, web-based GIS and Remote Sensing application built using Streamlit + Google Earth Engine, designed to analyze Land Use / Land Cover (LULC) and vegetation indices for cities across India.
+A state-of-the-art, web-based GIS and Remote Sensing application built using **Streamlit + Google Earth Engine**. Designed to provide holistic urban analytics, environmental monitoring, and disaster resilience insights for cities across India.
 
-🌍 Overview
+🚀 **Special Edition: WATER INNOVATION HACKATHON 2026**
+This portal now features **Jala-AI**, an advanced hydrological monitoring module developed for the "AI for Disaster Preparedness" track.
 
-This portal enables users to perform geospatial analysis using satellite data, visualize results interactively, and export insights for reporting or research workflows.
+---
 
-It supports:
+## 🌍 Overview
 
-City-level spatial analysis across India
+The portal transforms raw satellite data into actionable intelligence across six critical dimensions of urban sustainability. It enables researchers, urban planners, and disaster management authorities to visualize high-resolution geospatial data and generate comprehensive sustainability reports.
 
-High-resolution satellite imagery
+### ⭐ Core Modules
 
-Dynamic World LULC classification
+1. **🌿 Vegetation & LULC**: Dynamic World land use classification and NDVI health monitoring.
+2. **💨 Air Quality (AQI)**: Sentinel-5P based monitoring of PM2.5, NO2, and other pollutants.
+3. **🔥 Urban Heat & Climate**: Land Surface Temperature (LST) mapping and heat island detection.
+4. **🧠 Predictive Analysis**: AI-driven trend forecasting for urban expansion.
+5. **🌋 Earthquake Hazard**: Seismic zone mapping and comprehensive risk scoring (IS 1893:2025).
+6. **💧 Jala-AI (Water Resilience)**: Radar-based flood watch and surface water dynamics.
 
-Vegetation & urban index computations
+---
 
-Time-series land use change analysis
+## 🛰️ Tech Stack & Data Sources
 
-Custom AOI drawing tools
+- **Framework**: Streamlit (Python)
+- **Engine**: Google Earth Engine (GEE)
+- **Imagery**: Sentinel-1 (Radar), Sentinel-2 (Optical), Landsat 8/9, Sentinel-5P (AQI)
+- **Climate Data**: NASA GPM (Rainfall IMERG), MODIS (Temperature)
+- **Mapping**: Folium, Geemap, Leaflet
 
-Exportable maps and statistics
+---
 
-🚀 Current Status
-Attribute	Status
-Project State	✔️ Complete with enhanced LULC functionality
-Last Updated	December 2, 2025
-Tech Stack	Streamlit • Google Earth Engine • Python
-⭐ Features
-📍 Location Selection
+## 💧 Jal-AI: Water Innovation Feature
 
-Select any Indian state
+Developed for the **Water Innovation Hackathon 2026**, this module focuses on:
 
-Choose from 200+ major cities
+- **Active Flood Watch**: Using Sentinel-1 SAR (Radar) to detect flood inundation through cloud cover during extreme weather.
+- **Surface Water Dynamics**: NDWI-based monitoring of reservoirs, lakes, and wetlands to detect drought patterns.
+- **Rainfall Risk HUD**: Visualizing cumulative precipitation using NASA GPM data.
+- **Gender-Socio Resilience**: Strategic mapping for Women's Self-Help Groups (SHGs) to manage local water accessibility during disasters.
 
-Automatically loads geographic coordinates
+---
 
-Adjustable buffer radius (5–50 km)
+## 📊 Urban Sustainability Score (USS)
 
-🗓️ Date Range & Time Control
+The portal features a unique **USS Engine** that aggregates data from all modules to provide a holistic 0-100 score for any Indian city.
 
-Analyze a single year or custom date range
+- **Grade A (80-100)**: Excellent resilience and environmental health.
+- **Grade F (< 20)**: Critical intervention required.
 
-Support for data starting from 2017
+---
 
-Compare two different years to study land cover change
+## 🏗️ Project Structure
 
-🛰️ Satellite Data Sources
+```text
+├── app.py                      # Main Landing Page & Feature Grid
+├── services/
+│   ├── gee_core.py             # GEE Initialization & Geometry Helpers
+│   ├── gee_water.py            # [NEW] Jala-AI Water Analytics
+│   ├── gee_aqi.py              # Sentinel-5P Pollutant Logic
+│   ├── earthquake_core.py      # Seismic Risk Engine
+│   └── sustainability_report.py # USS Scoring & Report Generation
+├── pages/
+│   ├── 1_LULC_Vegetation.py
+│   ├── 2_AQI_Analysis.py
+│   ├── 10_Jala_AI_Water_Resilience.py # Jala-AI Dashboard
+│   └── ...
+└── components/                 # Reusable UI & Map Components
+```
 
-Sentinel-2 (10m resolution)
+---
 
-Landsat 8/9 (30m resolution)
+## ⚙️ Setup & Authentication
 
-Cloud filtering is automatically applied for optimal imagery quality.
+1. **GEE Credentials**:.
+2. **Environment**:
 
-🏞️ Land Use / Land Cover (LULC) Analysis
+    ```bash
 
-Based on the Google Dynamic World dataset, supporting 9 classes:
+📌 India GIS & Remote Sensing Portal
+====================================
 
-Water
+A state-of-the-art, web-based GIS and Remote Sensing application built using **Streamlit + Google Earth Engine**. Designed to provide holistic urban analytics, environmental monitoring, and disaster resilience insights for cities across India.
 
-Trees
+🚀 **Special Edition: WATER INNOVATION HACKATHON 2026**
+This portal now features **Jala-AI**, an advanced hydrological monitoring module developed for the "AI for Disaster Preparedness" track.
 
-Grass
+---
 
-Crops
+## 🌍 Overview
 
-Shrubland
+The portal transforms raw satellite data into actionable intelligence across six critical dimensions of urban sustainability. It enables researchers, urban planners, and disaster management authorities to visualize high-resolution geospatial data and generate comprehensive sustainability reports.
 
-Built-up
+### ⭐ Core Modules
 
-Bare ground
+1. **🌿 Vegetation & LULC**: Dynamic World land use classification and NDVI health monitoring.
+2. **💨 Air Quality (AQI)**: Sentinel-5P based monitoring of PM2.5, NO2, and other pollutants.
+3. **🔥 Urban Heat & Climate**: Land Surface Temperature (LST) mapping and heat island detection.
+4. **🧠 Predictive Analysis**: AI-driven trend forecasting for urban expansion.
+5. **🌋 Earthquake Hazard**: Seismic zone mapping and comprehensive risk scoring (IS 1893:2025).
+6. **💧 Jala-AI (Water Resilience)**: Radar-based flood watch and surface water dynamics.
 
-Flooded vegetation
+---
 
-Snow/Ice
+## 🛰️ Tech Stack & Data Sources
 
-Includes:
+- **Framework**: Streamlit (Python)
+- **Engine**: Google Earth Engine (GEE)
+- **Imagery**: Sentinel-1 (Radar), Sentinel-2 (Optical), Landsat 8/9, Sentinel-5P (AQI)
+- **Climate Data**: NASA GPM (Rainfall IMERG), MODIS (Temperature)
+- **Mapping**: Folium, Geemap, Leaflet
 
-Interactive map visualization
+---
 
-Color-coded legend
+## 💧 Jala-AI: Water Innovation Feature
 
-Area (km²) and percentage breakdown
+Developed for the **Water Innovation Hackathon 2026**, this module focuses on:
 
-Custom AOI statistics
+- **Active Flood Watch**: Using Sentinel-1 SAR (Radar) to detect flood inundation through cloud cover during extreme weather.
+- **Surface Water Dynamics**: NDWI-based monitoring of reservoirs, lakes, and wetlands to detect drought patterns.
+- **Rainfall Risk HUD**: Visualizing cumulative precipitation using NASA GPM data.
+- **Gender-Socio Resilience**: Strategic mapping for Women's Self-Help Groups (SHGs) to manage local water accessibility during disasters.
 
-🌿 Vegetation & Urban Indices
+---
 
-Compute the following indices dynamically over your AOI:
+## 📊 Urban Sustainability Score (USS)
 
-Index	Purpose
-NDVI	Vegetation health
-NDWI	Water body detection
-NDBI	Built-up area detection
-EVI	Enhanced vegetation index
-SAVI	Soil-adjusted vegetation
+The portal features a unique **USS Engine** that aggregates data from all modules to provide a holistic 0-100 score for any Indian city.
 
-Each index is displayed with a full gradient legend for interpretation.
+- **Grade A (80-100)**: Excellent resilience and environmental health.
+- **Grade F (< 20)**: Critical intervention required.
 
-🗺️ Interactive Map (Folium)
+---
 
-Layer toggles (RGB, LULC, indices, etc.)
+## 🏗️ Project Structure
 
-Zoom, pan, and inspect satellite layers
+```text
+├── app.py                      # Main Landing Page & Feature Grid
+├── services/
+│   ├── gee_core.py             # GEE Initialization & Geometry Helpers
+│   ├── gee_water.py            # [NEW] Jala-AI Water Analytics
+│   ├── gee_aqi.py              # Sentinel-5P Pollutant Logic
+│   ├── earthquake_core.py      # Seismic Risk Engine
+│   └── sustainability_report.py # USS Scoring & Report Generation
+├── pages/
+│   ├── 1_LULC_Vegetation.py
+│   ├── 2_AQI_Analysis.py
+│   ├── 10_Jala_AI_Water_Resilience.py # Jala-AI Dashboard
+│   └── ...
+└── components/                 # Reusable UI & Map Components
+```
 
-Circle AOI based on buffer radius
+---
 
-Custom AOI drawing (rectangle, circle, polygon)
+## ⚙️ Setup & Authentication
 
-📊 Analytics & Statistics
+1. **GEE Credentials**
+2. **Environment**:
 
-Per-class LULC area (km²)
+    ```bash
+    pip install -r requirements.txt
+    streamlit run app.py
+    ```
 
-Percentage distribution
+---
 
-Time-series LULC change analysis
+## 👨‍💻 Author
 
-Informative legends & progress indicators
-
-💾 Export Options
-
-Export outputs for further research & GIS workflows:
-
-CSV files (LULC statistics, change detection tables)
-
-GeoTIFF export links (Satellite imagery downloads)
-
-🏗️ Project Architecture
-📁 File Structure
-├── app.py              # Main Streamlit application
-├── india_cities.py     # State-city database with coordinates
-├── gee_utils.py        # Google Earth Engine helper functions
-├── pyproject.toml      # Project dependencies
-└── .streamlit/
-    └── config.toml     # Streamlit theme & configuration
-
-🔧 Key Components
-india_cities.py
-
-Contains:
-
-The INDIA_DATA dictionary
-
-Mapping of states → major cities → (lat, lon)
-
-Covers 36 States/UTs and 200+ cities
-
-gee_utils.py
-
-Handles all Earth Engine operations:
-
-GEE initialization & authentication
-
-Sentinel-2 & Landsat image retrieval
-
-Cloud masking logic
-
-Dynamic World LULC extraction
-
-Vegetation index computation
-
-LULC statistics & area calculations
-
-Year-to-year LULC change analysis
-
-Generating exportable GeoTIFF URLs
-
-Producing tile layers for Folium display
-
-app.py
-
-Implements:
-
-UI & sidebar layout
-
-State, city, and date selectors
-
-Satellite source selection
-
-AOI selection (buffer or custom geometry)
-
-Map rendering (Folium + Streamlit)
-
-LULC & index visualizations
-
-Time-series comparison panel
-
-Statistics display and download buttons
-
-🎨 User Experience
-
-Clean, intuitive layout
-
-Clear color-coded legends
-
-Progress bars for LULC distribution
-
-Download buttons for quick export
-
-Full-width map display for clarity
-
-⚙️ Technical Notes
-
-Requires a Google Earth Engine service account key
-(stored in st.secrets["GEE_JSON"])
-
-Dynamic World LULC available from 2017
-
-Uses <20% cloud cover for imagery filtering
-
-AOI radius: 5–50 km
-
-Custom AOI supported via Folium Draw tools
-
-📦 Dependencies
-streamlit
-earthengine-api
-folium
-streamlit-folium
-pandas
-numpy
-
-💡 Future Enhancements (Optional)
-
-Potential features to add next:
-
-Sentinel-5P Air Quality (NO₂, SO₂, CO, O₃, CH₄, AAI)
-
-AQI anomaly and plume detection
-
-Multi-layer comparison visualizations
-
-Time-series charts for AQI metrics
-
-Multi-pollutant comparison dashboards
-
-👨‍💻 Author
-
-Hemant Kumar
-LinkedIn: https://www.linkedin.com/in/hemantkumar2430
-geemap
-folium
-streamlit-folium
-pandas
-numpy
-matplotlib
-geopandas
+**Hemant Kumar**  
+*GIS Developer | AI for Sustainability*  
+[LinkedIn](https://www.linkedin.com/in/hemantkumar2430)

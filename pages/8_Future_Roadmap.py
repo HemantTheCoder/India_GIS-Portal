@@ -23,7 +23,7 @@ st.markdown("""
 }
 
 /* Hide Streamlit elements */
-header {visibility: hidden;}
+/* header {visibility: hidden;} */
 footer {visibility: hidden;}
 .viewerBadge_container__1QSob { display: none !important; }
 

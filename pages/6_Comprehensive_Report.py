@@ -34,7 +34,7 @@ st.markdown("""
 }
 
 /* Hide header & footer */
-header {visibility: hidden;}
+/* header {visibility: hidden;} */
 footer {visibility: hidden;}
 
 /* Remove "Built with Streamlit" space */
