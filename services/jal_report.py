@@ -262,14 +262,16 @@ def generate_jal_pdf(
     # ── Section 3: Advisory ──────────────────────────────────
     elems.append(Paragraph("2. Community Early Action Advisory (W-SHG)", h2_style))
     
-    # Simple summary sentence
+    # Simple summary sentence based on exact dashboard tiers
     summary_text = f"Current AI Risk Score for {city_name} is {risk_score:.0f}/100. "
     if risk_score >= 65:
-        summary_text += "<b>CRITICAL:</b> Execute primary disaster response protocols immediately. Evacuate low-lying vulnerability corridors."
+        summary_text += "<b>CRITICAL:</b> Extreme hazard detected. Execute primary disaster response protocols immediately. Evacuate low-lying vulnerability corridors."
     elif risk_score >= 40:
-        summary_text += "<b>WARNING:</b> High runoff and contamination risk. Pre-position water storage kits for SHG network."
+        summary_text += "<b>ALERT:</b> High risk of runoff and contamination. Pre-position water storage kits and activate SHG alert network."
+    elif risk_score >= 20:
+        summary_text += "<b>WATCH:</b> Elevated environmental stress. Monitor rainfall and surface water trends closely. Prepare for early action."
     else:
-        summary_text += "<b>STABLE:</b> No immediate threat detected. Continue standard resilience training."
+        summary_text += "<b>STABLE:</b> No immediate threat detected. Continue standard resilience training and routine water point audits."
     
     elems.append(Paragraph(summary_text, body_style))
     elems.append(Spacer(1, 5))
