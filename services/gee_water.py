@@ -179,7 +179,7 @@ def get_precipitation_map(geometry, start_date, end_date):
             ee.ImageCollection("NASA/GPM_L3/IMERG_V07")
             .filterBounds(geometry)
             .filterDate(start_date, end_date)
-            .select("precipitationCal")
+            .select("precipitation")
             .sum()
             .clip(geometry)
         )

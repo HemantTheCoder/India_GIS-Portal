@@ -190,7 +190,7 @@ if not (has_city_aoi or has_shp_aoi):
         | Sensor | Dataset | Variable | Role in Score | Weight |
         |---|---|---|---|---|
         | **Sentinel-1 SAR** | S1_GRD | Radar backscatter | **Flood Detection** | **30%** |
-        | **NASA GPM** | IMERG_V06 | Precipitation | **Rainfall** (30-day) | **20%** |
+        | **NASA GPM** | IMERG_V07 | Precipitation | **Rainfall** (30-day) | **20%** |
         | **Sentinel-2** | S2_SR | NDWI (Green-NIR) | **Surface Water** | **15%** |
         | **SRTM DEM** | SRTMGL1 | Elevation/Slope | **Terrain Risk** | **10%** |
         | **JRC Water** | JRC/GSW1_4 | Change band | **Historical Trend** | **10%** |
@@ -449,7 +449,7 @@ with col_left:
             <div class="jal-card">
             <b>Rainfall Source</b><br>
             <span style="font-size:0.9rem;color:#94a3b8">NASA GPM IMERG (30-min, global)<br>
-            Collection: NASA/GPM_L3/IMERG_V06</span>
+            Collection: NASA/GPM_L3/IMERG_V07</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -706,7 +706,7 @@ with st.expander("📖 Methodology & Data Sources — How Jal-AI Works", expande
     | Sensor | GEE Collection | Variable | Role in Score | Weight |
     |---|---|---|---|---|
     | **Sentinel-1 SAR** | `COPERNICUS/S1_GRD` | Radar backscatter (VV) | **Flood Detection** — change detection between baseline & event window | **30%** |
-    | **NASA GPM IMERG** | `NASA/GPM_L3/IMERG_V06` | `precipitationCal` | **Rainfall** — 30-day cumulative precipitation (mm) | **20%** |
+    | **NASA GPM IMERG** | `NASA/GPM_L3/IMERG_V07` | `precipitation` | **Rainfall** — 30-day cumulative precipitation (mm) | **20%** |
     | **Sentinel-2** | `COPERNICUS/S2_SR_HARMONIZED` | NDWI = (B3−B8)/(B3+B8) | **Surface Water** — current water area (km²), low area = high deficit risk | **15%** |
     | **SRTM DEM** | `USGS/SRTMGL1_003` | Elevation + Slope | **Terrain Risk** — steep slopes = high runoff; low elevation = flood exposure | **10%** |
     | **JRC Global Surface Water** | `JRC/GSW1_4/GlobalSurfaceWater` | `change_abs` band | **Historical Water Trend** — long-term loss of water bodies signals drought risk | **10%** |
