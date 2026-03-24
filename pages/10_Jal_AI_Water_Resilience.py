@@ -751,6 +751,17 @@ with st.expander("📖 Methodology & Data Sources — How Jal-AI Works", expande
     - **STABLE**: All below threshold — routine monitoring protocols applied
 
     ---
+    
+    #### ⚠️ Limitations & Data Uncertainty
+    
+    Jal-AI relies on public satellite records which have inherent scientific limitations:
+    - **Temporal Latency**: Sentinel-1/2 have a 5-12 day revisit cycle. The "Real-time" analysis reflects the *latest available* scene, not necessarily the current hour.
+    - **Cloud Interference**: Sentinel-2 (NDWI) and MODIS (LST/NDVI) cannot see through thick cloud cover. During heavy storms, Radar (Sentinel-1) is the primary reliable sensor.
+    - **Spatial Resolution**: GPM Rainfall (11km) and MODIS (1km) provide regional trends. Localized "cloudbursts" may be under-reported compared to ground-based rain gauges.
+    - **Vertical Accuracy**: SRTM Elevation data is static (circa 2000). It does not account for recent urban construction, new embankments, or drainage infrastructure.
+    - **Synthetic Fusions**: The Composite Risk Score is an algorithmic estimate. It should supplement, not replace, official government disaster bulletins and local field reports.
+
+    ---
 
     #### 📦 Open-Source Stack
     - **Platform**: Google Earth Engine (GEE) API + Streamlit
