@@ -42,7 +42,7 @@ st.markdown("""
 .block-container{padding-top:0!important;padding-bottom:0!important;}
 header{visibility:hidden;}
 footer{visibility:hidden;}
-html,body{overflow:hidden;}
+html,body{overflow-x:hidden;}
 .jal-card{
     background:rgba(15,23,42,0.7);
     border:1px solid rgba(14,165,233,0.25);

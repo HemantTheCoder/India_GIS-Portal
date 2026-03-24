@@ -619,11 +619,16 @@ def get_enhanced_css():
             color: #94a3b8 !important;
         }
         
-        /* Force popover to stay within viewport */
+        /* Ensure all internal calendar containers have the right background */
+        div[data-baseweb="calendar"], 
+        div[data-baseweb="calendar"] > div {
+            background-color: #1e293b !important;
+        }
+        
+        /* Force popover to stay within viewport and not be too narrow */
         section[data-testid="stSidebar"] div[data-baseweb="popover"] > div {
-            max-width: 280px !important;
-            left: auto !important;
-            right: 10px !important;
+            max-width: 340px !important; 
+            min-width: 300px !important;
         }
 
         /* --- MOBILE RESPONSIVENESS --- */
