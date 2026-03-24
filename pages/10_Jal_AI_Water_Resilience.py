@@ -555,16 +555,31 @@ with col_left:
 
             v1, v2, v3 = st.columns(3)
             with v1:
-                st.metric("Sentinel-2 Optical", meta.get("s2_status", "N/A"))
-                st.caption(f"Latest scene: {meta.get('last_s2', 'N/A')}")
+                st.markdown(f"""
+                <div class="jal-card" style="text-align:center;">
+                <small style="color:#94a3b8; text-transform:uppercase;">Sentinel-2 Optical</small><br>
+                <div style="font-size:1.2rem; font-weight:700; margin:0.5rem 0;">{meta.get('s2_status', 'N/A')}</div>
+                <small style="color:#64748b;">Latest: {meta.get('last_s2', 'N/A')}</small>
+                </div>
+                """, unsafe_allow_html=True)
             with v2:
-                st.metric("Sentinel-1 Radar", meta.get("s1_status", "N/A"))
-                st.caption(f"Latest pass: {meta.get('last_s1', 'N/A')}")
+                st.markdown(f"""
+                <div class="jal-card" style="text-align:center;">
+                <small style="color:#94a3b8; text-transform:uppercase;">Sentinel-1 Radar</small><br>
+                <div style="font-size:1.2rem; font-weight:700; margin:0.5rem 0;">{meta.get('s1_status', 'N/A')}</div>
+                <small style="color:#64748b;">Latest: {meta.get('last_s1', 'N/A')}</small>
+                </div>
+                """, unsafe_allow_html=True)
             with v3:
-                st.metric("GPM Granules", meta.get("gpm_status", "N/A"))
-                st.caption("Precipitation Cal")
+                st.markdown(f"""
+                <div class="jal-card" style="text-align:center;">
+                <small style="color:#94a3b8; text-transform:uppercase;">GPM Rainfall</small><br>
+                <div style="font-size:1.2rem; font-weight:700; margin:0.5rem 0;">{meta.get('gpm_status', 'N/A')}</div>
+                <small style="color:#64748b;">NASA IMERG V07</small>
+                </div>
+                """, unsafe_allow_html=True)
             
-            st.info("💡 **Accuracy logic:** Radar (SAR) provides 40pts base confidence as it penetrates clouds. Optical (S2) provides 40pts base but loses weight based on cloud % and scene age. Rainfall (GPM) provides the final 20pts.")
+            st.info("💡 **Accuracy logic:** Radar (SAR) provides 40pts base confidence (penetrates clouds). Optical (S2) provides 40pts base (penalized by clouds/age). Rainfall (GPM) provides final 20pts.")
 
         st.markdown("**📋 W-SHG Recommended Actions:**")
         for i, a in enumerate(actions, 1):

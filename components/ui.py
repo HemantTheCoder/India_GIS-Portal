@@ -203,31 +203,27 @@ def get_enhanced_css():
 
         /* Stat Cards */
         .stat-card {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1.25rem 1rem;
             text-align: center;
             margin: 0.5rem 0;
-            transition: transform 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0px;
-            left: 20%;
-            width: 60%;
-            height: 2px;
-            background: currentColor;
-            opacity: 0.5;
-            box-shadow: 0 -2px 10px currentColor;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
 
         .stat-card:hover {
-            transform: scale(1.02);
-            background: rgba(30, 41, 59, 0.5);
+            transform: translateY(-3px);
+            background: rgba(30, 41, 59, 0.75);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.7);
         }
 
         .stat-card-blue { color: #38bdf8; }

@@ -176,7 +176,7 @@ def get_precipitation_map(geometry, start_date, end_date):
     """
     try:
         gpm = (
-            ee.ImageCollection("NASA/GPM_L3/IMERG_V06")
+            ee.ImageCollection("NASA/GPM_L3/IMERG_V07")
             .filterBounds(geometry)
             .filterDate(start_date, end_date)
             .select("precipitationCal")
@@ -498,7 +498,7 @@ def get_jal_accuracy_metrics(geometry, target_date):
 
         # 3. GPM Rainfall (Granule Density)
         gpm_count = (
-            ee.ImageCollection("NASA/GPM_L3/IMERG_V06")
+            ee.ImageCollection("NASA/GPM_L3/IMERG_V07")
             .filterBounds(geometry)
             .filterDate(d30, target_date)
             .size().getInfo()

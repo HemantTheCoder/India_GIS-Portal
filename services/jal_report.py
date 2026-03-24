@@ -281,9 +281,12 @@ def generate_jal_pdf(
     # ── Footer ────────────────────────────────────────────────
     elems.append(Spacer(1, 20))
     elems.append(HRFlowable(width="100%", thickness=0.5, color=MUTED))
+    
+    # Use center style for footer text
+    footer_style = S("FT", "Normal", fontSize=8, textColor=MUTED, alignment=TA_CENTER)
     elems.append(Paragraph(
         "Jal-AI: Water Resilience Intelligence · Powered by Google Earth Engine · v2.0 Final Build",
-        small_style, alignment=TA_CENTER
+        footer_style
     ))
 
     doc.build(elems)
