@@ -699,14 +699,46 @@ def custom_spinner(text="Processing Earth Data..."):
 
 
 def render_stat_card(value, label, icon="", color_class=""):
-    extra_class = f" {color_class}" if color_class else ""
+    """
+    Renders a premium glassmorphic stat card with hover effects.
+    """
     st.markdown(f"""
-        <div class="stat-card{extra_class}">
-            <div class="stat-value">{icon} {value}</div>
-            <div class="stat-label">{label}</div>
+        <div class="stat-card" style="
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+            margin-bottom: 1rem;
+            text-align: center;
+        " onmouseover="this.style.borderColor='rgba(14, 165, 233, 0.6)'; this.style.transform='translateY(-5px)'" 
+           onmouseout="this.style.borderColor='rgba(14, 165, 233, 0.15)'; this.style.transform='translateY(0)'">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
+            <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 0.2rem; line-height: 1;">{value}</div>
+            <div style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05rem;">{label}</div>
         </div>
-    """,
-                unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+
+def render_stepper(current_step):
+    """
+    Renders a horizontal progress stepper for multi-phase analysis.
+    """
+    steps = ["📍 AOI SELECTION", "🌊 WATERSHED", "🧠 RISK ENGINE"]
+    cols = st.columns(len(steps))
+    for i, s in enumerate(steps):
+        with cols[i]:
+            is_done = current_step > i
+            is_active = current_step == i
+            color = "#22c55e" if is_done else "#3b82f6" if is_active else "#475569"
+            icon = "✅" if is_done else "🔵" if is_active else "⚪"
+            st.markdown(f"""
+            <div style="text-align:center; border-bottom: 3px solid {color}; padding-bottom:8px; margin-bottom: 25px;">
+                <span style="color:{color}; font-weight:700; font-size:0.75rem; letter-spacing:0.05em;">{icon} {s}</span>
+            </div>
+            """, unsafe_allow_html=True)
 
 
 def render_info_box(content, box_type="info"):
@@ -815,3 +847,16 @@ def init_common_session_state():
     for key, default_value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = default_value
+
+def ensure_python_dict(d):
+    """
+    Ensures a value is a Python dictionary. If it's a GEE object (ee.Dictionary/ee.Image),
+    it calls .getInfo() to convert it. Useful for robust multi-sensor data access.
+    """
+    if d is None: return {}
+    if hasattr(d, "getInfo"):
+        try:
+            return d.getInfo() or {}
+        except:
+            return {}
+    return d if isinstance(d, dict) else {}

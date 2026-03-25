@@ -37,7 +37,7 @@ def create_base_map(lat, lon, zoom=11, enable_drawing=False):
     
     return m
 
-def add_tile_layer(map_obj, tile_url, layer_name, opacity=1.0):
+def add_tile_layer(map_obj, tile_url, layer_name, opacity=1.0, show=True):
     folium.TileLayer(
         tiles=tile_url,
         attr="Google Earth Engine",
@@ -45,6 +45,7 @@ def add_tile_layer(map_obj, tile_url, layer_name, opacity=1.0):
         overlay=True,
         control=True,
         opacity=opacity,
+        show=show
     ).add_to(map_obj)
     return map_obj
 
