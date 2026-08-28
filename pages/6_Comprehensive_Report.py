@@ -13,7 +13,6 @@ from services.sustainability_report import generate_comprehensive_report
 from services.gee_core import auto_initialize_gee
 from india_cities import INDIA_DATA as INDIA_CITIES
 from components.ui import apply_enhanced_css, render_page_header, init_common_session_state, custom_spinner
-from components.theme_manager import ThemeManager
 from components.maps import create_base_map, add_tile_layer, add_layer_control
 
 import geopandas as gpd
@@ -23,31 +22,6 @@ matplotlib.use('Agg')
 import numpy as np
 
 st.set_page_config(layout="wide", page_title="Comprehensive Sustainability Report", page_icon="📊")
-st.markdown("""
-<style>
-/* Remove Streamlit default padding */
-.block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-}
-
-/* Hide header & footer */
-/* header {visibility: hidden;} */
-footer {visibility: hidden;}
-
-/* Remove "Built with Streamlit" space */
-.viewerBadge_container__1QSob {
-    display: none !important;
-}
-
-/* Prevent double scrollbars */
-html, body {
-    overflow: hidden;
-}
-</style>
-""", unsafe_allow_html=True)
 apply_enhanced_css()
 
 st.markdown("""
@@ -176,20 +150,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 init_common_session_state()
-apply_enhanced_css()
-
-# Theme Integration
-theme_manager = ThemeManager()
-theme_manager.apply_theme()
 
 auto_initialize_gee()
 
 render_page_header(
-    theme_manager.get_text("📊 Comprehensive Sustainability Report"),
-    theme_manager.get_text(
-        "Generate holistic environmental insights and actionable roadmaps.",
-        "📜 MISSION LOG: Compiling all known anomalies. Sustainability of current dimension is in question."
-    )
+    "📊 Comprehensive Sustainability Report",
+    "Generate holistic environmental insights and actionable roadmaps."
 )
 
 if 'report_data' not in st.session_state:

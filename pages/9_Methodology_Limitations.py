@@ -1,47 +1,14 @@
 import streamlit as st
 from components.ui import apply_enhanced_css, render_page_header, render_info_box
-from components.theme_manager import ThemeManager
 
 st.set_page_config(page_title="Methodology & Limitations", page_icon="📚", layout="wide")
 apply_enhanced_css()
 
-# Theme Integration
-theme_manager = ThemeManager()
-theme_manager.apply_theme()
-
 # Header
 render_page_header(
-    theme_manager.get_text("📚 Methodology & Limitations"),
-    theme_manager.get_text(
-        "Technical details, data sources, scoring algorithms, and known limitations.",
-        "📁 CLASSIFIED ARCHIVES: The truth behind the observations. Handle with clearance."
-    )
+    "📚 Methodology & Limitations",
+    "Technical details, data sources, scoring algorithms, and known limitations."
 )
-st.markdown("""
-<style>
-/* Remove Streamlit default padding */
-.block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-}
-
-/* Hide header & footer */
-/* header {visibility: hidden;} */
-footer {visibility: hidden;}
-
-/* Remove "Built with Streamlit" space */
-.viewerBadge_container__1QSob {
-    display: none !important;
-}
-
-/* Prevent double scrollbars */
-html, body {
-    overflow: hidden;
-}
-</style>
-""", unsafe_allow_html=True)
 # --- Section 1: Overview ---
 with st.expander("ℹ️ Overview of the GIS Portal", expanded=True):
     st.markdown("""

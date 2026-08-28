@@ -12,7 +12,6 @@ from services.gee_core import (auto_initialize_gee, get_city_geometry,
                                process_shapefile_upload,
                                geojson_file_to_ee_geometry)
 from components.ui import apply_enhanced_css, render_page_header, init_common_session_state, custom_spinner
-from components.theme_manager import ThemeManager
 
 # Import prediction service
 from services.prediction import prepare_time_series_data, train_forecast_model, generate_forecast, calculate_trend_slope
@@ -25,44 +24,12 @@ from services.timelapse import get_ndvi_timelapse, get_aqi_timelapse, get_lst_ti
 # to avoid circular dependencies or complex import paths if those pages aren't designed as modules.
 
 st.set_page_config(layout="wide", page_title="AI Predictive Analysis")
-st.markdown("""
-<style>
-/* Remove Streamlit default padding */
-.block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-}
-
-/* Hide header & footer */
-/* header {visibility: hidden;} */
-footer {visibility: hidden;}
-
-/* Remove "Built with Streamlit" space */
-.viewerBadge_container__1QSob {
-    display: none !important;
-}
-
-/* Prevent double scrollbars */
-html, body {
-    overflow: hidden;
-}
-</style>
-""", unsafe_allow_html=True)
 init_common_session_state()
 apply_enhanced_css()
 
-# Theme Integration
-theme_manager = ThemeManager()
-theme_manager.apply_theme()
-
 render_page_header(
-    theme_manager.get_text("🔮 Predictive Analysis"),
-    theme_manager.get_text(
-        "Forecast future environmental trends (NDVI, LST, AQI) using Machine Learning on GEE.",
-        "👁️ FUTURE VISION: Calculating propagation of the Rift. Estimating time until total dimensional overlap."
-    )
+    "🔮 Predictive Analysis",
+    "Forecast future environmental trends (NDVI, LST, AQI) using Machine Learning on GEE."
 )
 
 # --- Helper Functions for Data Extraction ---

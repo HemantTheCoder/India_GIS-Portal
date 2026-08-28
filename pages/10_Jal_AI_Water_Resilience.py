@@ -35,7 +35,6 @@ from components.ui import (
     apply_enhanced_css, render_page_header, render_stat_card,
     render_stepper, init_common_session_state, ensure_python_dict
 )
-from components.theme_manager import ThemeManager
 from components.maps import create_base_map, add_tile_layer, add_layer_control
 
 # ── Page Config ──────────────────────────────────────────────
@@ -48,10 +47,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.block-container{padding-top:0!important;padding-bottom:0!important;}
-header{visibility:hidden;}
-footer{visibility:hidden;}
-html,body{overflow-x:hidden;}
 .jal-card{
     background:rgba(15,23,42,0.7);
     border:1px solid rgba(14,165,233,0.25);
@@ -73,15 +68,9 @@ auto_initialize_gee()
 init_common_session_state()
 apply_enhanced_css()
 
-theme_manager = ThemeManager()
-theme_manager.apply_theme()
-
 render_page_header(
-    theme_manager.get_text("💧 Jal-AI — AI Disaster Preparedness & Early Action"),
-    theme_manager.get_text(
-        "Real-time multi-satellite intelligence for water resilience, flood risk, and community early action.",
-        "🌊 HYDRO-NEURAL: Catastrophic water flux event detected — multi-sensor fusion active."
-    )
+    "💧 Jal-AI — AI Disaster Preparedness & Early Action",
+    "Real-time multi-satellite intelligence for water resilience, flood risk, and community early action."
 )
 
 # ── Session state init ────────────────────────────────────────

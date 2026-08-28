@@ -2,6 +2,34 @@ import streamlit as st
 import pandas as pd
 import io
 
+_CHART_BG = "#0f172a"
+_CHART_TEXT = "#e2e8f0"
+_CHART_MUTED = "#94a3b8"
+_CHART_GRID = "#334155"
+
+
+def _apply_dark_style(fig, ax, grid=True):
+    """Matches matplotlib figures to the app's dark surface so charts don't render as white cutouts."""
+    fig.patch.set_facecolor(_CHART_BG)
+    axes = ax if isinstance(ax, (list, tuple)) else [ax]
+    for a in axes:
+        a.set_facecolor(_CHART_BG)
+        a.tick_params(colors=_CHART_MUTED)
+        a.xaxis.label.set_color(_CHART_TEXT)
+        a.yaxis.label.set_color(_CHART_TEXT)
+        if a.get_title():
+            a.title.set_color(_CHART_TEXT)
+        for spine in a.spines.values():
+            spine.set_color(_CHART_GRID)
+        if grid:
+            a.grid(True, color=_CHART_GRID, alpha=0.3)
+        legend = a.get_legend()
+        if legend:
+            legend.get_frame().set_facecolor(_CHART_BG)
+            legend.get_frame().set_edgecolor(_CHART_GRID)
+            for text in legend.get_texts():
+                text.set_color(_CHART_TEXT)
+
 
 def render_pie_chart(data, title=""):
     if not data:
@@ -50,25 +78,27 @@ def render_pie_chart(data, title=""):
         autotext.set_fontweight('bold')
         autotext.set_color('white')
 
-    centre_circle = plt.Circle((0, 0), 0.55, fc='white')
+    centre_circle = plt.Circle((0, 0), 0.55, fc=_CHART_BG)
     fig.gca().add_artist(centre_circle)
 
     legend_labels = [
         f"{row['Class']} ({row['Percentage']:.1f}%)"
         for _, row in df.iterrows()
     ]
-    ax.legend(wedges,
+    legend = ax.legend(wedges,
               legend_labels,
               title="Land Cover",
               loc="center left",
               bbox_to_anchor=(1, 0.5),
               fontsize=9,
               title_fontsize=10)
+    legend.get_title().set_color(_CHART_TEXT)
 
     if title:
         ax.set_title(title, fontsize=14, fontweight='bold', pad=10)
 
     ax.axis('equal')
+    _apply_dark_style(fig, ax, grid=False)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -100,14 +130,15 @@ def render_bar_chart(data, title="", x_label="", y_label=""):
     bars = ax.barh(df["Class"],
                    df["Percentage"],
                    color=colors,
-                   edgecolor='white')
+                   edgecolor=_CHART_BG)
 
     for bar, pct in zip(bars, df["Percentage"]):
         ax.text(bar.get_width() + 0.5,
                 bar.get_y() + bar.get_height() / 2,
                 f'{pct:.1f}%',
                 va='center',
-                fontsize=9)
+                fontsize=9,
+                color=_CHART_TEXT)
 
     ax.set_xlabel(x_label or "Percentage (%)")
     ax.set_ylabel(y_label or "Land Cover Class")
@@ -117,6 +148,7 @@ def render_bar_chart(data, title="", x_label="", y_label=""):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
+    _apply_dark_style(fig, ax)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -165,11 +197,11 @@ def render_line_chart(time_series_data,
         ax.set_title(title, fontsize=14, fontweight='bold')
 
     ax.legend()
-    ax.grid(True, alpha=0.3)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
+    _apply_dark_style(fig, ax)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -205,11 +237,11 @@ def render_multi_pollutant_chart(time_series_dict, title=""):
         ax.set_title(title, fontsize=14, fontweight='bold')
 
     ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-    ax.grid(True, alpha=0.3)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
+    _apply_dark_style(fig, ax)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -252,11 +284,14 @@ def render_correlation_heatmap(correlations, pollutants, title=""):
                            color='black',
                            fontsize=10)
 
-    plt.colorbar(im, ax=ax, label='Correlation')
+    cbar = plt.colorbar(im, ax=ax, label='Correlation')
+    cbar.ax.yaxis.label.set_color(_CHART_TEXT)
+    cbar.ax.tick_params(colors=_CHART_MUTED)
 
     if title:
         ax.set_title(title, fontsize=14, fontweight='bold')
 
+    _apply_dark_style(fig, ax, grid=False)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -295,6 +330,8 @@ def render_radar_chart(data, title=""):
     if title:
         ax.set_title(title, fontsize=14, fontweight='bold', y=1.08)
 
+    _apply_dark_style(fig, ax)
+    ax.tick_params(axis='x', colors=_CHART_TEXT)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()

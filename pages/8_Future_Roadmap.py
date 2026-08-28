@@ -1,45 +1,24 @@
 import streamlit as st
 import sys
 from components.ui import apply_enhanced_css, render_page_header
-from components.theme_manager import ThemeManager
 
 st.set_page_config(layout="wide", page_title="Future Roadmap")
 
 apply_enhanced_css()
 
-# Initialize Theme Manager
-theme_manager = ThemeManager()
-theme_manager.apply_theme()
-
-# Custom CSS for this page to handle layout specifics
+# Wider side padding suits this page's timeline layout
 st.markdown("""
 <style>
-/* Remove Streamlit default padding for cleaner look */
 .block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
-}
-
-/* Hide Streamlit elements */
-/* header {visibility: hidden;} */
-footer {visibility: hidden;}
-.viewerBadge_container__1QSob { display: none !important; }
-
-/* Prevent double scrollbars handled in global css usually, but ensuring here */
-html, body {
-    overflow-x: hidden;
 }
 </style>
 """, unsafe_allow_html=True)
 
 render_page_header(
-    theme_manager.get_text("🚀 Project Roadmap & Future Modules"),
-    theme_manager.get_text(
-        "Upcoming features, planned expansions, and development milestones.",
-        "🚧 EXPANSION PROTOCOL: The gate is opening. Future anomalies incoming."
-    )
+    "🚀 Project Roadmap & Future Modules",
+    "Upcoming features, planned expansions, and development milestones."
 )
 
 # Introductory Note

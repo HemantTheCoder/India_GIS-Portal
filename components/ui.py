@@ -6,72 +6,113 @@ def get_enhanced_css():
     from components.map_asset import INDIA_MAP_BASE64
     css = """
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
-        /* Force dark mode - override any system/browser preferences */
+        /* ============================================================
+           DESIGN TOKENS
+           ============================================================ */
         :root {
             color-scheme: dark !important;
+
+            --bg-base: #060a12;
+            --bg-surface: rgba(15, 23, 42, 0.6);
+            --bg-surface-solid: #0f172a;
+            --bg-surface-hover: rgba(30, 41, 59, 0.75);
+            --bg-surface-dim: rgba(15, 23, 42, 0.4);
+
+            --border-subtle: rgba(148, 163, 184, 0.12);
+            --border-strong: rgba(148, 163, 184, 0.32);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            --accent: #38bdf8;
+            --accent-strong: #0ea5e9;
+            --accent-soft: rgba(56, 189, 248, 0.14);
+
+            --success: #22c55e;
+            --warning: #f97316;
+            --danger: #ef4444;
+            --info: #3b82f6;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-pill: 9999px;
+
+            --shadow-card: 0 4px 16px -4px rgba(0, 0, 0, 0.4);
+            --shadow-card-hover: 0 16px 32px -12px rgba(0, 0, 0, 0.55);
         }
 
+        /* ============================================================
+           BASE / SHELL
+           ============================================================ */
         html, body, [class*="css"] {
             font-family: 'Outfit', sans-serif;
             scroll-behavior: smooth;
-            background-color: #050911 !important;
-            color: #f1f5f9 !important;
+            background-color: var(--bg-base) !important;
+            color: var(--text-primary) !important;
         }
 
-        /* --- ORBITAL COMMAND THEME (FORCED DARK) --- */
-
-        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], 
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"],
         .main, section[data-testid="stSidebar"], [data-testid="stToolbar"] {
-            background-color: #050911 !important;
-            color: #f1f5f9 !important;
+            background-color: var(--bg-base) !important;
+            color: var(--text-primary) !important;
         }
 
         .stApp {
-            background-image: 
-                radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 50%),
-                radial-gradient(circle at 0% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 40%) !important;
+            background-image:
+                radial-gradient(circle at 50% 0%, #101c2e 0%, transparent 55%),
+                radial-gradient(circle at 0% 60%, rgba(56, 189, 248, 0.05) 0%, transparent 40%) !important;
         }
 
-        /* Force header/toolbar dark */
         header[data-testid="stHeader"] {
-            background-color: #050911 !important;
+            background-color: var(--bg-base) !important;
         }
 
-        /* Sidebar dark */
         section[data-testid="stSidebar"] > div {
-            background-color: #0f172a !important;
+            background-color: var(--bg-surface-solid) !important;
         }
 
+        /* Remove default Streamlit chrome */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 1.5rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        footer, footer:after,
+        .viewerBadge_container__1QSob,
+        div[data-testid="stStatusWidget"],
+        #MainMenu,
+        .stDeployButton {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0px !important;
+        }
+        html, body { overflow-x: hidden !important; }
+
+        /* ============================================================
+           HERO / HEADER
+           ============================================================ */
         .main-header {
-            font-size: 3.5rem;
+            font-size: 3.25rem;
             font-weight: 800;
-            color: #ffffff !important;
+            color: var(--text-primary) !important;
             text-align: center;
-            padding: 4rem 0 2rem 0;
+            padding: 3.5rem 0 1.25rem 0;
             letter-spacing: -0.03em;
-            text-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
-            text-transform: uppercase;
             position: relative;
             z-index: 1;
         }
 
         .hero-container {
             position: relative;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            background-image: url('data:image/png;base64,INDIA_MAP_PLACEHOLDER');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center center;
-            opacity: 1; /* Container opacity */
+            padding: 1.5rem 0 0 0;
+            margin-bottom: 1rem;
         }
-        
-        /* Pseudo-element for the background image to handle opacity independently if needed, 
-           but putting it on a container and adjusting image colors in generation is often cleaner.
-           Given the prompt asked for "low opacity", we can do it via a mask or just opacity on a pseudo.
-        */
+
         .hero-background {
             position: absolute;
             top: 0;
@@ -79,133 +120,183 @@ def get_enhanced_css():
             transform: translateX(-50%);
             width: 100%;
             height: 100%;
-            max-width: 800px;
+            max-width: 780px;
             background-image: url('data:image/png;base64,INDIA_MAP_PLACEHOLDER');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center center;
-            opacity: 0.15; /* Low opacity as requested */
+            opacity: 0.10;
             z-index: 0;
             pointer-events: none;
         }
 
         .sub-header {
-            font-size: 1.1rem;
-            color: #f8fafc !important;
+            font-size: 1.05rem;
+            color: var(--text-secondary) !important;
             text-align: center;
-            margin-bottom: 3.5rem;
+            margin-bottom: 3rem;
             font-weight: 400;
-            max-width: 650px;
+            max-width: 680px;
             margin-left: auto;
             margin-right: auto;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(15, 23, 42, 0.6);
-            padding: 0.75rem 1.5rem;
-            border-radius: 100px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
             backdrop-filter: blur(10px);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-pill);
         }
 
+        .attribution-line {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+        }
+        .attribution-line a { color: var(--accent); text-decoration: none; }
+        .attribution-line a:hover { text-decoration: underline; }
+
         .map-container {
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             overflow: hidden;
-            box-shadow: 0 0 0 1px #1e293b, 0 20px 40px -10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 0 1px var(--border-subtle), var(--shadow-card);
             padding: 4px;
-            background: #0f172a;
+            background: var(--bg-surface-solid);
             margin: 1.5rem 0;
         }
 
-        /* HUD Cards */
-        .card, .feature-card {
-            background: rgba(15, 23, 42, 0.6);
+        /* ============================================================
+           FEATURE CARDS (homepage grid)
+           ============================================================ */
+        .feature-card {
+            background: var(--bg-surface);
             backdrop-filter: blur(12px);
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             padding: 1.75rem;
-            margin: 1rem 0;
-            border: 1px solid rgba(56, 189, 248, 0.1); /* Subtle cyan border */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0.5rem 0;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            color: #f1f5f9;
+            color: var(--text-primary);
+            height: 320px;
+            display: flex;
+            flex-direction: column;
         }
 
         .feature-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 0; left: 0; right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, #00f3ff, transparent);
+            background: linear-gradient(90deg, transparent, var(--badge-color, var(--accent)), transparent);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.25s ease;
         }
 
         .feature-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(56, 189, 248, 0.4);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
-            background: rgba(15, 23, 42, 0.8);
+            border-color: var(--border-strong);
+            box-shadow: var(--shadow-card-hover);
+            background: var(--bg-surface-hover);
         }
+        .feature-card:hover::before { opacity: 1; }
 
-        .feature-card:hover::before {
-            opacity: 1;
+        .feature-icon-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            background: color-mix(in srgb, var(--badge-color, var(--accent)) 16%, transparent);
+            border: 1px solid color-mix(in srgb, var(--badge-color, var(--accent)) 35%, transparent);
+            margin-bottom: 1rem;
         }
 
         .card-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.6rem;
             font-weight: 700;
-            font-size: 1.2rem;
-            color: #f1f5f9;
-            letter-spacing: 0.02em;
-            white-space: normal; /* Allow wrapping */
-            line-height: 1.2;
+            font-size: 1.15rem;
+            color: var(--text-primary);
+            letter-spacing: 0.01em;
+            line-height: 1.25;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .feature-list {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            padding-left: 1.1rem;
+            line-height: 1.6;
         }
 
         /* Coming Soon Card */
         .coming-soon-card {
-            background: rgba(15, 23, 42, 0.4); /* Darker/dimmed background */
+            background: var(--bg-surface-dim);
             backdrop-filter: blur(8px);
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             padding: 1.75rem;
             margin: 1rem 0;
-            border: 1px solid rgba(148, 163, 184, 0.1); /* Greyer border */
+            border: 1px solid var(--border-subtle);
             box-shadow: none;
             position: relative;
             overflow: hidden;
-            color: #94a3b8; /* Dimmed text */
-            opacity: 0.8;
-            transition: all 0.3s ease;
+            color: var(--text-muted);
+            opacity: 0.85;
+            transition: all 0.25s ease;
         }
-
         .coming-soon-card:hover {
             opacity: 1;
-            border-color: rgba(148, 163, 184, 0.3);
-            background: rgba(15, 23, 42, 0.5);
+            border-color: var(--border-strong);
+            background: rgba(15, 23, 42, 0.55);
         }
-
         .coming-soon-badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
+            border-radius: var(--radius-pill);
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             background: rgba(51, 65, 85, 0.5);
-            color: #cbd5e1;
+            color: var(--text-secondary);
             margin-bottom: 1rem;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid var(--border-subtle);
         }
 
-        /* Stat Cards */
+        /* Generic content card (render_card) */
+        .card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-md);
+            padding: 1.75rem;
+            margin: 1rem 0;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
+            color: var(--text-primary);
+        }
+
+        /* ============================================================
+           STAT CARDS
+           ============================================================ */
         .stat-card {
             background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
             padding: 1.25rem 1rem;
             text-align: center;
             margin: 0.5rem 0;
@@ -216,17 +307,15 @@ def get_enhanced_css():
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--shadow-card);
         }
-
         .stat-card:hover {
             transform: translateY(-3px);
-            background: rgba(30, 41, 59, 0.75);
-            border-color: rgba(56, 189, 248, 0.4);
-            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.7);
+            background: var(--bg-surface-hover);
+            border-color: var(--border-strong);
+            box-shadow: var(--shadow-card-hover);
         }
-
-        .stat-card-blue { color: #38bdf8; }
+        .stat-card-blue { color: var(--accent); }
         .stat-card-green { color: #4ade80; }
         .stat-card-orange { color: #fb923c; }
 
@@ -236,21 +325,57 @@ def get_enhanced_css():
             letter-spacing: -0.02em;
             color: #fff;
             margin-bottom: 0.25rem;
-            text-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
         .stat-label {
             font-size: 0.85rem;
             opacity: 0.9;
-            color: #e2e8f0;
+            color: var(--text-secondary);
             font-weight: 600;
             letter-spacing: 0.05em;
             text-transform: uppercase;
         }
 
-        /* Utility Boxes */
+        /* ============================================================
+           POLLUTANT CARDS + GRADIENT LEGEND
+           ============================================================ */
+        .pollutant-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+        .pollutant-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        .pollutant-unit {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .gradient-legend {
+            height: 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-subtle);
+        }
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+
+        /* ============================================================
+           UTILITY BOXES
+           ============================================================ */
         .info-box, .success-box, .warning-box, .error-box {
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             padding: 1rem;
             margin: 1.5rem 0;
             border-left: 3px solid;
@@ -258,27 +383,26 @@ def get_enhanced_css():
             display: flex;
             gap: 1rem;
         }
+        .info-box { border-color: var(--info); color: #bfdbfe; }
+        .success-box { border-color: var(--success); color: #bbf7d0; }
+        .warning-box { border-color: var(--warning); color: #fed7aa; }
+        .error-box { border-color: var(--danger); color: #fecaca; }
 
-        .info-box { border-color: #3b82f6; color: #bfdbfe; }
-        .success-box { border-color: #22c55e; color: #bbf7d0; }
-        .warning-box { border-color: #f97316; color: #fed7aa; }
-        .error-box { border-color: #ef4444; color: #fecaca; }
-
-        /* Animation */
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
 
-        /* Custom Radar Loader */
         .custom-loader-container {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             width: 100vw;
             height: 100dvh;
-            background: rgba(5, 9, 17, 0.85);
+            background: rgba(6, 10, 18, 0.88);
             backdrop-filter: blur(8px);
             z-index: 999999;
             display: flex;
@@ -286,387 +410,219 @@ def get_enhanced_css():
             align-items: center;
             justify-content: center;
         }
-
         .radar-spinner {
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            border: 2px solid rgba(56, 189, 248, 0.3);
-            border-top-color: #38bdf8;
+            border: 2px solid var(--accent-soft);
+            border-top-color: var(--accent);
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
             animation: radar-spin 1.5s linear infinite;
             margin-bottom: 1rem;
             position: relative;
         }
-
         .radar-spinner::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 6px;
-            height: 6px;
-            background: #38bdf8;
+            width: 6px; height: 6px;
+            background: var(--accent);
             border-radius: 50%;
-            box-shadow: 0 0 10px #38bdf8;
+            box-shadow: 0 0 10px var(--accent);
         }
-
-        @keyframes radar-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes radar-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .loader-text {
-            color: #e2e8f0;
+            color: var(--text-secondary);
             font-size: 0.9rem;
             font-weight: 500;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             animation: pulse 1.5s ease-in-out infinite;
         }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
-        /* Form Elements Override */
-        [data-testid="stSelectbox"] label, [data-testid="stSlider"] label, [data-testid="stDateInput"] label, 
+        /* ============================================================
+           FORM ELEMENTS
+           ============================================================ */
+        [data-testid="stSelectbox"] label, [data-testid="stSlider"] label, [data-testid="stDateInput"] label,
         [data-testid="stMultiSelect"] label, [data-testid="stTextInput"] label, [data-testid="stNumberInput"] label {
-            color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        /* Generic Button Styling - catch all standard buttons */
         .stButton button {
-            background-color: #0f172a !important;
+            background-color: var(--bg-surface-solid) !important;
             border: 1px solid #475569 !important;
-            color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
             transition: all 0.2s;
         }
-
-        /* Primary Buttons - Override Generic */
         .stButton button[kind="primary"] {
-            background: linear-gradient(90deg, #0ea5e9, #2563eb) !important;
+            background: linear-gradient(90deg, var(--accent-strong), var(--accent)) !important;
             border: none !important;
-            color: white !important;
+            color: #fff !important;
             font-weight: 600;
         }
-
-        /* Secondary/Default Buttons - Explicit targeting if needed, but generic covers it */
         .stButton button[kind="secondary"] {
-            background-color: #0f172a !important;
+            background-color: var(--bg-surface-solid) !important;
             border: 1px solid #475569 !important;
-            color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
         }
-
         .stButton button:hover {
-            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
             transform: scale(1.02);
-            border-color: #38bdf8 !important;
+            border-color: var(--accent) !important;
             background-color: #1e293b !important;
-            color: white !important;
+            color: #fff !important;
         }
 
-        /* Specific Override for Download Buttons */
         .stDownloadButton button {
-            background-color: #0f172a !important;
+            background-color: var(--bg-surface-solid) !important;
             border: 1px solid #475569 !important;
-            color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
         }
-
         .stDownloadButton button:hover {
-            border-color: #38bdf8 !important;
+            border-color: var(--accent) !important;
             background-color: #1e293b !important;
-            color: white !important;
+            color: #fff !important;
         }
 
-        /* Expander Headers ("Clickable Drops") */
         div[data-testid="stExpander"] details > summary {
             background-color: rgba(15, 23, 42, 0.8) !important;
-            color: #f1f5f9 !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            border-radius: 8px !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-radius: var(--radius-sm) !important;
         }
-
         div[data-testid="stExpander"] details > summary:hover {
-            color: #38bdf8 !important;
-            border-color: #38bdf8 !important;
+            color: var(--accent) !important;
+            border-color: var(--accent) !important;
         }
-
         div[data-testid="stExpander"] details[open] > summary {
-             border-bottom-left-radius: 0 !important;
-             border-bottom-right-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
         }
+        div[data-testid="stExpander"] { border: none !important; box-shadow: none !important; }
 
-        div[data-testid="stExpander"] {
-            border: none !important;
-            box-shadow: none !important;
-        }
+        [data-testid="stCheckbox"] label, [data-testid="stRadio"] label { color: var(--text-secondary) !important; }
 
-        /* Checkbox & Radio */
-        [data-testid="stCheckbox"] label, [data-testid="stRadio"] label {
-            color: #e2e8f0 !important;
-        }
-
-        /* Specific fix for Slider and Chart Selection (Radio) text visibility */
-
-        /* Sliders */
         [data-testid="stSlider"] div[data-testid="stMarkdownContainer"] p,
-        [data-testid="stSlider"] div[data-testid="stSliderTickBar"] + div, /* Tick labels */
+        [data-testid="stSlider"] div[data-testid="stSliderTickBar"] + div,
         [data-testid="stSlider"] div[data-testid="stSliderValueLabel"] {
-             color: #e2e8f0 !important;
+            color: var(--text-secondary) !important;
         }
 
-        /* Chart Selection (Horizontal Radio Buttons) */
-        [data-testid="stRadio"] div[role="radiogroup"] label {
-             color: #f1f5f9 !important;
-        }
-
-        [data-testid="stRadio"] div[role="radiogroup"] label[data-baseweb="radio"] {
-             background-color: transparent; /* Clean background */
-        }    
-
+        [data-testid="stRadio"] div[role="radiogroup"] label { color: var(--text-primary) !important; }
+        [data-testid="stRadio"] div[role="radiogroup"] label[data-baseweb="radio"] { background-color: transparent; }
         [data-testid="stRadio"] div[role="radiogroup"] {
-             background-color: rgba(15, 23, 42, 0.4);
-             padding: 4px;
-             border-radius: 8px;
+            background-color: var(--bg-surface-dim);
+            padding: 4px;
+            border-radius: var(--radius-sm);
         }
 
-        /* Force high contrast for all slider elements - Robust Fix */
-        div[data-testid="stSlider"],
-        div[data-testid="stSlider"] label,
-        div[data-testid="stSlider"] p,
-        div[data-testid="stSlider"] div {
-            color: #f1f5f9 !important;
+        div[data-testid="stSlider"], div[data-testid="stSlider"] label,
+        div[data-testid="stSlider"] p, div[data-testid="stSlider"] div {
+            color: var(--text-primary) !important;
         }
+        div[data-testid="stSliderTickBar"] > div { color: var(--text-secondary) !important; }
+        div[data-testid="stRadio"] label p { color: var(--text-primary) !important; }
 
-        /* Ensure specific tick labels are visible */
-        div[data-testid="stSliderTickBar"] > div {
-            color: #cbd5e1 !important;
-        }
-
-        /* Force Radio text color again with higher specificity */
-        div[data-testid="stRadio"] label p {
-            color: #f1f5f9 !important;
-        }
-
-        /* Input Fields & Selectboxes */
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
             background-color: rgba(15, 23, 42, 0.8) !important;
             border-color: #475569 !important;
-            color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
         }
+        ul[data-testid="stSelectboxVirtualDropdown"] { background-color: var(--bg-surface-solid) !important; }
+        li[role="option"] { color: var(--text-secondary) !important; }
+        span[data-baseweb="tag"] { background-color: #1e293b !important; color: var(--text-primary) !important; }
 
-        /* Dropdowns menu */
-        ul[data-testid="stSelectboxVirtualDropdown"] {
-            background-color: #0f172a !important;
-        }
-
-        li[role="option"] {
-            color: #e2e8f0 !important;
-        }
-
-        /* Multiselect pills */
-        span[data-baseweb="tag"] {
-            background-color: #1e293b !important;
-            color: #f1f5f9 !important;
-        }
-
-        /* --- SIDEBAR SPECIFIC OVERRIDES --- */
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
         section[data-testid="stSidebar"] {
-            background-color: #0f172a !important;
-            color: #f1f5f9 !important;
+            background-color: var(--bg-surface-solid) !important;
+            color: var(--text-primary) !important;
         }
-
-        section[data-testid="stSidebar"] > div {
-            background-color: #0f172a !important;
-        }
-
-        /* Force text colors in sidebar */
-        section[data-testid="stSidebar"] .stMarkdown p, 
+        section[data-testid="stSidebar"] > div { background-color: var(--bg-surface-solid) !important; }
+        section[data-testid="stSidebar"] .stMarkdown p,
         section[data-testid="stSidebar"] .stCaption,
         section[data-testid="stSidebar"] label,
         section[data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p,
         section[data-testid="stSidebar"] .stMultiSelect,
         section[data-testid="stSidebar"] .stSelectbox,
         section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
-             color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
         }
-
-        /* Specific fix for help text/captions */
         section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
         section[data-testid="stSidebar"] small {
-             color: #cbd5e1 !important;
-             opacity: 1 !important;
+            color: var(--text-secondary) !important;
+            opacity: 1 !important;
+        }
+        [data-testid="stSidebarNav"] a, [data-testid="stSidebarNav"] span { color: var(--text-primary) !important; }
+        [data-testid="stSidebarNav"] a:hover { color: var(--accent) !important; }
+
+        /* ============================================================
+           TEXT / TABLES / MISC CONTRAST
+           ============================================================ */
+        .stMarkdown p, .stMarkdown li, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown span {
+            color: var(--text-secondary) !important;
         }
 
-        /* Navigation Links Fix */
-        [data-testid="stSidebarNav"] a, 
-        [data-testid="stSidebarNav"] span {
-            color: #f1f5f9 !important;
-        }
-
-        [data-testid="stSidebarNav"] a:hover {
-            color: #38bdf8 !important; /* Cyan hover */
-        }
-
-        /* --- HEADER & FOOTER CUSTOMIZATION --- */
-        /* Keep default Streamlit header with visible buttons */
-
-        /* Hide ONLY the Streamlit branding footer */
-        /* Hide Streamlit Footer & Viewer Badge */
-        footer, footer:after {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0px !important;
-        }
-        
-        div[data-testid="stStatusWidget"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        #MainMenu { 
-            visibility: hidden !important; 
-            display: none !important; 
-        }
-
-        .stDeployButton {
-            display: none !important;
-        }
-
-        /* 2. Global Text High Contrast Enforcement */
-        /* Ensure all standard text elements are readable */
-        .stMarkdown p, .stMarkdown li, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown span {
-             color: #e2e8f0 !important;
-        }
-
-        /* 3. Input Fields & Widget Contrast */
-        /* Force dark background and white text for inputs */
-        div[data-baseweb="input"] > div,
-        div[data-baseweb="base-input"] > div,
-        div[data-baseweb="select"] > div,
-        div[data-baseweb="number-input"] > div {
-            background-color: #1e293b !important; /* Slate-800 for inputs */
-            color: #f1f5f9 !important;
+        div[data-baseweb="input"] > div, div[data-baseweb="base-input"] > div,
+        div[data-baseweb="select"] > div, div[data-baseweb="number-input"] > div {
+            background-color: #1e293b !important;
+            color: var(--text-primary) !important;
             border-color: #475569 !important;
         }
-
-        /* Ensure input text itself is white (the actual typed chars) */
-        input[data-baseweb="input"], 
-        div[data-baseweb="select"] span {
-            color: #f1f5f9 !important;
-            -webkit-text-fill-color: #f1f5f9 !important; /* Webkit override */
+        input[data-baseweb="input"], div[data-baseweb="select"] span {
+            color: var(--text-primary) !important;
+            -webkit-text-fill-color: var(--text-primary) !important;
         }
 
-        /* 4. Dataframes and Tables */
-        [data-testid="stDataFrame"] div, [data-testid="stTable"] div {
-            color: #e2e8f0 !important;
-        }
-        [data-testid="stDataFrame"] {
-            background-color: rgba(15, 23, 42, 0.4);
-        }
+        [data-testid="stDataFrame"] div, [data-testid="stTable"] div { color: var(--text-secondary) !important; }
+        [data-testid="stDataFrame"] { background-color: var(--bg-surface-dim); }
 
-        /* --- DATE PICKER CALENDAR FIX --- */
-        /* Fix calendar popup going out of frame in sidebar */
-        section[data-testid="stSidebar"] [data-testid="stDateInput"] {
-            position: relative;
-        }
-        
-        /* Calendar popup positioning */
-        div[data-baseweb="popover"] {
-            z-index: 9999 !important;
-        }
-        
-        /* Ensure calendar popup is visible and properly styled */
+        /* Date picker */
+        section[data-testid="stSidebar"] [data-testid="stDateInput"] { position: relative; }
+        div[data-baseweb="popover"] { z-index: 9999 !important; }
         div[data-baseweb="calendar"] {
             background-color: #1e293b !important;
-            color: #f1f5f9 !important;
+            color: var(--text-primary) !important;
             border: 1px solid #475569 !important;
-            border-radius: 8px !important;
+            border-radius: var(--radius-sm) !important;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
         }
-        
-        /* Calendar header (month/year) */
         div[data-baseweb="calendar"] div[role="presentation"] {
-            background-color: #0f172a !important;
-            color: #f1f5f9 !important;
+            background-color: var(--bg-surface-solid) !important;
+            color: var(--text-primary) !important;
         }
-        
-        /* Calendar day cells */
-        div[data-baseweb="calendar"] button {
-            color: #f1f5f9 !important;
-            background-color: transparent !important;
-        }
-        
-        div[data-baseweb="calendar"] button:hover {
-            background-color: #38bdf8 !important;
-            color: #000 !important;
-        }
-        
-        /* Selected day */
-        div[data-baseweb="calendar"] button[aria-selected="true"] {
-            background-color: #0ea5e9 !important;
-            color: #fff !important;
-        }
-        
-        /* Weekday headers */
-        div[data-baseweb="calendar"] div[role="row"] > div {
-            color: #94a3b8 !important;
-        }
-        
-        /* Ensure all internal calendar containers have the right background */
-        div[data-baseweb="calendar"], 
-        div[data-baseweb="calendar"] > div {
-            background-color: #1e293b !important;
-        }
-        
-        /* Force popover to stay within viewport and not be too narrow */
-        section[data-testid="stSidebar"] div[data-baseweb="popover"] > div {
-            max-width: 340px !important; 
-            min-width: 300px !important;
-        }
+        div[data-baseweb="calendar"] button { color: var(--text-primary) !important; background-color: transparent !important; }
+        div[data-baseweb="calendar"] button:hover { background-color: var(--accent) !important; color: #000 !important; }
+        div[data-baseweb="calendar"] button[aria-selected="true"] { background-color: var(--accent-strong) !important; color: #fff !important; }
+        div[data-baseweb="calendar"] div[role="row"] > div { color: var(--text-muted) !important; }
+        div[data-baseweb="calendar"], div[data-baseweb="calendar"] > div { background-color: #1e293b !important; }
+        section[data-testid="stSidebar"] div[data-baseweb="popover"] > div { max-width: 340px !important; min-width: 300px !important; }
 
-        /* --- MOBILE RESPONSIVENESS --- */
-        /* --- MOBILE RESPONSIVENESS --- */
+        /* ============================================================
+           MOBILE RESPONSIVENESS
+           ============================================================ */
         @media (max-width: 768px) {
-            html, body {
-                overflow-x: hidden !important;
-                width: 100% !important;
-            }
-
-            .main-header {
-                font-size: 2.2rem !important;
-                padding-top: 1.5rem;
-            }
-            .sub-header {
-                font-size: 0.95rem !important;
-                padding: 1rem;
-                margin-bottom: 2rem;
-            }
-            .stat-value {
-                font-size: 1.75rem !important;
-            }
-            .stat-label {
-                font-size: 0.75rem;
-            }
-            .card-header {
-                font-size: 1.1rem;
-            }
+            html, body { width: 100% !important; }
+            .main-header { font-size: 2.1rem !important; padding-top: 1.5rem; }
+            .sub-header { font-size: 0.95rem !important; padding: 1rem; margin-bottom: 2rem; }
+            .stat-value { font-size: 1.75rem !important; }
+            .stat-label { font-size: 0.75rem; }
+            .card-header { font-size: 1.05rem; }
             .feature-card, .card, .stat-card {
                 padding: 1.25rem !important;
                 margin: 0.75rem 0;
-                height: auto !important; /* Allow content to dictate height on mobile */
-                min-height: 250px; /* Optional consistency */
+                height: auto !important;
+                min-height: 240px;
             }
-            .stApp {
-                background-image: none !important; /* Performance on mobile */
-                background-color: #050911 !important;
-            }
+            .stApp { background-image: none !important; background-color: var(--bg-base) !important; }
         }
     </style>
     """
@@ -695,29 +651,16 @@ def custom_spinner(text="Processing Earth Data..."):
         placeholder.empty()
 
 
-
-
-
 def render_stat_card(value, label, icon="", color_class=""):
     """
-    Renders a premium glassmorphic stat card with hover effects.
+    Renders a stat card. `color_class` is unused visually (kept for call-site
+    compatibility) - value color is driven by the shared token system.
     """
     st.markdown(f"""
-        <div class="stat-card" style="
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid rgba(14, 165, 233, 0.15);
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
-            margin-bottom: 1rem;
-            text-align: center;
-        " onmouseover="this.style.borderColor='rgba(14, 165, 233, 0.6)'; this.style.transform='translateY(-5px)'" 
-           onmouseout="this.style.borderColor='rgba(14, 165, 233, 0.15)'; this.style.transform='translateY(0)'">
+        <div class="stat-card">
             <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
-            <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 0.2rem; line-height: 1;">{value}</div>
-            <div style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05rem;">{label}</div>
+            <div class="stat-value">{value}</div>
+            <div class="stat-label">{label}</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -732,7 +675,7 @@ def render_stepper(current_step):
         with cols[i]:
             is_done = current_step > i
             is_active = current_step == i
-            color = "#22c55e" if is_done else "#3b82f6" if is_active else "#475569"
+            color = "#22c55e" if is_done else "#38bdf8" if is_active else "#475569"
             icon = "✅" if is_done else "🔵" if is_active else "⚪"
             st.markdown(f"""
             <div style="text-align:center; border-bottom: 3px solid {color}; padding-bottom:8px; margin-bottom: 25px;">
@@ -757,11 +700,31 @@ def render_card(title, content, icon=""):
                 unsafe_allow_html=True)
 
 
+def render_feature_card(icon, title, description, bullets, accent, button_label, page_path, delay=0.0):
+    """
+    Renders one homepage feature card and its navigation button as a single unit.
+    `accent` is a CSS color used for the icon badge tint and hover accent line.
+    Returns True the render cycle the button is clicked, so callers do:
+        if render_feature_card(...): st.switch_page(page_path)
+    """
+    bullets_html = "".join(f"<li>{b}</li>" for b in bullets)
+    st.markdown(f"""
+        <div class="feature-card animate-fade-in" style="animation-delay: {delay}s; --badge-color: {accent};">
+            <div class="feature-icon-badge" style="--badge-color: {accent};">{icon}</div>
+            <div class="card-header">{title}</div>
+            <p class="feature-desc">{description}</p>
+            <ul class="feature-list">{bullets_html}</ul>
+        </div>
+    """, unsafe_allow_html=True)
+
+    return st.button(button_label, use_container_width=True, type="primary", key=f"nav_{page_path}")
+
+
 def render_gradient_legend(palette, min_val, max_val, label=""):
     gradient = ", ".join(palette)
     st.markdown(f"""
         <div style="margin: 1rem 0;">
-            {f'<div style="font-weight: 500; margin-bottom: 0.5rem;">{label}</div>' if label else ''}
+            {f'<div style="font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">{label}</div>' if label else ''}
             <div class="gradient-legend" style="background: linear-gradient(to right, {gradient});"></div>
             <div class="legend-labels">
                 <span>{min_val}</span>
@@ -781,10 +744,10 @@ def render_collapsible(title, content_func, icon="", default_open=False):
 def render_pollutant_stat_card(name, value, unit, description=""):
     st.markdown(f"""
         <div class="pollutant-card">
-            <div style="font-weight: 500; margin-bottom: 0.5rem;">{name}</div>
+            <div style="font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">{name}</div>
             <div class="pollutant-value">{value:.2f}</div>
             <div class="pollutant-unit">{unit}</div>
-            {f'<div style="font-size: 0.75rem; color: #888; margin-top: 0.5rem;">{description}</div>' if description else ''}
+            {f'<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">{description}</div>' if description else ''}
         </div>
     """,
                 unsafe_allow_html=True)
@@ -793,34 +756,34 @@ def render_pollutant_stat_card(name, value, unit, description=""):
 def render_page_header(title, subtitle="", hero=False, show_author=True):
     """
     Render consistent page headers across the application.
-    
+
     Args:
         title: Main page title (can include emoji)
-        subtitle: Optional description text  
+        subtitle: Optional description text
         hero: If True, renders larger centered hero-style header (for landing page)
         show_author: If True, shows author attribution line
     """
     if hero:
         st.markdown(f"""
-        <div style="position: relative;">
+        <div class="hero-container">
             <div class="hero-background"></div>
-            <div style="text-align: center; padding: 2rem 0 1rem 0; position: relative; z-index: 2;">
-                <h1 class="main-header" style="color: #ffffff !important; padding: 0 !important;">{title}</h1>
+            <div style="text-align: center; padding: 1rem 0 0.5rem 0; position: relative; z-index: 2;">
+                <h1 class="main-header">{title}</h1>
             </div>
         </div>
         """, unsafe_allow_html=True)
         if subtitle:
             st.markdown(f'<div class="sub-header">{subtitle}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="main-header" style="font-size: 2.2rem; padding: 1rem 0;">{title}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="main-header" style="font-size: 2.1rem; padding: 1rem 0;">{title}</div>', unsafe_allow_html=True)
         if subtitle:
             st.markdown(f'<div class="sub-header" style="font-size: 1rem; margin-bottom: 1.5rem;">{subtitle}</div>', unsafe_allow_html=True)
-    
+
     if show_author:
         st.markdown("""
-        <div style="text-align: center; font-size: 0.85rem; color: #94a3b8; padding: 0.5rem 0; margin-bottom: 1rem;">
-            Made with ❤️ by <strong style="color: #e2e8f0;">Hemant Kumar</strong> • 
-            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank" style="color: #60a5fa; text-decoration: none;">LinkedIn</a>
+        <div class="attribution-line">
+            Made with ❤️ by <strong style="color: var(--text-primary);">Hemant Kumar</strong> •
+            <a href="https://www.linkedin.com/in/hemantkumar2430" target="_blank">LinkedIn</a>
         </div>
         """, unsafe_allow_html=True)
 
