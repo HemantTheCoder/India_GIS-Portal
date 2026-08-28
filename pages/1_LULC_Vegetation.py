@@ -272,15 +272,20 @@ if city_coords and st.session_state.gee_initialized:
                     st.error(f"No cloud-free {satellite} images found. Try a different date range.")
                 else:
                     st.session_state.current_image = image
-                    
+                    st.session_state.rgb_tile_url = None
+                    st.session_state.lulc_tile_url = None
+                    st.session_state.index_tile_urls = {}
+
                     if show_rgb and image is not None:
                         try:
                             rgb_params = rgb_params_func(image)
                             rgb_url = get_tile_url(image, rgb_params)
                             add_tile_layer(base_map, rgb_url, f"{satellite} RGB", 0.9)
+                            st.session_state.rgb_tile_url = rgb_url
+                            st.session_state.rgb_layer_name = f"{satellite} RGB"
                         except Exception as e:
                             st.warning(f"Could not load RGB layer: {str(e)}")
-                    
+
                     if show_lulc:
                         st.write("🏘️ Classifying Land Use/Land Cover (Dynamic World)...")
                         lulc = get_dynamic_world_lulc(geometry, start_date, end_date)
@@ -288,19 +293,20 @@ if city_coords and st.session_state.gee_initialized:
                             lulc_params = get_lulc_vis_params()
                             lulc_url = get_tile_url(lulc, lulc_params)
                             add_tile_layer(base_map, lulc_url, "LULC", 0.8)
+                            st.session_state.lulc_tile_url = lulc_url
                             st.session_state.lulc_stats = calculate_lulc_statistics_with_area(lulc, geometry)
                             st.session_state.lulc_image = lulc
-                            
+
                             if analysis_mode == "Time Series Comparison" and compare_year1 and compare_year2:
                                 st.write("📅 Analyzing time series changes...")
                                 stats1, stats2, _ = get_lulc_change_analysis(geometry, compare_year1, compare_year2)
                                 st.session_state.time_series_stats = (stats1, stats2, compare_year1, compare_year2)
-                    
+
                     st.write("🌿 Calculating spectral indices...")
                     index_funcs = get_index_functions(satellite)
                     st.session_state.index_images = {}
                     st.session_state.index_means = {}
-                    
+
                     for idx in show_indices:
                         if idx in index_funcs:
                             try:
@@ -310,7 +316,8 @@ if city_coords and st.session_state.gee_initialized:
                                     index_params = get_index_vis_params(idx)
                                     index_url = get_tile_url(index_image, index_params)
                                     add_tile_layer(base_map, index_url, idx, 0.8)
-                                    
+                                    st.session_state.index_tile_urls[idx] = index_url
+
                                     mean_result = get_image_mean(index_image, geometry)
                                     if mean_result:
                                         st.session_state.index_means[idx] = mean_result.get(idx, None)
@@ -355,11 +362,31 @@ if city_coords and st.session_state.gee_initialized:
                 elif error:
                     st.error(f"Timelapse error: {error}")
     
+    # `base_map` above is rebuilt from scratch on every rerun (e.g. a map
+    # click for the Pixel Inspector), so previously computed layers need to
+    # be re-applied here from cached tile URLs, otherwise they'd vanish the
+    # moment the user interacts with the map instead of pressing Run Analysis.
+    if not run_analysis and st.session_state.get("analysis_complete"):
+        if st.session_state.get("rgb_tile_url"):
+            add_tile_layer(base_map, st.session_state.rgb_tile_url,
+                          st.session_state.get("rgb_layer_name", "RGB"), 0.9)
+        if st.session_state.get("lulc_tile_url"):
+            add_tile_layer(base_map, st.session_state.lulc_tile_url, "LULC", 0.8)
+        for idx_name, idx_url in st.session_state.get("index_tile_urls", {}).items():
+            add_tile_layer(base_map, idx_url, idx_name, 0.8)
+
     add_layer_control(base_map)
-    
+
     st.markdown(f"### 🗺️ {selected_city}, {selected_state}")
     st.markdown('<div class="map-container">', unsafe_allow_html=True)
-    map_data = st_folium(base_map, width=None, height=550, returned_objects=["all_drawings", "last_clicked"])
+    # A stable key is required for `last_clicked` to register at all: Folium
+    # embeds a fresh random element ID into the map HTML on every
+    # construction, so without a fixed key Streamlit treats each rerun's map
+    # as a brand-new component and drops the very click that triggered the
+    # rerun.
+    map_data = st_folium(base_map, width=None, height=550,
+                        returned_objects=["all_drawings", "last_clicked"],
+                        key="lulc_map")
     st.markdown('</div>', unsafe_allow_html=True)
     
     map_info_col1, map_info_col2 = st.columns(2)
